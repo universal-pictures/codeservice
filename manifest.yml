@@ -1,0 +1,11 @@
+---
+applications:
+- name: uddcs-poc 
+  memory: 512M
+  instances: 1
+  host: uddcs-poc-ds
+  buildpack: https://github.com/cloudfoundry/java-buildpack.git
+  env:
+    http_proxy: http://216.178.96.20:80
+    https_proxy: http://216.178.96.20:80
+  path: target/uddcs-poc-0.0.1-SNAPSHOT.jar 
