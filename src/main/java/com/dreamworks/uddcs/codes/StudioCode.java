@@ -10,6 +10,9 @@ import java.util.Date;
  * Created by dsherman on 2/27/17.
  */
 @Entity
+@Table(name = "studio_code", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_studio_code", columnNames = {"code"})
+})
 public class StudioCode
 {
     @Id

@@ -10,21 +10,25 @@ import java.util.Set;
  * Created by dsherman on 2/27/17.
  */
 @Entity
+@Table(name = "partner", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_partner", columnNames = {"id"})
+})
 public class Partner
 {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    private Long id;
+
     private String name;
     private String description;
     private String contactName;
     private String email;
     private String phone;
     private Date createdOn;
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "parnter_retailer", joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
-    private Set<Retailer> retailers;
 
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "partner_retailer", joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
+    private Set<Retailer> retailers;
 
     public Partner() {}
 
@@ -38,13 +42,11 @@ public class Partner
         this.createdOn = createdOn;
     }
 
-    public String getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 

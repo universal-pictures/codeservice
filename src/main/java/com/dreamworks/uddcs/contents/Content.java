@@ -9,21 +9,26 @@ import java.util.Set;
  * Created by dsherman on 2/27/17.
  */
 @Entity
+@Table(name = "content", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_content", columnNames = {"id"})
+})
 public class Content
 {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    private Long id;
+
     private String title;
     private String eidr;
     private String gtm;
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "content_retailer", joinColumns = @JoinColumn(name = "content_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
     public Content() {}
 
-    public Content(String id, String title, String eidr, String gtm)
+    public Content(Long id, String title, String eidr, String gtm)
     {
         this.id = id;
         this.title = title;
@@ -31,13 +36,11 @@ public class Content
         this.gtm = gtm;
     }
 
-    public String getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 

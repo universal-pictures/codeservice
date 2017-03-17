@@ -1,18 +1,10 @@
 package com.dreamworks.uddcs.partners;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
 /**
  * Created by dsherman on 2/27/17.
  */
-@Entity
 public class PartnerRequest
 {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private String name;
     private String description;
     private String contactName;

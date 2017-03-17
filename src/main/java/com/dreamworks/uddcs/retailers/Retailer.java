@@ -12,17 +12,23 @@ import java.util.Set;
  * Created by dsherman on 2/27/17.
  */
 @Entity
+@Table(name = "retailer", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_retailer", columnNames = {"id"})
+})
 public class Retailer
 {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    private Long id;
+
     private String name;
     private String regionCode;
     private Date createdOn;
+
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
     private Set<Content> contents;
+
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
     private Set<Partner> partners;
@@ -36,13 +42,11 @@ public class Retailer
         this.createdOn = createdOn;
     }
 
-    public String getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 
