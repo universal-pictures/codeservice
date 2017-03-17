@@ -6,12 +6,12 @@ package com.dreamworks.uddcs.codes;
 public class PairStudioCodeRequest
 {
     private String retailerCode;
-    private String retailerId;
+    private Long retailerId;
     private String pairedBy;
 
     public PairStudioCodeRequest() {}
 
-    public PairStudioCodeRequest(String code, String retailerCode, String retailerId, String pairedBy)
+    public PairStudioCodeRequest(String code, String retailerCode, Long retailerId, String pairedBy)
     {
         this.retailerCode = retailerCode;
         this.retailerId = retailerId;
@@ -28,16 +28,6 @@ public class PairStudioCodeRequest
         this.retailerCode = retailerCode;
     }
 
-    public String getRetailerId()
-    {
-        return retailerId;
-    }
-
-    public void setRetailerId(String retailerId)
-    {
-        this.retailerId = retailerId;
-    }
-
     public String getPairedBy()
     {
         return pairedBy;
@@ -46,5 +36,13 @@ public class PairStudioCodeRequest
     public void setPairedBy(String pairedBy)
     {
         this.pairedBy = pairedBy;
+    }
+
+    public Long getRetailerId() {
+        return retailerId;
+    }
+
+    public void setRetailerId(Long retailerId) {
+        this.retailerId = retailerId;
     }
 }

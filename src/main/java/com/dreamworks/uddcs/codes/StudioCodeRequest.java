@@ -5,46 +5,40 @@ package com.dreamworks.uddcs.codes;
  */
 public class StudioCodeRequest
 {
-    private String contentId;
+    private Long contentId;
     private String createdBy;
-    private String partnerId;
+    private Long partnerId;
 
     public StudioCodeRequest() {}
 
-    public StudioCodeRequest(String contentId, String createdBy, String partnerId)
+    public StudioCodeRequest(Long contentId, String createdBy, Long partnerId)
     {
         this.contentId = contentId;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
     }
 
-    public String getContentId()
-    {
+    public Long getContentId() {
         return contentId;
     }
 
-    public void setContentId(String contentId)
-    {
+    public void setContentId(Long contentId) {
         this.contentId = contentId;
     }
 
-    public String getCreatedBy()
-    {
+    public String getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(String createdBy)
-    {
+    public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
     }
 
-    public String getPartnerId()
-    {
+    public Long getPartnerId() {
         return partnerId;
     }
 
-    public void setPartnerId(String partnerId)
-    {
+    public void setPartnerId(Long partnerId) {
         this.partnerId = partnerId;
     }
 }

@@ -19,6 +19,7 @@ public class StudioCode
     private String code;
     private String createdBy;
     private Date createdOn;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
     private Partner partner;
@@ -28,7 +29,7 @@ public class StudioCode
     private Content content;
 
     private String retailerCode;
-    private String retailerId;
+    private Long retailerId;
     private String pairedBy;
     private Date pairedOn;
 
@@ -106,13 +107,11 @@ public class StudioCode
         this.retailerCode = retailerCode;
     }
 
-    public String getRetailerId()
-    {
+    public Long getRetailerId() {
         return retailerId;
     }
 
-    public void setRetailerId(String retailerId)
-    {
+    public void setRetailerId(Long retailerId) {
         this.retailerId = retailerId;
     }
 

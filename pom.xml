@@ -5,7 +5,7 @@
 
 	<groupId>com.dreamworks.uddcs</groupId>
 	<artifactId>uddcs-poc</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>uddcs-poc</name>
@@ -40,10 +40,16 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.h2database</groupId>-->
-            <!--<artifactId>h2</artifactId>-->
-        <!--</dependency>-->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+			<scope>test</scope>
+        </dependency>
 
 		<dependency>
 			<groupId>mysql</groupId>

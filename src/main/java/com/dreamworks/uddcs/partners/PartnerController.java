@@ -1,5 +1,6 @@
 package com.dreamworks.uddcs.partners;
 
+import com.dreamworks.uddcs.exception.ApiError;
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
@@ -42,11 +43,11 @@ public class PartnerController
     @CrossOrigin
     @ApiOperation("Get Partner information for a given Partner id")
     @RequestMapping(method= RequestMethod.GET, value = "/{id}")
-    public ResponseEntity<Partner> getPartnerById(@PathVariable String id)
+    public ResponseEntity<Partner> getPartnerById(@PathVariable Long id)
     {
         Partner partner = partnerRepository.findOne(id);
         if (partner == null)
-            return new ResponseEntity("Content id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<Partner>(partner, HttpStatus.OK);
     }
@@ -63,16 +64,16 @@ public class PartnerController
     @CrossOrigin
     @ApiOperation("Add a Retailer for a Partner")
     @RequestMapping(method= RequestMethod.PUT, value = "/{id}")
-    public ResponseEntity<Partner> addRetailerToContent(@PathVariable String id, @RequestBody AddRetailerToPartnerRequest request)
+    public ResponseEntity<Partner> addRetailerToContent(@PathVariable Long id, @RequestBody AddRetailerToPartnerRequest request)
     {
         Retailer retailer = retailerRepository.findOne(request.getRetailerId());
         if (retailer == null)
-            return new ResponseEntity("Retailer id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
 
         Partner partner = partnerRepository.findOne(id);
         if (partner == null)
-            return new ResponseEntity("Partner id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
 
         retailer.getPartners().add(partner);
         partner.getRetailers().add(retailer);

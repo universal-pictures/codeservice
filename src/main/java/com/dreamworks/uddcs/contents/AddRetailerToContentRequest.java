@@ -5,22 +5,20 @@ package com.dreamworks.uddcs.contents;
  */
 public class AddRetailerToContentRequest
 {
-    private String retailerId;
+    private Long retailerId;
 
     public AddRetailerToContentRequest() {}
 
-    public AddRetailerToContentRequest(String retailerId)
+    public AddRetailerToContentRequest(Long retailerId)
     {
         this.retailerId = retailerId;
     }
 
-    public String getRetailerId()
-    {
+    public Long getRetailerId() {
         return retailerId;
     }
 
-    public void setRetailerId(String retailerId)
-    {
+    public void setRetailerId(Long retailerId) {
         this.retailerId = retailerId;
     }
 }

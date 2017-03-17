@@ -2,11 +2,14 @@ package com.dreamworks.uddcs.codes;
 
 import com.dreamworks.uddcs.contents.Content;
 import com.dreamworks.uddcs.contents.ContentRepository;
+import com.dreamworks.uddcs.exception.ApiError;
 import com.dreamworks.uddcs.partners.Partner;
 import com.dreamworks.uddcs.partners.PartnerRepository;
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,11 +42,11 @@ public class StudioCodeController
     {
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
-            return new ResponseEntity("Content id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
 
         Partner partner = partnerRepository.findOne(request.getPartnerId());
         if (partner == null)
-            return new ResponseEntity("Partner id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
 
         String code = UUID.randomUUID().toString();
         StudioCode studioCode =
@@ -59,7 +62,7 @@ public class StudioCodeController
     {
         StudioCode studioCode = studioCodeRepository.findOne(code);
         if (studioCode == null)
-            return new ResponseEntity("Studio Code expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Studio Code expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<StudioCode>(studioCode, HttpStatus.OK);
     }
@@ -80,20 +83,20 @@ public class StudioCodeController
     {
         StudioCode studioCode = studioCodeRepository.findOne(code);
         if (studioCode == null)
-            return new ResponseEntity("Studio Code expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Studio Code expressed is not found."), HttpStatus.NOT_FOUND);
 
         if (studioCode.isPaired())
-            return new ResponseEntity("Studio Code expressed is already paired.", HttpStatus.CONFLICT);
+            return new ResponseEntity(new ApiError("Studio Code expressed is already paired."), HttpStatus.CONFLICT);
 
         Retailer retailer = retailerRepository.findOne(request.getRetailerId());
         if (retailer == null)
-            return new ResponseEntity("Retailer id expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
         if (! studioCode.getContent().getRetailers().contains(retailer))
-            return new ResponseEntity("Retailer does not have requested Content.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Retailer does not have requested Content."), HttpStatus.NOT_FOUND);
 
         if (! studioCode.getPartner().getRetailers().contains(retailer))
-            return new ResponseEntity("Partner does not have access to selected Retailer.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Partner does not have access to selected Retailer."), HttpStatus.NOT_FOUND);
 
         studioCode.setPairedOn(new Date());
         studioCode.setRetailerCode(request.getRetailerCode());
@@ -112,10 +115,10 @@ public class StudioCodeController
     {
         StudioCode studioCode = studioCodeRepository.findOne(code);
         if (studioCode == null)
-            return new ResponseEntity("Studio Code expressed is not found.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Studio Code expressed is not found."), HttpStatus.NOT_FOUND);
 
         if (studioCode.isRedeemed())
-            return new ResponseEntity("Studio Code expressed is already redeemed.", HttpStatus.CONFLICT);
+            return new ResponseEntity(new ApiError("Studio Code expressed is already redeemed."), HttpStatus.CONFLICT);
 
         studioCode.setRedeemedOn(new Date());
         studioCode.setRedeemedBy(request.getRedeemedBy());
@@ -124,4 +127,5 @@ public class StudioCodeController
 
         return new ResponseEntity<StudioCode>(studioCode, HttpStatus.CREATED);
     }
+
 }

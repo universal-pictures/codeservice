@@ -5,22 +5,20 @@ package com.dreamworks.uddcs.partners;
  */
 public class AddRetailerToPartnerRequest
 {
-    private String retailerId;
+    private Long retailerId;
 
     public AddRetailerToPartnerRequest() {}
 
-    public AddRetailerToPartnerRequest(String retailerId)
+    public AddRetailerToPartnerRequest(Long retailerId)
     {
         this.retailerId = retailerId;
     }
 
-    public String getRetailerId()
-    {
+    public Long getRetailerId() {
         return retailerId;
     }
 
-    public void setRetailerId(String retailerId)
-    {
+    public void setRetailerId(Long retailerId) {
         this.retailerId = retailerId;
     }
 }
