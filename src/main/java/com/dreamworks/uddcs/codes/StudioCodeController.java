@@ -8,8 +8,6 @@ import com.dreamworks.uddcs.partners.PartnerRepository;
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,7 +97,7 @@ public class StudioCodeController
             return new ResponseEntity(new ApiError("Partner does not have access to selected Retailer."), HttpStatus.NOT_FOUND);
 
         studioCode.setPairedOn(new Date());
-        studioCode.setRetailerCode(request.getRetailerCode());
+//        studioCode.setRetailerCode(request.getRetailerCode());
         studioCode.setRetailerId(request.getRetailerId());
         studioCode.setPairedBy(request.getPairedBy());
 
