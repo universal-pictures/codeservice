@@ -13,9 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -50,7 +50,9 @@ public class StudioCodeController
         if (partner == null)
             return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        String code = UUID.randomUUID().toString();
+        long l = ByteBuffer.wrap(UUID.randomUUID().toString().getBytes()).getLong();
+        String code = Long.toString(l, Character.MAX_RADIX);
+
         StudioCode studioCode =
                 new StudioCode(code, request.getCreatedBy(), new Date(), partner, content);
         studioCodeRepository.save(studioCode);
@@ -101,26 +103,20 @@ public class StudioCodeController
             return new ResponseEntity(new ApiError("Partner does not have access to selected Retailer."), HttpStatus.NOT_FOUND);
 
         // = Check if the code in the request is in the list of codes of RetailerCodes.
-        final List<RetailerCode> retailerCodes = retailerCodesRepository.findByPairedOnAndContentAndRetailer(null, studioCode.getContent(), retailer);
-        final Optional<RetailerCode> retailerCode = retailerCodes.stream().filter(x->x.getCode().equalsIgnoreCase(request.getRetailerCode())).findFirst();
-        if (!retailerCode.isPresent()) {
-            return new ResponseEntity(new ApiError("Retailer Code expressed is not found"), HttpStatus.NOT_FOUND);
+        final RetailerCode retailerCode = retailerCodesRepository.findFirstByPairedOnAndContentAndRetailer(null, studioCode.getContent(), retailer);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code not available for selected Content"), HttpStatus.NOT_FOUND);
         }
 
         final Date pairingDate = new Date();
         studioCode.setPairedOn(pairingDate);
-
-        // = In order to avoid providing the retailer code by URL, the code in RetailerCode entity should be Key.
-        // = Right now the key for that entity is autoincrement allowing to have for 1 retailer and 1 content -> N Codes.
-        studioCode.setRetailerCode(request.getRetailerCode());
         studioCode.setRetailerId(request.getRetailerId());
         studioCode.setPairedBy(request.getPairedBy());
 
         studioCodeRepository.save(studioCode);
-        retailerCode.ifPresent(x -> {
-            x.setPairedOn(pairingDate);
-            retailerCodesRepository.save(x);
-        });
+
+        retailerCode.setPairedOn(pairingDate);
+        retailerCodesRepository.save(retailerCode);
 
         return new ResponseEntity<StudioCode>(studioCode, HttpStatus.CREATED);
     }

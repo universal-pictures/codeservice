@@ -1,16 +1,13 @@
 package com.dreamworks.uddcs.codes;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 /**
  * Created by dsherman on 2/27/17.
  */
 public class RetailerCodeRequest
 {
+    private String code;
     private Long contentId;
     private Long retailerId;
-    @NotEmpty
-    private String code;
 
     public RetailerCodeRequest() {}
 

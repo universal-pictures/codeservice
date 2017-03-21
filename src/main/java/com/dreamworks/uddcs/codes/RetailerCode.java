@@ -10,14 +10,12 @@ import java.util.Date;
  * Created by mmonti on 3/20/17.
  */
 @Entity
-@Table(name = "retailer_code", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_retailer_code", columnNames = {"code"})
-})
+@Table(name = "retailer_code")
+
 public class RetailerCode {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private String code;
 
     private Date createdOn;
     private Date pairedOn;
@@ -30,10 +28,7 @@ public class RetailerCode {
     @JoinColumn(name = "retailerId")
     private Retailer retailer;
 
-    private String code;
-
-    public RetailerCode() {
-    }
+    public RetailerCode() {}
 
     /**
      *
@@ -41,19 +36,20 @@ public class RetailerCode {
      * @param retailer
      * @param code
      */
-    public RetailerCode(final Content content, final Retailer retailer, final String code) {
+    public RetailerCode(final String code, final Content content, final Retailer retailer)
+    {
+        this.code = code;
         this.content = content;
         this.retailer = retailer;
-        this.code = code;
         this.createdOn = new Date();
     }
 
-    public Long getId() {
-        return id;
+    public String getCode() {
+        return code;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public Date getCreatedOn() {
@@ -86,14 +82,6 @@ public class RetailerCode {
 
     public void setRetailer(Retailer retailer) {
         this.retailer = retailer;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public boolean isPaired() {

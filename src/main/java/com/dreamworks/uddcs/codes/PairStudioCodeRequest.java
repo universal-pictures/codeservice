@@ -5,27 +5,15 @@ package com.dreamworks.uddcs.codes;
  */
 public class PairStudioCodeRequest
 {
-    private String retailerCode;
     private Long retailerId;
     private String pairedBy;
 
     public PairStudioCodeRequest() {}
 
-    public PairStudioCodeRequest(String retailerCode, Long retailerId, String pairedBy)
+    public PairStudioCodeRequest(Long retailerId, String pairedBy)
     {
-        this.retailerCode = retailerCode;
         this.retailerId = retailerId;
         this.pairedBy = pairedBy;
-    }
-
-    public String getRetailerCode()
-    {
-        return retailerCode;
-    }
-
-    public void setRetailerCode(String retailerCode)
-    {
-        this.retailerCode = retailerCode;
     }
 
     public String getPairedBy()

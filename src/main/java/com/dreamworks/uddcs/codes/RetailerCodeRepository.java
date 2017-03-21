@@ -12,8 +12,7 @@ import java.util.List;
  */
 public interface RetailerCodeRepository extends JpaRepository<RetailerCode, Long>
 {
-
     List<RetailerCode> findByPairedOnAndContentAndRetailer(final Date date, final Content content, final Retailer retailer);
 
-    RetailerCode findFirstByCode(final String code);
+    RetailerCode findFirstByPairedOnAndContentAndRetailer(final Date date, final Content content, final Retailer retailer);
 }

@@ -40,11 +40,8 @@ public class RetailerCodeController
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        final RetailerCode exist = retailerCodeRepository.findFirstByCode(request.getCode());
-        if (exist != null)
-            return new ResponseEntity(new ApiError("Retailer Code already exist."), HttpStatus.CONFLICT);
+        final RetailerCode retailerCode = new RetailerCode(request.getCode(), content, retailer);
 
-        final RetailerCode retailerCode = new RetailerCode(content, retailer, request.getCode());
         return new ResponseEntity(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }
 
@@ -76,10 +73,14 @@ public class RetailerCodeController
     public ResponseEntity<List<RetailerCode>> getRetailerCodeForRetailerAndContent(@PathVariable Long contentId, @PathVariable Long retailerId)
     {
         final Content content = contentRepository.findOne(contentId);
+        if (content == null)
+            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
+
         final Retailer retailer = retailerRepository.findOne(retailerId);
+        if (retailer == null)
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
+
         final List<RetailerCode> retailerCodes = retailerCodeRepository.findByPairedOnAndContentAndRetailer(null, content, retailer);
-        if (retailerCodes == null || retailerCodes != null && retailerCodes.isEmpty())
-            return new ResponseEntity(new ApiError("Retailer Code for content id and retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
