@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -29,6 +30,9 @@ public class StudioCodeController
 
     @Autowired
     private RetailerRepository retailerRepository;
+
+    @Autowired
+    private RetailerCodeRepository retailerCodesRepository;
 
     @Autowired
     private PartnerRepository partnerRepository;
@@ -96,12 +100,27 @@ public class StudioCodeController
         if (! studioCode.getPartner().getRetailers().contains(retailer))
             return new ResponseEntity(new ApiError("Partner does not have access to selected Retailer."), HttpStatus.NOT_FOUND);
 
-        studioCode.setPairedOn(new Date());
-//        studioCode.setRetailerCode(request.getRetailerCode());
+        // = Check if the code in the request is in the list of codes of RetailerCodes.
+        final List<RetailerCode> retailerCodes = retailerCodesRepository.findByPairedOnAndContentAndRetailer(null, studioCode.getContent(), retailer);
+        final Optional<RetailerCode> retailerCode = retailerCodes.stream().filter(x->x.getCode().equalsIgnoreCase(request.getRetailerCode())).findFirst();
+        if (!retailerCode.isPresent()) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found"), HttpStatus.NOT_FOUND);
+        }
+
+        final Date pairingDate = new Date();
+        studioCode.setPairedOn(pairingDate);
+
+        // = In order to avoid providing the retailer code by URL, the code in RetailerCode entity should be Key.
+        // = Right now the key for that entity is autoincrement allowing to have for 1 retailer and 1 content -> N Codes.
+        studioCode.setRetailerCode(request.getRetailerCode());
         studioCode.setRetailerId(request.getRetailerId());
         studioCode.setPairedBy(request.getPairedBy());
 
         studioCodeRepository.save(studioCode);
+        retailerCode.ifPresent(x -> {
+            x.setPairedOn(pairingDate);
+            retailerCodesRepository.save(x);
+        });
 
         return new ResponseEntity<StudioCode>(studioCode, HttpStatus.CREATED);
     }
