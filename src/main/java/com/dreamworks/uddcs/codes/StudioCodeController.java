@@ -112,6 +112,7 @@ public class StudioCodeController
         studioCode.setPairedOn(pairingDate);
         studioCode.setRetailerId(request.getRetailerId());
         studioCode.setPairedBy(request.getPairedBy());
+        studioCode.setRetailerCode(retailerCode.getCode());
 
         studioCodeRepository.save(studioCode);
 
