@@ -2,7 +2,7 @@ package com.dreamworks.uddcs.retailers;
 
 import com.dreamworks.uddcs.contents.Content;
 import com.dreamworks.uddcs.exception.ApiError;
-import com.dreamworks.uddcs.partners.Partner;
+import com.dreamworks.uddcs.partners.ReferralPartner;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,13 +62,13 @@ public class RetailerController
     @CrossOrigin
     @ApiOperation("Get Partners for a given Retailer")
     @RequestMapping(method= RequestMethod.GET, value = "/{id}/partners")
-    public ResponseEntity<Set<Partner>> getPartnersForRetailId(@PathVariable Long id)
+    public ResponseEntity<Set<ReferralPartner>> getPartnersForRetailId(@PathVariable Long id)
     {
         Retailer retailer = retailerRepository.findOne(id);
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity<Set<Partner>>(retailer.getPartners(), HttpStatus.OK);
+        return new ResponseEntity<Set<ReferralPartner>>(retailer.getReferralPartners(), HttpStatus.OK);
     }
 
     @CrossOrigin

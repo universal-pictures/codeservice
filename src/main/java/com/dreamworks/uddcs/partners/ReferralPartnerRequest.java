@@ -3,7 +3,7 @@ package com.dreamworks.uddcs.partners;
 /**
  * Created by dsherman on 2/27/17.
  */
-public class PartnerRequest
+public class ReferralPartnerRequest
 {
     private String name;
     private String description;
@@ -11,9 +11,9 @@ public class PartnerRequest
     private String email;
     private String phone;
 
-    public PartnerRequest() {}
+    public ReferralPartnerRequest() {}
 
-    public PartnerRequest(String name, String description, String contactName, String email, String phone)
+    public ReferralPartnerRequest(String name, String description, String contactName, String email, String phone)
     {
         this.name = name;
         this.description = description;

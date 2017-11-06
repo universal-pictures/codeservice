@@ -3,13 +3,13 @@ package com.dreamworks.uddcs.codes;
 /**
  * Created by dsherman on 2/27/17.
  */
-public class RedeemStudioCodeRequest
+public class RedeemMasterCodeRequest
 {
     private String redeemedBy;
 
-    public RedeemStudioCodeRequest() {}
+    public RedeemMasterCodeRequest() {}
 
-    public RedeemStudioCodeRequest(String redeemedBy)
+    public RedeemMasterCodeRequest(String redeemedBy)
     {
         this.redeemedBy = redeemedBy;
     }

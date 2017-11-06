@@ -1,16 +1,16 @@
-package com.dreamworks.uddcs.codes;
+package com.dreamworks.uddcs.pairings;
 
 /**
  * Created by dsherman on 2/27/17.
  */
-public class PairStudioCodeRequest
+public class PairMasterCodeRequest
 {
     private Long retailerId;
     private String pairedBy;
 
-    public PairStudioCodeRequest() {}
+    public PairMasterCodeRequest() {}
 
-    public PairStudioCodeRequest(Long retailerId, String pairedBy)
+    public PairMasterCodeRequest(Long retailerId, String pairedBy)
     {
         this.retailerId = retailerId;
         this.pairedBy = pairedBy;

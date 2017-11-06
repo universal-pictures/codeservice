@@ -3,15 +3,15 @@ package com.dreamworks.uddcs.codes;
 /**
  * Created by dsherman on 2/27/17.
  */
-public class StudioCodeRequest
+public class MasterCodeRequest
 {
     private Long contentId;
     private String createdBy;
     private Long partnerId;
 
-    public StudioCodeRequest() {}
+    public MasterCodeRequest() {}
 
-    public StudioCodeRequest(Long contentId, String createdBy, Long partnerId)
+    public MasterCodeRequest(Long contentId, String createdBy, Long partnerId)
     {
         this.contentId = contentId;
         this.createdBy = createdBy;

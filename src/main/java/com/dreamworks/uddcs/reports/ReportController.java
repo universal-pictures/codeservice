@@ -1,8 +1,8 @@
 package com.dreamworks.uddcs.reports;
 
-import com.dreamworks.uddcs.codes.StudioCodeRepository;
+import com.dreamworks.uddcs.codes.MasterCodeRepository;
 import com.dreamworks.uddcs.contents.ContentRepository;
-import com.dreamworks.uddcs.partners.PartnerRepository;
+import com.dreamworks.uddcs.partners.ReferralPartnerRepository;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReportController
 {
     @Autowired
-    private PartnerRepository partnerRepository;
+    private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
     private RetailerRepository retailerRepository;
@@ -27,7 +27,7 @@ public class ReportController
     private ContentRepository contentRepository;
 
     @Autowired
-    private StudioCodeRepository studioCodeRepository;
+    private MasterCodeRepository masterCodeRepository;
 
     @CrossOrigin
     @ApiOperation("Get a summarized report of UDDCS stats")
@@ -35,14 +35,14 @@ public class ReportController
     public ResponseEntity<SummaryReport> getSummaryReport()
     {
         SummaryReport report = new SummaryReport();
-        report.setPartners(partnerRepository.count());
+        report.setPartners(referralPartnerRepository.count());
         report.setRetailers(retailerRepository.count());
         report.setContents(contentRepository.count());
 
-        long totalCodes = studioCodeRepository.count();
+        long totalCodes = masterCodeRepository.count();
         report.setStudioCodes(totalCodes);
-        report.setStudioCodesPaired(totalCodes - studioCodeRepository.countByPairedBy(null));
-        report.setStudioCodesRedeemed(totalCodes - studioCodeRepository.countByRedeemedBy(null));
+//        report.setStudioCodesPaired(totalCodes - masterCodeRepository.countByPairedBy(null));
+//        report.setStudioCodesRedeemed(totalCodes - masterCodeRepository.countByRedeemedBy(null));
 
         return new ResponseEntity<SummaryReport>(report, HttpStatus.OK);
     }
