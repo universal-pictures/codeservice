@@ -40,7 +40,7 @@ public class RetailerCodeController
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        final RetailerCode retailerCode = new RetailerCode(request.getCode(), content, "NEED FORMAT", retailer);
+        final RetailerCode retailerCode = new RetailerCode(request.getCode(), content, request.getFormat(), retailer);
 
         return new ResponseEntity(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }

@@ -1,5 +1,6 @@
 package com.dreamworks.uddcs.configs;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -12,10 +13,15 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  * Created by dsherman on 2/24/17.
+ * Updated by kkirkland on 11/7/17.
  */
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
+
+    @Value("${build.version}")
+    private String BUILD_VERSION;
+
     @Bean
     public Docket api()
     {
@@ -31,11 +37,11 @@ public class SwaggerConfig {
     private ApiInfo apiInfo()
     {
         return new ApiInfoBuilder()
-                .title("UDDCS")
-                .description("Microservices-based POC for UDDCS")
+                .title("Media Everywhere")
+                .description("NBCUniversal Media Everywhere API")
                 .license("License TBD")
                 .licenseUrl("License TBD")
-                .version("1.0.0")
+                .version(BUILD_VERSION)
                 .build();
     }
 }

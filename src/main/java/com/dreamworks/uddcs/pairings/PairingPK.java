@@ -9,6 +9,8 @@ public class PairingPK implements Serializable {
     private String masterCode;
     private String retailerCode;
 
+    public PairingPK() {}
+
     public PairingPK(String masterCode, String retailerCode) {
         this.masterCode = masterCode;
         this.retailerCode = retailerCode;
