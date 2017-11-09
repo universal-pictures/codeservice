@@ -1,7 +1,6 @@
 package com.dreamworks.uddcs.partners;
 
 import com.dreamworks.uddcs.apps.App;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.dreamworks.uddcs.retailers.Retailer;
 
 import javax.persistence.*;
@@ -17,34 +16,16 @@ import java.util.Set;
 public class ReferralPartner {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("name")
     private String name;
-
-    @JsonProperty("description")
     private String description;
-
-    @JsonProperty("contactName")
     private String contactName;
-
-    @JsonProperty("contactEmail")
     private String contactEmail;
-
-    @JsonProperty("contactPhone")
     private String contactPhone;
-
-    @JsonProperty("createdOn")
     private Date createdOn;
-
-    @JsonProperty("modifiedOn")
     private Date modifiedOn;
-
-    @JsonProperty("regionCode")
     private String regionCode;
-
-    @JsonProperty("status")
     private String status;
 
     @ManyToMany(cascade = CascadeType.ALL)

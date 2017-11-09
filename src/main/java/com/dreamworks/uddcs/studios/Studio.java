@@ -2,8 +2,6 @@ package com.dreamworks.uddcs.studios;
 
 import javax.persistence.*;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * Created by kkirkland on 10/25/17.
  */
@@ -12,28 +10,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Studio {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("name")
     private String name;
-    
-    @JsonProperty("description")
     private String description;
-    
-    @JsonProperty("contactName")
     private String contactName;
-    
-    @JsonProperty("contactEmail")
     private String contactEmail;
-    
-    @JsonProperty("contactPhone")
     private String contactPhone;
-    
-    @JsonProperty("status")
     private String status;
-    
-    @JsonProperty("flags")
     private Long flags; // bitwise placeholder for potential configuration
 
     public Studio() {}

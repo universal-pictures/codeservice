@@ -3,7 +3,6 @@ package com.dreamworks.uddcs.retailers;
 import com.dreamworks.uddcs.contents.Content;
 import com.dreamworks.uddcs.partners.ReferralPartner;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -17,29 +16,19 @@ import java.util.Set;
 public class Retailer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("name")
     private String name;
-    
-    @JsonProperty("regionCode")
     private String regionCode;
-    
-    @JsonProperty("createdOn")
     private Date createdOn;
-    
-    @JsonProperty("status")
     private String status;
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
-    @JsonProperty("contents")
     private Set<Content> contents;
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
-    @JsonProperty("referralPartners")
     private Set<ReferralPartner> referralPartners;
 
     public Retailer() {

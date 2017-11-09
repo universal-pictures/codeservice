@@ -17,7 +17,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation("Create a Studio Entry")
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Studio> createStudio(@RequestBody StudioRequest request) {
         Studio studio = new Studio();
         studio.setName(request.getName());
@@ -35,7 +35,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation("Get studio information for a given Studio id")
-    @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Studio> getStudioById(@PathVariable Long id) {
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
@@ -46,7 +46,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation("Get Studio List")
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Studio>> getStudios() {
         List<Studio> studios = studioRepository.findAll();
         return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);

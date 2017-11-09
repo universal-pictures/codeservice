@@ -22,7 +22,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Create an App Entry")
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody AppRequest request) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
@@ -42,7 +42,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get app information for a given App id")
-    @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<App> getAppById(@PathVariable Long id) {
         App app = appRepository.findOne(id);
         if (app == null)
@@ -53,7 +53,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get App List")
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<App>> getApps() {
         List<App> apps = appRepository.findAll();
         return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
@@ -61,7 +61,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get Apps for a given Referral Partner id")
-    @RequestMapping(method = RequestMethod.GET, value = "/partner/{partnerId}")
+    @RequestMapping(method = RequestMethod.GET, value = "/partner/{partnerId}", produces = "application/json")
     public ResponseEntity<List<App>> getAppsByPartnerId(@PathVariable Long partnerId) {
         final ReferralPartner partner = referralPartnerRepository.findOne(partnerId);
         if (partner == null)
