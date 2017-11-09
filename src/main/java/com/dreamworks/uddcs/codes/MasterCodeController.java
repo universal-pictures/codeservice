@@ -132,7 +132,7 @@ public class MasterCodeController {
 
         // Insert new pairings record
         Pairing pairing = new Pairing(new PairingPK(masterCode.getCode(), retailerCode.getCode()),
-                                      request.getPairedBy(), "NEED STATUS");
+                                      request.getPairedBy(), request.getStatus());
         pairingRepository.save(pairing);
 
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);

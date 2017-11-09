@@ -1,9 +1,11 @@
 package com.dreamworks.uddcs.partners;
 
+import com.dreamworks.uddcs.apps.App;
 import com.dreamworks.uddcs.retailers.Retailer;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -31,6 +33,9 @@ public class ReferralPartner {
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
+
+    @OneToMany(mappedBy = "referralPartner")
+    private List<App> apps;
 
     public ReferralPartner() {
     }
@@ -134,5 +139,13 @@ public class ReferralPartner {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public List<App> getApps() {
+        return apps;
+    }
+
+    public void setApps(List<App> apps) {
+        this.apps = apps;
     }
 }

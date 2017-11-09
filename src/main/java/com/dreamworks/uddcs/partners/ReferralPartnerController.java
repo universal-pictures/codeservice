@@ -1,5 +1,7 @@
 package com.dreamworks.uddcs.partners;
 
+import com.dreamworks.uddcs.apps.App;
+import com.dreamworks.uddcs.apps.AppRepository;
 import com.dreamworks.uddcs.exception.ApiError;
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
@@ -21,6 +23,9 @@ public class ReferralPartnerController
 
     @Autowired
     private RetailerRepository retailerRepository;
+
+    @Autowired
+    private AppRepository appRepository;
 
     @CrossOrigin
     @ApiOperation("Create a ReferralPartner Entry")
@@ -81,5 +86,18 @@ public class ReferralPartnerController
         referralPartnerRepository.save(referralPartner);
 
         return new ResponseEntity<ReferralPartner>(referralPartner, HttpStatus.CREATED);
+    }
+
+    @CrossOrigin
+    @ApiOperation("Get all Apps for the given ReferralPartner id")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}/apps")
+    public ResponseEntity<List<App>> getAppsByPartnerId(@PathVariable Long id)
+    {
+        ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
+        if (referralPartner == null)
+            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+
+        List<App> apps = appRepository.findByReferralPartner(referralPartner);
+        return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
     }
 }

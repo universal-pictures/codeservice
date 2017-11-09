@@ -34,7 +34,7 @@ public class MasterCode {
     @JoinColumn(name = "appId")
     private App app;
 
-    @OneToMany(mappedBy = "masterCode")
+    @OneToMany(mappedBy = "id.masterCode")
     private List<Pairing> pairings;
 
     public MasterCode() {

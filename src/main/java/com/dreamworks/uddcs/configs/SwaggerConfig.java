@@ -37,8 +37,8 @@ public class SwaggerConfig {
     private ApiInfo apiInfo()
     {
         return new ApiInfoBuilder()
-                .title("Media Everywhere")
-                .description("NBCUniversal Media Everywhere API")
+                .title("Movies Everywhere")
+                .description("NBCUniversal Movies Everywhere API")
                 .license("License TBD")
                 .licenseUrl("License TBD")
                 .version(BUILD_VERSION)

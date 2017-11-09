@@ -30,7 +30,7 @@ public class RetailerCode {
     @JoinColumn(name = "retailerId")
     private Retailer retailer;
 
-    @OneToMany(mappedBy = "retailerCode")
+    @OneToMany(mappedBy = "id.retailerCode")
     private List<Pairing> pairings;
 
     public RetailerCode() {}
