@@ -1,5 +1,7 @@
 package com.dreamworks.uddcs.codes;
 
+import com.dreamworks.uddcs.apps.App;
+import com.dreamworks.uddcs.apps.AppRepository;
 import com.dreamworks.uddcs.contents.Content;
 import com.dreamworks.uddcs.contents.ContentRepository;
 import com.dreamworks.uddcs.exception.ApiError;
@@ -23,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/codes/studio")
+@RequestMapping("/api/codes/master")
 public class MasterCodeController {
     @Autowired
     private MasterCodeRepository masterCodeRepository;
@@ -42,6 +44,9 @@ public class MasterCodeController {
 
     @Autowired
     private PairingRepository pairingRepository;
+
+    @Autowired
+    private AppRepository appRepository;
 
     @CrossOrigin
     @ApiOperation("Create initial Master Code")
@@ -83,6 +88,18 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
+    @ApiOperation("Get Master Codes for a given App id")
+    @RequestMapping(method = RequestMethod.GET, value = "/app/{appId}")
+    public ResponseEntity<List<MasterCode>> getMasterCodesByAppId(@PathVariable Long appId) {
+        App app = appRepository.findOne(appId);
+        if (app == null)
+            return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+
+        List<MasterCode> masterCodes = masterCodeRepository.findByApp(app);
+        return new ResponseEntity<List<MasterCode>>(masterCodes, HttpStatus.OK);
+    }
+
+    @CrossOrigin
     @ApiOperation("Pair Master Code to a Retailer Code")
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/pair", produces = "application/json")
     public ResponseEntity<MasterCode> pairMasterCode(@PathVariable String code,
@@ -115,7 +132,7 @@ public class MasterCodeController {
 
         // Insert new pairings record
         Pairing pairing = new Pairing(new PairingPK(masterCode.getCode(), retailerCode.getCode()),
-                                      request.getPairedBy(), new Date(), "NEED STATUS");
+                                      request.getPairedBy(), "NEED STATUS");
         pairingRepository.save(pairing);
 
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);

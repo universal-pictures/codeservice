@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <name>uddcs-poc</name>
-    <description>Universal Digital Content Digital Code Services POC</description>
+    <description>Universal Digital Content Code Services POC</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -94,5 +94,15 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>application.properties</include>
+                </includes>
+            </resource>
+        </resources>
     </build>
 </project>

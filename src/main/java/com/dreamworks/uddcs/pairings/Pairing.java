@@ -40,10 +40,10 @@ public class Pairing {
 
     public Pairing () {}
 
-    public Pairing(PairingPK id, String pairedBy, Date pairedOn, String status) {
+    public Pairing(PairingPK id, String pairedBy, String status) {
         this.id = id;
         this.pairedBy = pairedBy;
-        this.pairedOn = pairedOn;
+        this.pairedOn = new Date();
         this.status = status;
     }
 
