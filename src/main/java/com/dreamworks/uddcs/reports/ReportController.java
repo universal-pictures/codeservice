@@ -31,7 +31,7 @@ public class ReportController
 
     @CrossOrigin
     @ApiOperation("Get a summarized report of UDDCS stats")
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<SummaryReport> getSummaryReport()
     {
         SummaryReport report = new SummaryReport();

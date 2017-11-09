@@ -22,7 +22,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Create a Retail Entry")
-    @RequestMapping(method= RequestMethod.POST)
+    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Retailer> createRetailer(@RequestBody RetailerRequest request)
     {
         Retailer retailer = new Retailer();
@@ -37,7 +37,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Get Retailer information for a given Retailer id")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Retailer> getRetailerById(@PathVariable Long id)
     {
         Retailer retailer = retailerRepository.findOne(id);
@@ -49,7 +49,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Get Contents for a given Retailer")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}/contents")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}/contents", produces = "application/json")
     public ResponseEntity<Set<Content>> getContentsForRetailId(@PathVariable Long id)
     {
         Retailer retailer = retailerRepository.findOne(id);
@@ -61,7 +61,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Get Partners for a given Retailer")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}/partners")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}/partners", produces = "application/json")
     public ResponseEntity<Set<ReferralPartner>> getPartnersForRetailId(@PathVariable Long id)
     {
         Retailer retailer = retailerRepository.findOne(id);
@@ -73,7 +73,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Get Retailer List")
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Retailer>> getRetailers()
     {
         List<Retailer> retailers = retailerRepository.findAll();

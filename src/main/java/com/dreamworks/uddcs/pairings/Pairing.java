@@ -1,5 +1,7 @@
 package com.dreamworks.uddcs.pairings;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -13,10 +15,16 @@ import java.util.Date;
 public class Pairing {
 
     @EmbeddedId
+    @JsonProperty("id")
     private PairingPK id;  // masterCode & retailerCode
 
+    @JsonProperty("pairedBy")
     private String pairedBy;
+
+    @JsonProperty("pairedOn")
     private Date pairedOn;
+
+    @JsonProperty("status")
     private String status;
 
     public Pairing () {}

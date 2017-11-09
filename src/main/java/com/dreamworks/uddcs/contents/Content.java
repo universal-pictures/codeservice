@@ -2,6 +2,7 @@ package com.dreamworks.uddcs.contents;
 
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.studios.Studio;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -15,23 +16,37 @@ import java.util.Set;
 public class Content {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonProperty("id")
     private Long id;
 
+    @JsonProperty("title")
     private String title;
+    
+    @JsonProperty("eidr")
     private String eidr;
+    
+    @JsonProperty("eidrv")
     private String eidrv;
+
+    @JsonProperty("gtm")
     private String gtm;
+    
+    @JsonProperty("status")
     private String status;
+    
+    @JsonProperty("msrp")
     private BigDecimal msrp;
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "content_retailer",
                joinColumns = @JoinColumn(name = "content_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
+    @JsonProperty("retailers")
     private Set<Retailer> retailers;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "studioId")
+    @JsonProperty("studio")
     private Studio studio;
 
     public Content() {
