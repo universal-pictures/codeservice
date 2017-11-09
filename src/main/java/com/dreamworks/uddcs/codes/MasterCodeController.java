@@ -45,8 +45,8 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation("Create initial Master Code")
-    @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity createMasterCode(@RequestBody MasterCodeRequest request) {
+    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<MasterCode> createMasterCode(@RequestBody MasterCodeRequest request) {
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -60,12 +60,12 @@ public class MasterCodeController {
 
         MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, content);
         masterCodeRepository.save(masterCode);
-        return new ResponseEntity(masterCode, HttpStatus.CREATED);
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
 
     @CrossOrigin
     @ApiOperation("Get Master Code information for a given code")
-    @RequestMapping(method = RequestMethod.GET, value = "/{code}")
+    @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
     public ResponseEntity<MasterCode> getMasterCode(@PathVariable String code) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
@@ -76,7 +76,7 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation("Get Master Codes")
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<MasterCode>> getMasterCodes() {
         List<MasterCode> masterCodes = masterCodeRepository.findAll();
         return new ResponseEntity<List<MasterCode>>(masterCodes, HttpStatus.OK);
@@ -84,7 +84,7 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation("Pair Master Code to a Retailer Code")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/pair")
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/pair", produces = "application/json")
     public ResponseEntity<MasterCode> pairMasterCode(@PathVariable String code,
                                                      @RequestBody PairMasterCodeRequest request) {
         MasterCode masterCode = masterCodeRepository.findOne(code);

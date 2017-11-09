@@ -23,7 +23,7 @@ public class ContentController
 
     @CrossOrigin
     @ApiOperation("Create a Content Entry")
-    @RequestMapping(method= RequestMethod.POST)
+    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody ContentRequest request)
     {
         Content content = new Content();
@@ -38,7 +38,7 @@ public class ContentController
 
     @CrossOrigin
     @ApiOperation("Get Content information for a given Content id")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> getContentById(@PathVariable Long id)
     {
         Content content = contentRepository.findOne(id);
@@ -50,7 +50,7 @@ public class ContentController
 
     @CrossOrigin
     @ApiOperation("Get Content List")
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Content>> getContents()
     {
         List<Content> contents = contentRepository.findAll();
@@ -59,7 +59,7 @@ public class ContentController
 
     @CrossOrigin
     @ApiOperation("Add a Retailer for Content")
-    @RequestMapping(method= RequestMethod.PUT, value = "/{id}")
+    @RequestMapping(method= RequestMethod.PUT, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> addRetailerToContent(@PathVariable Long id, @RequestBody AddRetailerToContentRequest request)
     {
         Retailer retailer = retailerRepository.findOne(request.getRetailerId());

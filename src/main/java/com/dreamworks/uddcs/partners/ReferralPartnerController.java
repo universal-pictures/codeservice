@@ -24,7 +24,7 @@ public class ReferralPartnerController
 
     @CrossOrigin
     @ApiOperation("Create a ReferralPartner Entry")
-    @RequestMapping(method= RequestMethod.POST)
+    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
     public ResponseEntity<ReferralPartner> createPartner(@RequestBody ReferralPartnerRequest request)
     {
         ReferralPartner referralPartner = new ReferralPartner();
@@ -42,7 +42,7 @@ public class ReferralPartnerController
 
     @CrossOrigin
     @ApiOperation("Get ReferralPartner information for a given ReferralPartner id")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<ReferralPartner> getPartnerById(@PathVariable Long id)
     {
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
@@ -54,7 +54,7 @@ public class ReferralPartnerController
 
     @CrossOrigin
     @ApiOperation("Get ReferralPartner List")
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<ReferralPartner>> getPartners()
     {
         List<ReferralPartner> referralPartners = referralPartnerRepository.findAll();
@@ -63,7 +63,7 @@ public class ReferralPartnerController
 
     @CrossOrigin
     @ApiOperation("Add a Retailer for a ReferralPartner")
-    @RequestMapping(method= RequestMethod.PUT, value = "/{id}")
+    @RequestMapping(method= RequestMethod.PUT, value = "/{id}", produces = "application/json")
     public ResponseEntity<ReferralPartner> addRetailerToContent(@PathVariable Long id, @RequestBody AddRetailerToReferralPartnerRequest request)
     {
         Retailer retailer = retailerRepository.findOne(request.getRetailerId());
