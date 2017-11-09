@@ -2,20 +2,23 @@ package com.dreamworks.uddcs.codes;
 
 /**
  * Created by dsherman on 2/27/17.
+ * Updated by kkirkland on 11/7/17.
  */
-public class StudioCodeRequest
+public class MasterCodeRequest
 {
     private Long contentId;
     private String createdBy;
     private Long partnerId;
+    private Long appId;
 
-    public StudioCodeRequest() {}
+    public MasterCodeRequest() {}
 
-    public StudioCodeRequest(Long contentId, String createdBy, Long partnerId)
+    public MasterCodeRequest(Long contentId, String createdBy, Long partnerId, Long appId)
     {
         this.contentId = contentId;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
+        this.appId = appId;
     }
 
     public Long getContentId() {
@@ -40,5 +43,13 @@ public class StudioCodeRequest
 
     public void setPartnerId(Long partnerId) {
         this.partnerId = partnerId;
+    }
+
+    public Long getAppId() {
+        return appId;
+    }
+
+    public void setAppId(Long appId) {
+        this.appId = appId;
     }
 }

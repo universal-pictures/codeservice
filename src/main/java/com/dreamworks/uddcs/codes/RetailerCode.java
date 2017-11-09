@@ -1,24 +1,26 @@
 package com.dreamworks.uddcs.codes;
 
 import com.dreamworks.uddcs.contents.Content;
+import com.dreamworks.uddcs.pairings.Pairing;
 import com.dreamworks.uddcs.retailers.Retailer;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by mmonti on 3/20/17.
+ * Updated by kkirkland on 10/25/2017.
  */
 @Entity
 @Table(name = "retailer_code")
-
 public class RetailerCode {
 
     @Id
     private String code;
 
     private Date createdOn;
-    private Date pairedOn;
+    private String format;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "contentId")
@@ -28,6 +30,9 @@ public class RetailerCode {
     @JoinColumn(name = "retailerId")
     private Retailer retailer;
 
+    @OneToMany(mappedBy = "id.retailerCode")
+    private List<Pairing> pairings;
+
     public RetailerCode() {}
 
     /**
@@ -36,10 +41,11 @@ public class RetailerCode {
      * @param retailer
      * @param code
      */
-    public RetailerCode(final String code, final Content content, final Retailer retailer)
+    public RetailerCode(final String code, final Content content, final String format, final Retailer retailer)
     {
         this.code = code;
         this.content = content;
+        this.format = format;
         this.retailer = retailer;
         this.createdOn = new Date();
     }
@@ -60,14 +66,6 @@ public class RetailerCode {
         this.createdOn = createdOn;
     }
 
-    public Date getPairedOn() {
-        return pairedOn;
-    }
-
-    public void setPairedOn(Date pairedOn) {
-        this.pairedOn = pairedOn;
-    }
-
     public Content getContent() {
         return content;
     }
@@ -84,7 +82,23 @@ public class RetailerCode {
         this.retailer = retailer;
     }
 
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public List<Pairing> getPairings() {
+        return pairings;
+    }
+
+    public void setPairings(List<Pairing> pairings) {
+        this.pairings = pairings;
+    }
+
     public boolean isPaired() {
-        return this.getPairedOn() != null;
+        return pairings != null && pairings.size() > 0;
     }
 }

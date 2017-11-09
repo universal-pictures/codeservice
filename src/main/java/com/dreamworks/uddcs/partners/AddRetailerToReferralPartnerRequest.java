@@ -3,13 +3,13 @@ package com.dreamworks.uddcs.partners;
 /**
  * Created by dsherman on 2/27/17.
  */
-public class AddRetailerToPartnerRequest
+public class AddRetailerToReferralPartnerRequest
 {
     private Long retailerId;
 
-    public AddRetailerToPartnerRequest() {}
+    public AddRetailerToReferralPartnerRequest() {}
 
-    public AddRetailerToPartnerRequest(Long retailerId)
+    public AddRetailerToReferralPartnerRequest(Long retailerId)
     {
         this.retailerId = retailerId;
     }

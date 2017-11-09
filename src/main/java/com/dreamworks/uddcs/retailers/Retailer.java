@@ -1,7 +1,7 @@
 package com.dreamworks.uddcs.retailers;
 
 import com.dreamworks.uddcs.contents.Content;
-import com.dreamworks.uddcs.partners.Partner;
+import com.dreamworks.uddcs.partners.ReferralPartner;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import javax.persistence.*;
@@ -12,11 +12,8 @@ import java.util.Set;
  * Created by dsherman on 2/27/17.
  */
 @Entity
-@Table(name = "retailer", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_retailer", columnNames = {"id"})
-})
-public class Retailer
-{
+@Table(name = "retailer", uniqueConstraints = {@UniqueConstraint(name = "uk_retailer", columnNames = {"id"})})
+public class Retailer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -24,6 +21,7 @@ public class Retailer
     private String name;
     private String regionCode;
     private Date createdOn;
+    private String status;
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
@@ -31,15 +29,16 @@ public class Retailer
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
-    private Set<Partner> partners;
+    private Set<ReferralPartner> referralPartners;
 
-    public Retailer() {}
+    public Retailer() {
+    }
 
-    public Retailer(String name, String regionCode, Date createdOn)
-    {
+    public Retailer(String name, String regionCode, Date createdOn, String status) {
         this.name = name;
         this.regionCode = regionCode;
         this.createdOn = createdOn;
+        this.status = status;
     }
 
     public Long getId() {
@@ -50,8 +49,7 @@ public class Retailer
         this.id = id;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
@@ -63,44 +61,44 @@ public class Retailer
         return regionCode;
     }
 
-    public void setRegionCode(String regionCode)
-    {
+    public void setRegionCode(String regionCode) {
         this.regionCode = regionCode;
     }
 
-    public Date getCreatedOn()
-    {
+    public Date getCreatedOn() {
         return createdOn;
     }
 
-    public void setCreatedOn(Date createdOn)
-    {
+    public void setCreatedOn(Date createdOn) {
         this.createdOn = createdOn;
     }
 
-    public Set<Content> getContents()
-    {
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Set<Content> getContents() {
         return contents;
     }
 
-    public void setContents(Set<Content> contents)
-    {
+    public void setContents(Set<Content> contents) {
         this.contents = contents;
     }
 
-    public Set<Partner> getPartners()
-    {
-        return partners;
+    public Set<ReferralPartner> getReferralPartners() {
+        return referralPartners;
     }
 
-    public void setPartners(Set<Partner> partners)
-    {
-        this.partners = partners;
+    public void setReferralPartners(Set<ReferralPartner> referralPartners) {
+        this.referralPartners = referralPartners;
     }
 
     @Override
-    public boolean equals(Object o)
-    {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
@@ -109,29 +107,22 @@ public class Retailer
         if (!id.equals(retailer.id)) return false;
         if (name != null ? !name.equals(retailer.name) : retailer.name != null) return false;
         if (regionCode != null ? !regionCode.equals(retailer.regionCode) : retailer.regionCode != null) return false;
+        if (status != null ? !status.equals(retailer.status) : retailer.status != null) return false;
         return createdOn != null ? createdOn.equals(retailer.createdOn) : retailer.createdOn == null;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         int result = id.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
         result = 31 * result + (regionCode != null ? regionCode.hashCode() : 0);
         result = 31 * result + (createdOn != null ? createdOn.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 
     @Override
-    public String toString()
-    {
-        return "Retailer{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", regionCode='" + regionCode + '\'' +
-                ", createdOn=" + createdOn +
-                ", contents=" + contents +
-                ", partners=" + partners +
-                '}';
+    public String toString() {
+        return "Retailer{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", regionCode='" + regionCode + '\'' + ", createdOn=" + createdOn + ", status=" + status + ", contents=" + contents + ", referralPartners=" + referralPartners + '}';
     }
 }

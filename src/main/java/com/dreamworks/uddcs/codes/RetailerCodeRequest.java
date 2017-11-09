@@ -2,19 +2,23 @@ package com.dreamworks.uddcs.codes;
 
 /**
  * Created by dsherman on 2/27/17.
+ * Updated by kkirkland on 11/7/17.
  */
 public class RetailerCodeRequest
 {
     private String code;
     private Long contentId;
     private Long retailerId;
+    private String format;
 
     public RetailerCodeRequest() {}
 
-    public RetailerCodeRequest(Long contentId, Long partnerId)
+    public RetailerCodeRequest(String code, Long contentId, Long partnerId, String format)
     {
+        this.code = code;
         this.contentId = contentId;
         this.retailerId = partnerId;
+        this.format = format;
     }
 
     public Long getContentId() {
@@ -39,5 +43,13 @@ public class RetailerCodeRequest
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
     }
 }

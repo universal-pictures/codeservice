@@ -29,8 +29,8 @@ public class RetailerCodeController
 
     @CrossOrigin
     @ApiOperation("Create initial Retailer Code")
-    @RequestMapping(method= RequestMethod.POST)
-    public ResponseEntity createRetailerCode(@RequestBody @Valid RetailerCodeRequest request)
+    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<RetailerCode> createRetailerCode(@RequestBody @Valid RetailerCodeRequest request)
     {
         final Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
@@ -40,14 +40,14 @@ public class RetailerCodeController
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        final RetailerCode retailerCode = new RetailerCode(request.getCode(), content, retailer);
+        final RetailerCode retailerCode = new RetailerCode(request.getCode(), content, request.getFormat(), retailer);
 
-        return new ResponseEntity(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
+        return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }
 
     @CrossOrigin
     @ApiOperation("Get Retailer Code information for a given id")
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}")
+    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable Long id)
     {
         RetailerCode retailerCode = retailerCodeRepository.findOne(id);
@@ -59,7 +59,7 @@ public class RetailerCodeController
 
     @CrossOrigin
     @ApiOperation("Get Retailer Codes")
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<RetailerCode>> getRetailerCodes()
     {
         List<RetailerCode> retailerCodes = retailerCodeRepository.findAll();
@@ -69,7 +69,7 @@ public class RetailerCodeController
 
     @CrossOrigin
     @ApiOperation("Get Retailer Codes for a given Content and Retailer")
-    @RequestMapping(method= RequestMethod.GET, value = "/content/{contentId}/retailer/{retailerId}")
+    @RequestMapping(method= RequestMethod.GET, value = "/content/{contentId}/retailer/{retailerId}", produces = "application/json")
     public ResponseEntity<List<RetailerCode>> getRetailerCodeForRetailerAndContent(@PathVariable Long contentId, @PathVariable Long retailerId)
     {
         final Content content = contentRepository.findOne(contentId);
@@ -80,7 +80,7 @@ public class RetailerCodeController
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        final List<RetailerCode> retailerCodes = retailerCodeRepository.findByPairedOnAndContentAndRetailer(null, content, retailer);
+        final List<RetailerCode> retailerCodes = retailerCodeRepository.findByContentAndRetailer(content, retailer);
 
         return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
