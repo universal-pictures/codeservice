@@ -71,6 +71,9 @@ public class CCFUtility {
     }
 
 
+    /*
+     * main for debugging purposes only.
+     */
     public static void main(String args[]) {
         String code = generateCode("U");
         System.out.println(code);
