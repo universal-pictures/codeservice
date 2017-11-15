@@ -13,16 +13,17 @@ import com.dreamworks.uddcs.partners.ReferralPartner;
 import com.dreamworks.uddcs.partners.ReferralPartnerRepository;
 import com.dreamworks.uddcs.retailers.Retailer;
 import com.dreamworks.uddcs.retailers.RetailerRepository;
+import com.dreamworks.uddcs.studios.Studio;
+import com.dreamworks.uddcs.studios.StudioRepository;
+import com.dreamworks.uddcs.utilities.CCFUtility;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/codes/master")
@@ -48,6 +49,9 @@ public class MasterCodeController {
     @Autowired
     private AppRepository appRepository;
 
+    @Autowired
+    private StudioRepository studioRepository;
+
     @CrossOrigin
     @ApiOperation("Create initial Master Code")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
@@ -60,8 +64,11 @@ public class MasterCodeController {
         if (referralPartner == null)
             return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        long l = ByteBuffer.wrap(UUID.randomUUID().toString().getBytes()).getLong();
-        String code = Long.toString(l, Character.MAX_RADIX);
+        Studio studio = studioRepository.findOne(request.getStudioId());
+        if (studio == null)
+            return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
+
+        String code = CCFUtility.generateCode(studio.getCodePrefix());
 
         MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, content);
         masterCodeRepository.save(masterCode);

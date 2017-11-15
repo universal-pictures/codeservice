@@ -1,6 +1,7 @@
 package com.dreamworks.uddcs.studios;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by kkirkland on 10/25/17.
@@ -17,18 +18,24 @@ public class Studio {
     private String contactName;
     private String contactEmail;
     private String contactPhone;
+
+    @NotNull
+    @Column(nullable = false)
+    private String codePrefix;
+
     private String status;
     private Long flags; // bitwise placeholder for potential configuration
 
     public Studio() {}
 
     public Studio(String name, String description, String contactName, String contactEmail, String contactPhone,
-                  String status, Long flags) {
+                  String codePrefix, String status, Long flags) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.contactEmail = contactEmail;
         this.contactPhone = contactPhone;
+        this.codePrefix = codePrefix;
         this.status = status;
         this.flags = flags;
     }
@@ -87,5 +94,13 @@ public class Studio {
 
     public void setFlags(Long flags) {
         this.flags = flags;
+    }
+
+    public String getCodePrefix() {
+        return codePrefix;
+    }
+
+    public void setCodePrefix(String codePrefix) {
+        this.codePrefix = codePrefix;
     }
 }
