@@ -6,6 +6,8 @@ package com.dreamworks.uddcs.codes;
  */
 public class MasterCodeRequest
 {
+
+    private Long studioId;
     private Long contentId;
     private String createdBy;
     private Long partnerId;
@@ -13,12 +15,21 @@ public class MasterCodeRequest
 
     public MasterCodeRequest() {}
 
-    public MasterCodeRequest(Long contentId, String createdBy, Long partnerId, Long appId)
+    public MasterCodeRequest(Long studioId, Long contentId, String createdBy, Long partnerId, Long appId)
     {
+        this.studioId = studioId;
         this.contentId = contentId;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
         this.appId = appId;
+    }
+
+    public Long getStudioId() {
+        return studioId;
+    }
+
+    public void setStudioId(Long studioId) {
+        this.studioId = studioId;
     }
 
     public Long getContentId() {
@@ -52,4 +63,6 @@ public class MasterCodeRequest
     public void setAppId(Long appId) {
         this.appId = appId;
     }
+
+
 }
