@@ -1,3 +1,5 @@
+# This file is required by our CI/CD pipeline defined within AWS CodePipeline
+# and manages how the build and deployment are processed.
 version: 0.2
 
 phases:
