@@ -15,4 +15,4 @@ phases:
       - mvn package
 artifacts:
   files:
-    - target/udccs-poc-0.0.3-SNAPSHOT.jar
+    - target/udccs-poc-*.jar
