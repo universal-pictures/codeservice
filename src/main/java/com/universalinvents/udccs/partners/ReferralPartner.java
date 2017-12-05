@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.partners;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.retailers.Retailer;
 
@@ -35,6 +36,7 @@ public class ReferralPartner {
     private Set<Retailer> retailers;
 
     @OneToMany(mappedBy = "referralPartner")
+    @JsonManagedReference
     private List<App> apps;
 
     public ReferralPartner() {
