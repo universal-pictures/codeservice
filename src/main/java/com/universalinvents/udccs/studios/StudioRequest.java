@@ -12,12 +12,13 @@ public class StudioRequest {
     private String contactPhone;
     private String status;
     private Long flags;
+    private String codePrefix;
 
     public StudioRequest() {
     }
 
     public StudioRequest(String name, String description, String contactName, String contactEmail, String contactPhone,
-                         String status, Long flags) {
+                         String status, Long flags, String codePrefix) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
@@ -25,6 +26,7 @@ public class StudioRequest {
         this.contactPhone = contactPhone;
         this.status = status;
         this.flags = flags;
+        this.codePrefix = codePrefix;
     }
 
     public String getName() {
@@ -81,5 +83,13 @@ public class StudioRequest {
 
     public void setFlags(Long flags) {
         this.flags = flags;
+    }
+
+    public String getCodePrefix() {
+        return codePrefix;
+    }
+
+    public void setCodePrefix(String codePrefix) {
+        this.codePrefix = codePrefix;
     }
 }

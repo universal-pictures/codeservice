@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.pairings.Pairing;
@@ -22,8 +23,9 @@ public class MasterCode {
     private String createdBy;
     private Date createdOn;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
+    @JsonIgnoreProperties("codes")
     private ReferralPartner referralPartner;
 
     @OneToOne(cascade = CascadeType.ALL)

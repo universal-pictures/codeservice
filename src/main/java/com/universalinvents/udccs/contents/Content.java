@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.contents;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.studios.Studio;
 
@@ -30,18 +31,20 @@ public class Content {
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "studioId")
+    @JsonIgnoreProperties("contents")
     private Studio studio;
 
     public Content() {
     }
 
-    public Content(Long id, String title, String eidr, String gtm) {
+    public Content(Long id, String title, String eidr, String gtm, Studio studio) {
         this.id = id;
         this.title = title;
         this.eidr = eidr;
         this.gtm = gtm;
+        this.studio = studio;
     }
 
     public Long getId() {
