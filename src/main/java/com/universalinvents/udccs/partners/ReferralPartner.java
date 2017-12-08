@@ -2,6 +2,7 @@ package com.universalinvents.udccs.partners;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.apps.App;
+import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.retailers.Retailer;
 
 import javax.persistence.*;
@@ -38,6 +39,10 @@ public class ReferralPartner {
     @OneToMany(mappedBy = "referralPartner")
     @JsonIgnoreProperties("referralPartner")
     private List<App> apps;
+
+    @OneToMany(mappedBy = "referralPartner")
+    @JsonIgnoreProperties("referralPartner")
+    private List<MasterCode> codes;
 
     public ReferralPartner() {
     }
@@ -149,5 +154,13 @@ public class ReferralPartner {
 
     public void setApps(List<App> apps) {
         this.apps = apps;
+    }
+
+    public List<MasterCode> getCodes() {
+        return codes;
+    }
+
+    public void setCodes(List<MasterCode> codes) {
+        this.codes = codes;
     }
 }
