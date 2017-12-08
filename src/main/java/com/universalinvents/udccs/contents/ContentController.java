@@ -3,6 +3,8 @@ package com.universalinvents.udccs.contents;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import com.universalinvents.udccs.studios.Studio;
+import com.universalinvents.udccs.studios.StudioRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,10 +22,18 @@ public class ContentController {
     @Autowired
     private RetailerRepository retailerRepository;
 
+    @Autowired
+    private StudioRepository studioRepository;
+
     @CrossOrigin
     @ApiOperation("Create a Content Entry")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody ContentRequest request) {
+
+        Studio studio = studioRepository.findOne(request.getStudioId());
+        if (studio == null)
+            return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
+
         Content content = new Content();
         content.setTitle(request.getTitle());
         content.setEidr(request.getEidr());
@@ -31,6 +41,7 @@ public class ContentController {
         content.setGtm(request.getGtm());
         content.setStatus(request.getStatus());
         content.setMsrp(request.getMsrp());
+        content.setStudio(studio);
 
         contentRepository.save(content);
 

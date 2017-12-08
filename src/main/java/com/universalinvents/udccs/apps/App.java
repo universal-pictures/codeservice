@@ -1,6 +1,6 @@
 package com.universalinvents.udccs.apps;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
@@ -22,9 +22,9 @@ public class App {
     private Date modifiedOn;
     private String status;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
-    @JsonBackReference
+    @JsonIgnoreProperties("apps")
     private ReferralPartner referralPartner;
 
     public App() {

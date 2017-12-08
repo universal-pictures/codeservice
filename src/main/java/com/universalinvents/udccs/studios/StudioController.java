@@ -27,6 +27,7 @@ public class StudioController {
         studio.setContactPhone(request.getContactPhone());
         studio.setStatus(request.getStatus());
         studio.setFlags(request.getFlags());
+        studio.setCodePrefix(request.getCodePrefix());
 
         studioRepository.save(studio);
 

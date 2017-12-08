@@ -14,10 +14,11 @@ public class ContentRequest
     private String gtm;
     private String status;
     private BigDecimal msrp;
+    private Long studioId;
 
     public ContentRequest () {}
 
-    public ContentRequest(String title, String eidr, String eidrv, String gtm, String status, BigDecimal msrp)
+    public ContentRequest(String title, String eidr, String eidrv, String gtm, String status, BigDecimal msrp, Long studioId)
     {
         this.title = title;
         this.eidr = eidr;
@@ -25,6 +26,7 @@ public class ContentRequest
         this.gtm = gtm;
         this.status = status;
         this.msrp = msrp;
+        this.studioId = studioId;
     }
 
     public String getTitle()
@@ -79,5 +81,13 @@ public class ContentRequest
 
     public void setMsrp(BigDecimal msrp) {
         this.msrp = msrp;
+    }
+
+    public Long getStudioId() {
+        return studioId;
+    }
+
+    public void setStudioId(Long studioId) {
+        this.studioId = studioId;
     }
 }

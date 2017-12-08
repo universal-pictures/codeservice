@@ -1,7 +1,11 @@
 package com.universalinvents.udccs.studios;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.universalinvents.udccs.contents.Content;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * Created by kkirkland on 10/25/17.
@@ -25,6 +29,10 @@ public class Studio {
 
     private String status;
     private Long flags; // bitwise placeholder for potential configuration
+
+    @OneToMany(mappedBy = "studio")
+    @JsonIgnoreProperties("studio")
+    private List<Content> contents;
 
     public Studio() {}
 
@@ -102,5 +110,21 @@ public class Studio {
 
     public void setCodePrefix(String codePrefix) {
         this.codePrefix = codePrefix;
+    }
+
+    public List<Content> getContents() {
+        return contents;
+    }
+
+    public void setContents(List<Content> contents) {
+        this.contents = contents;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }
