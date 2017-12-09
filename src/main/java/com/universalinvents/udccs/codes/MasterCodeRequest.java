@@ -6,7 +6,7 @@ package com.universalinvents.udccs.codes;
  */
 public class MasterCodeRequest
 {
-
+    private String code;
     private Long studioId;
     private Long contentId;
     private String createdBy;
@@ -15,8 +15,9 @@ public class MasterCodeRequest
 
     public MasterCodeRequest() {}
 
-    public MasterCodeRequest(Long studioId, Long contentId, String createdBy, Long partnerId, Long appId)
+    public MasterCodeRequest(String code, Long studioId, Long contentId, String createdBy, Long partnerId, Long appId)
     {
+        this.code = code;
         this.studioId = studioId;
         this.contentId = contentId;
         this.createdBy = createdBy;
@@ -65,4 +66,11 @@ public class MasterCodeRequest
     }
 
 
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
 }
