@@ -1,74 +1,76 @@
 package com.universalinvents.udccs.partners;
 
+import java.util.Set;
+
 /**
  * Created by dsherman on 2/27/17.
  */
-public class ReferralPartnerRequest
-{
+public class ReferralPartnerRequest {
     private String name;
     private String description;
     private String contactName;
     private String email;
     private String phone;
+    private Set<Long> retailerIds;
 
-    public ReferralPartnerRequest() {}
+    public ReferralPartnerRequest() {
+    }
 
-    public ReferralPartnerRequest(String name, String description, String contactName, String email, String phone)
-    {
+    public ReferralPartnerRequest(String name, String description, String contactName, String email, String phone,
+                                  Set<Long> retailerIds) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.email = email;
         this.phone = phone;
+        this.retailerIds = retailerIds;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName(String name)
-    {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description)
-    {
+    public void setDescription(String description) {
         this.description = description;
     }
 
-    public String getContactName()
-    {
+    public String getContactName() {
         return contactName;
     }
 
-    public void setContactName(String contactName)
-    {
+    public void setContactName(String contactName) {
         this.contactName = contactName;
     }
 
-    public String getEmail()
-    {
+    public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email)
-    {
+    public void setEmail(String email) {
         this.email = email;
     }
 
-    public String getPhone()
-    {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(String phone)
-    {
+    public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Set<Long> getRetailerIds() {
+        return retailerIds;
+    }
+
+    public void setRetailerIds(Set<Long> retailerIds) {
+        this.retailerIds = retailerIds;
     }
 }

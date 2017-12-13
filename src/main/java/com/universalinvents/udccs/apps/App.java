@@ -30,13 +30,12 @@ public class App {
     public App() {
     }
 
-    public App(Long id, String name, String description, Date modifiedOn, String status,
+    public App(Long id, String name, String description, String status,
                ReferralPartner referralPartner) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.createdOn = new Date();
-        this.modifiedOn = modifiedOn;
         this.status = status;
         this.referralPartner = referralPartner;
     }

@@ -5,6 +5,7 @@ import com.universalinvents.udccs.contents.Content;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,6 +23,8 @@ public class Studio {
     private String contactName;
     private String contactEmail;
     private String contactPhone;
+    private Date createdOn;
+    private Date modifiedOn;
 
     @NotNull
     @Column(nullable = false)
@@ -46,6 +49,7 @@ public class Studio {
         this.codePrefix = codePrefix;
         this.status = status;
         this.flags = flags;
+        this.createdOn = new Date();
     }
 
     public String getName() {
@@ -126,5 +130,21 @@ public class Studio {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Date getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(Date createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 }

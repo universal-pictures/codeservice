@@ -7,6 +7,7 @@ public class RetailerRequest
 {
     private String name;
     private String regionCode;
+    private String status;
 
     public RetailerRequest() {}
 

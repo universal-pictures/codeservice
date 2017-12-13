@@ -10,6 +10,7 @@ import java.util.Set;
 
 /**
  * Created by dsherman on 2/27/17.
+ * Updated by kkirkland on 12/13/17.
  */
 @Entity
 @Table(name = "retailer", uniqueConstraints = {@UniqueConstraint(name = "uk_retailer", columnNames = {"id"})})
@@ -21,6 +22,7 @@ public class Retailer {
     private String name;
     private String regionCode;
     private Date createdOn;
+    private Date modifiedOn;
     private String status;
 
     @ManyToMany(mappedBy = "retailers")
@@ -34,10 +36,10 @@ public class Retailer {
     public Retailer() {
     }
 
-    public Retailer(String name, String regionCode, Date createdOn, String status) {
+    public Retailer(String name, String regionCode, String status) {
         this.name = name;
         this.regionCode = regionCode;
-        this.createdOn = createdOn;
+        this.createdOn = new Date();
         this.status = status;
     }
 
@@ -124,5 +126,13 @@ public class Retailer {
     @Override
     public String toString() {
         return "Retailer{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", regionCode='" + regionCode + '\'' + ", createdOn=" + createdOn + ", status=" + status + ", contents=" + contents + ", referralPartners=" + referralPartners + '}';
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 }
