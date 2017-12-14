@@ -39,20 +39,31 @@ public class RetailerController
     @CrossOrigin
     @ApiOperation("Update a Retailer Entry")
     @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Retailer> updateRetailer(@PathVariable Long id, @RequestBody RetailerRequest request) {
+    public ResponseEntity<Retailer> updateRetailer(@PathVariable Long id, @RequestBody(required = false) RetailerRequest request) {
         // Get existing Retailer record
         Retailer retailer = retailerRepository.findOne(id);
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        // Update values from request
-        retailer.setName(request.getName());
-        retailer.setRegionCode(request.getRegionCode());
-        retailer.setModifiedOn(new Date());
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getName() != null) {
+            retailer.setName(request.getName());
+            isModified = true;
+        }
+        if (request.getRegionCode() != null) {
+            retailer.setRegionCode(request.getRegionCode());
+            isModified = true;
+        }
 
-        retailerRepository.save(retailer);
+        if (isModified) {
+            retailer.setModifiedOn(new Date());
+            retailerRepository.save(retailer);
+            return new ResponseEntity<Retailer>(retailer, HttpStatus.OK);
+        }
 
-        return new ResponseEntity<Retailer>(retailer, HttpStatus.OK);
+        // Nothing was modified.  Just return the found Retailer.
+        return new ResponseEntity<Retailer>(retailer, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin

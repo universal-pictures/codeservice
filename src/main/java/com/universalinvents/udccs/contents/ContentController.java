@@ -63,40 +63,69 @@ public class ContentController {
     @CrossOrigin
     @ApiOperation("Update a Content Entry")
     @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Content> updateContent(@PathVariable Long id, @RequestBody ContentRequest request) {
-        HashSet<Retailer> retailers = null;
-        try {
-            retailers = getRetailers(request);
-        } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
-        }
-
-        Studio studio = studioRepository.findOne(request.getStudioId());
-        if (studio == null)
-            return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
+    public ResponseEntity<Content> updateContent(@PathVariable Long id, @RequestBody(required = false) ContentRequest request) {
 
         // Get existing Content record
         Content content = contentRepository.findOne(id);
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        // Update values from request
-        content.setTitle(request.getTitle());
-        content.setEidr(request.getEidr());
-        content.setEidrv(request.getEidrv());
-        content.setGtm(request.getGtm());
-        content.setStatus(request.getStatus());
-        content.setMsrp(request.getMsrp());
-        content.setStudio(studio);
-        content.setRetailers(retailers);
-        content.setModifiedOn(new Date());
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getRetailerIds() != null) {
+            try {
+                content.setRetailers(getRetailers(request));
+                isModified = true;
+            } catch (ApiError apiError) {
+                return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
+            }
+        }
 
-        contentRepository.save(content);
+        if (request.getStudioId() != null) {
+            Studio studio = studioRepository.findOne(request.getStudioId());
+            if (studio == null) {
+                return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
+            }
+            content.setStudio(studio);
+            isModified = true;
+        }
 
-        return new ResponseEntity<Content>(content, HttpStatus.OK);
+        if (request.getTitle() != null) {
+            content.setTitle(request.getTitle());
+            isModified = true;
+        }
+        if (request.getEidr() != null) {
+            content.setEidr(request.getEidr());
+            isModified = true;
+        }
+        if (request.getEidrv() != null) {
+            content.setEidrv(request.getEidrv());
+            isModified = true;
+        }
+        if (request.getGtm() != null) {
+            content.setGtm(request.getGtm());
+            isModified = true;
+        }
+        if (request.getStatus() != null) {
+            content.setStatus(request.getStatus());
+            isModified = true;
+        }
+        if (request.getMsrp() != null) {
+            content.setMsrp(request.getMsrp());
+            isModified = true;
+        }
+
+        if (isModified) {
+            content.setModifiedOn(new Date());
+            contentRepository.save(content);
+            return new ResponseEntity<Content>(content, HttpStatus.OK);
+        }
+
+        // Nothing was modified.  Just return the found Content.
+        return new ResponseEntity<Content>(content, HttpStatus.NOT_MODIFIED);
     }
 
-    private HashSet<Retailer> getRetailers(@RequestBody ContentRequest request) throws ApiError {
+    private HashSet<Retailer> getRetailers(ContentRequest request) throws ApiError {
         HashSet<Retailer> retailers = new HashSet();
         for (Long retailerId : request.getRetailerIds()) {
             Retailer foundRetailer = retailerRepository.findOne(retailerId);

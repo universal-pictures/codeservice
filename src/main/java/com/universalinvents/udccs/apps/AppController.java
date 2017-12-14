@@ -46,26 +46,43 @@ public class AppController {
     @CrossOrigin
     @ApiOperation("Update an App Entry")
     @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
-    public ResponseEntity<App> updateApp(@PathVariable Long id, @RequestBody AppRequest request) {
-        ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-        if (referralPartner == null)
-            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
-
+    public ResponseEntity<App> updateApp(@PathVariable Long id, @RequestBody(required = false) AppRequest request) {
         // Get existing App record
         App app = appRepository.findOne(id);
         if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        // Update values from request
-        app.setDescription(request.getDescription());
-        app.setName(request.getName());
-        app.setStatus(request.getStatus());
-        app.setReferralPartner(referralPartner);
-        app.setModifiedOn(new Date());
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getPartnerId() != null) {
+            ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+            if (referralPartner == null)
+                return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
+            app.setReferralPartner(referralPartner);
+            isModified = true;
+        }
 
-        appRepository.save(app);
+        if (request.getDescription() != null) {
+            app.setDescription(request.getDescription());
+            isModified = true;
+        }
+        if (request.getName() != null) {
+            app.setName(request.getName());
+            isModified = true;
+        }
+        if (request.getStatus() != null) {
+            app.setStatus(request.getStatus());
+            isModified = true;
+        }
 
-        return new ResponseEntity<App>(app, HttpStatus.OK);
+        if (isModified) {
+            app.setModifiedOn(new Date());
+            appRepository.save(app);
+            return new ResponseEntity<App>(app, HttpStatus.OK);
+        }
+
+        // Nothing was updated.  Just return the found App.
+        return new ResponseEntity<App>(app, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin

@@ -40,26 +40,55 @@ public class StudioController {
     @CrossOrigin
     @ApiOperation("Update a Studio Entry")
     @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Studio> updateStudio(@PathVariable Long id, @RequestBody StudioRequest request) {
+    public ResponseEntity<Studio> updateStudio(@PathVariable Long id, @RequestBody(required = false) StudioRequest request) {
         // Get existing Studio record
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
             return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        // Update values from request
-        studio.setName(request.getName());
-        studio.setDescription(request.getDescription());
-        studio.setContactName(request.getContactName());
-        studio.setContactEmail(request.getContactEmail());
-        studio.setContactPhone(request.getContactPhone());
-        studio.setStatus(request.getStatus());
-        studio.setFlags(request.getFlags());
-        studio.setCodePrefix(request.getCodePrefix());
-        studio.setModifiedOn(new Date());
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getName() != null) {
+            studio.setName(request.getName());
+            isModified = true;
+        }
+        if (request.getDescription() != null) {
+            studio.setDescription(request.getDescription());
+            isModified = true;
+        }
+        if (request.getContactName() != null) {
+            studio.setContactName(request.getContactName());
+            isModified = true;
+        }
+        if (request.getContactEmail() != null) {
+            studio.setContactEmail(request.getContactEmail());
+            isModified = true;
+        }
+        if (request.getContactPhone() != null) {
+            studio.setContactPhone(request.getContactPhone());
+            isModified = true;
+        }
+        if (request.getStatus() != null) {
+            studio.setStatus(request.getStatus());
+            isModified = true;
+        }
+        if (request.getFlags() != null) {
+            studio.setFlags(request.getFlags());
+            isModified = true;
+        }
+        if (request.getCodePrefix() != null) {
+            studio.setCodePrefix(request.getCodePrefix());
+            isModified = true;
+        }
 
-        studioRepository.save(studio);
+        if (isModified) {
+            studio.setModifiedOn(new Date());
+            studioRepository.save(studio);
+            return new ResponseEntity<Studio>(studio, HttpStatus.OK);
+        }
 
-        return new ResponseEntity<Studio>(studio, HttpStatus.OK);
+        // Nothing was modified.  Just return the found Studio.
+        return new ResponseEntity<Studio>(studio, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
