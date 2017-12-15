@@ -1,13 +1,13 @@
 package com.universalinvents.udccs.contents;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 /**
  * Created by dsherman on 2/27/17.
  * Updated by kkirkland on 11/7/17.
  */
-public class ContentRequest
-{
+public class ContentRequest {
     private String title;
     private String eidr;
     private String eidrv;
@@ -15,11 +15,13 @@ public class ContentRequest
     private String status;
     private BigDecimal msrp;
     private Long studioId;
+    private Set<Long> retailerIds;
 
-    public ContentRequest () {}
+    public ContentRequest() {
+    }
 
-    public ContentRequest(String title, String eidr, String eidrv, String gtm, String status, BigDecimal msrp, Long studioId)
-    {
+    public ContentRequest(String title, String eidr, String eidrv, String gtm, String status, BigDecimal msrp,
+                          Long studioId, Set<Long> retailerIds) {
         this.title = title;
         this.eidr = eidr;
         this.eidrv = eidrv;
@@ -27,25 +29,22 @@ public class ContentRequest
         this.status = status;
         this.msrp = msrp;
         this.studioId = studioId;
+        this.retailerIds = retailerIds;
     }
 
-    public String getTitle()
-    {
+    public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title)
-    {
+    public void setTitle(String title) {
         this.title = title;
     }
 
-    public String getEidr()
-    {
+    public String getEidr() {
         return eidr;
     }
 
-    public void setEidr(String eidr)
-    {
+    public void setEidr(String eidr) {
         this.eidr = eidr;
     }
 
@@ -57,13 +56,11 @@ public class ContentRequest
         this.eidrv = eidrv;
     }
 
-    public String getGtm()
-    {
+    public String getGtm() {
         return gtm;
     }
 
-    public void setGtm(String gtm)
-    {
+    public void setGtm(String gtm) {
         this.gtm = gtm;
     }
 
@@ -89,5 +86,13 @@ public class ContentRequest
 
     public void setStudioId(Long studioId) {
         this.studioId = studioId;
+    }
+
+    public Set<Long> getRetailerIds() {
+        return retailerIds;
+    }
+
+    public void setRetailerIds(Set<Long> retailerIds) {
+        this.retailerIds = retailerIds;
     }
 }

@@ -5,6 +5,7 @@ import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class RetailerController
     private RetailerRepository retailerRepository;
 
     @CrossOrigin
-    @ApiOperation("Create a Retail Entry")
+    @ApiOperation("Create a Retailer Entry")
     @RequestMapping(method= RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Retailer> createRetailer(@RequestBody RetailerRequest request)
     {
@@ -33,6 +34,48 @@ public class RetailerController
         retailerRepository.save(retailer);
 
         return new ResponseEntity<Retailer>(retailer, HttpStatus.CREATED);
+    }
+
+    @CrossOrigin
+    @ApiOperation("Update a Retailer Entry")
+    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    public ResponseEntity<Retailer> updateRetailer(@PathVariable Long id, @RequestBody(required = false) RetailerRequest request) {
+        // Get existing Retailer record
+        Retailer retailer = retailerRepository.findOne(id);
+        if (retailer == null)
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
+
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getName() != null) {
+            retailer.setName(request.getName());
+            isModified = true;
+        }
+        if (request.getRegionCode() != null) {
+            retailer.setRegionCode(request.getRegionCode());
+            isModified = true;
+        }
+
+        if (isModified) {
+            retailer.setModifiedOn(new Date());
+            retailerRepository.save(retailer);
+            return new ResponseEntity<Retailer>(retailer, HttpStatus.OK);
+        }
+
+        // Nothing was modified.  Just return the found Retailer.
+        return new ResponseEntity<Retailer>(retailer, HttpStatus.NOT_MODIFIED);
+    }
+
+    @CrossOrigin
+    @ApiOperation("Delete a Retailer Entry")
+    @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
+    public ResponseEntity deleteRetailer(@PathVariable Long id) {
+        try {
+            retailerRepository.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @CrossOrigin

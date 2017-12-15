@@ -6,6 +6,7 @@ import com.universalinvents.udccs.studios.Studio;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -24,6 +25,8 @@ public class Content {
     private String gtm;
     private String status;
     private BigDecimal msrp;
+    private Date createdOn;
+    private Date modifiedOn;
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "content_retailer",
@@ -45,6 +48,7 @@ public class Content {
         this.eidr = eidr;
         this.gtm = gtm;
         this.studio = studio;
+        this.createdOn = new Date();
     }
 
     public Long getId() {
@@ -117,5 +121,21 @@ public class Content {
 
     public void setStudio(Studio studio) {
         this.studio = studio;
+    }
+
+    public Date getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(Date createdOn) {
+        this.createdOn = createdOn;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 }
