@@ -121,4 +121,15 @@ public class StudioController {
         List<Studio> studios = studioRepository.findAll();
         return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
     }
+
+    @CrossOrigin
+    @ApiOperation("Get studio information for a given Studio name")
+    @RequestMapping(method = RequestMethod.GET, value = "/name/{name}", produces = "application/json")
+    public ResponseEntity<List<Studio>> getStudioByName(@PathVariable String name) {
+        List<Studio> studios = studioRepository.findByName(name);
+        if (studios == null || studios.isEmpty())
+            return new ResponseEntity(new ApiError("Studio name expressed is not found."), HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
+    }
 }

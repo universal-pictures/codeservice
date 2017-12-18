@@ -134,7 +134,7 @@ public class ReferralPartnerController {
     public ResponseEntity<ReferralPartner> getPartnerById(@PathVariable Long id) {
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
         if (referralPartner == null)
-            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<ReferralPartner>(referralPartner, HttpStatus.OK);
     }
@@ -158,5 +158,16 @@ public class ReferralPartnerController {
 
         List<App> apps = appRepository.findByReferralPartner(referralPartner);
         return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
+    }
+
+    @CrossOrigin
+    @ApiOperation("Get ReferralPartner information for a given ReferralPartner name")
+    @RequestMapping(method = RequestMethod.GET, value = "/name/{name}", produces = "application/json")
+    public ResponseEntity<List<ReferralPartner>> getPartnerByName(@PathVariable String name) {
+        List<ReferralPartner> referralPartners = referralPartnerRepository.findByName(name);
+        if (referralPartners == null || referralPartners.isEmpty())
+            return new ResponseEntity(new ApiError("ReferralPartner name expressed is not found."), HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<List<ReferralPartner>>(referralPartners, HttpStatus.OK);
     }
 }
