@@ -3,6 +3,9 @@ package com.universalinvents.udccs.configs;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -33,6 +36,17 @@ public class SwaggerConfig {
                 .build();
     }
 
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        // Allow anyone and anything access. Probably ok for Swagger spec
+        CorsConfiguration config = new CorsConfiguration();
+        config.applyPermitDefaultValues();
+
+        source.registerCorsConfiguration("/api.*", config);
+        return new CorsFilter(source);
+    }
 
     private ApiInfo apiInfo()
     {
