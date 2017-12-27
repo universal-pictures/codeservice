@@ -118,7 +118,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get Apps for a given Referral Partner id")
-    @RequestMapping(method = RequestMethod.GET, value = "/partner/{partnerId}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, value = "/partners/{partnerId}", produces = "application/json")
     public ResponseEntity<List<App>> getAppsByPartnerId(@PathVariable Long partnerId) {
         final ReferralPartner partner = referralPartnerRepository.findOne(partnerId);
         if (partner == null)
