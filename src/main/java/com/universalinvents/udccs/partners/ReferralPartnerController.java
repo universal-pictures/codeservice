@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/partners")
@@ -169,5 +170,16 @@ public class ReferralPartnerController {
             return new ResponseEntity(new ApiError("ReferralPartner name expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<List<ReferralPartner>>(referralPartners, HttpStatus.OK);
+    }
+
+    @CrossOrigin
+    @ApiOperation("Get all Partners related to the given Retailer id")
+    @RequestMapping(method = RequestMethod.GET, value = "/retailers/{retailerId}", produces = "application/json")
+    public ResponseEntity<Set<ReferralPartner>> getPartnersByRetailerId(@PathVariable Long retailerId) {
+        Retailer retailer = retailerRepository.findOne(retailerId);
+        if (retailer == null)
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<Set<ReferralPartner>>(retailer.getReferralPartners(), HttpStatus.OK);
     }
 }
