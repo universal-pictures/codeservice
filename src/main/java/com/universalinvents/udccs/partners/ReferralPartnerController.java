@@ -56,7 +56,7 @@ public class ReferralPartnerController {
 
     @CrossOrigin
     @ApiOperation("Update a ReferralPartner Entry")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<ReferralPartner> updatePartner(@PathVariable Long id,
                                                          @RequestBody(required = false) ReferralPartnerRequest request) {
         // Get existing Partner record

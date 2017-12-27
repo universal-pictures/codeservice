@@ -45,7 +45,7 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Update an App Entry")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<App> updateApp(@PathVariable Long id, @RequestBody(required = false) AppRequest request) {
         // Get existing App record
         App app = appRepository.findOne(id);
