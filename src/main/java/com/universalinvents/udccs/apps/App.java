@@ -20,6 +20,7 @@ public class App {
     private String description;
     private Date createdOn;
     private Date modifiedOn;
+    private String accessToken;
     private String status;
 
     @ManyToOne(cascade = CascadeType.ALL)
@@ -30,12 +31,13 @@ public class App {
     public App() {
     }
 
-    public App(Long id, String name, String description, String status,
+    public App(Long id, String name, String description, String accessToken, String status,
                ReferralPartner referralPartner) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.createdOn = new Date();
+        this.accessToken = accessToken;
         this.status = status;
         this.referralPartner = referralPartner;
     }
@@ -96,4 +98,11 @@ public class App {
         this.referralPartner = referralPartner;
     }
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 }
