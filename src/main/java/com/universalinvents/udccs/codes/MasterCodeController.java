@@ -55,7 +55,7 @@ public class MasterCodeController {
     @CrossOrigin
     @ApiOperation("Create initial Master Code")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<MasterCode> createMasterCode(@RequestBody(required = false) MasterCodeRequest request) {
+    public ResponseEntity<MasterCode> createMasterCode(@RequestBody MasterCodeRequest request) {
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -68,12 +68,16 @@ public class MasterCodeController {
         if (studio == null)
             return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
 
+        App app = appRepository.findOne(request.getAppId());
+        if (app == null)
+            return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+
         String code = request.getCode();
         if (code == null)
             // Generate a code if one wasn't specified
             code = CCFUtility.generateCode(studio.getCodePrefix());
 
-        MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, content);
+        MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content);
         masterCodeRepository.save(masterCode);
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }

@@ -1,0 +1,1 @@
+ALTER TABLE udccs.master_code MODIFY COLUMN app_id BIGINT(20) NOT NULL;

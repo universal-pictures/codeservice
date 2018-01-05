@@ -7,6 +7,7 @@ import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -25,15 +26,17 @@ public class MasterCode {
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
-    @JsonIgnoreProperties("codes")
+    @JsonIgnoreProperties(value = {"codes", "apps"})
     private ReferralPartner referralPartner;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "contentId")
     private Content content;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "appId")
+    @NotNull
+    @JsonIgnoreProperties("masterCodes")
     private App app;
 
     @OneToMany(mappedBy = "id.masterCode")
@@ -42,11 +45,13 @@ public class MasterCode {
     public MasterCode() {
     }
 
-    public MasterCode(String code, String createdBy, Date createdOn, ReferralPartner referralPartner, Content content) {
+    public MasterCode(String code, String createdBy, Date createdOn, ReferralPartner referralPartner, App app,
+                      Content content) {
         this.code = code;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
         this.referralPartner = referralPartner;
+        this.app = app;
         this.content = content;
     }
 

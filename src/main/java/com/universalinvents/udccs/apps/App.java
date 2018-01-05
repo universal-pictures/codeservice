@@ -1,10 +1,12 @@
 package com.universalinvents.udccs.apps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by kkirkland on 10/19/17.
@@ -23,10 +25,13 @@ public class App {
     private String accessToken;
     private String status;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "partnerId")
-    @JsonIgnoreProperties("apps")
+    @JsonIgnoreProperties({"apps", "codes"})
     private ReferralPartner referralPartner;
+
+    @OneToMany(mappedBy = "app")
+    private List<MasterCode> masterCodes;
 
     public App() {
     }
@@ -104,5 +109,13 @@ public class App {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public List<MasterCode> getMasterCodes() {
+        return masterCodes;
+    }
+
+    public void setMasterCodes(List<MasterCode> masterCodes) {
+        this.masterCodes = masterCodes;
     }
 }
