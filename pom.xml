@@ -85,6 +85,12 @@
             <artifactId>flyway-core</artifactId>
             <version>5.0.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>amazon-sqs-java-messaging-lib</artifactId>
+            <version>1.0.4</version>
+        </dependency>
     </dependencies>
 
     <build>

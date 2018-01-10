@@ -1,6 +1,9 @@
 package com.universalinvents.udccs.apps;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import io.swagger.annotations.ApiOperation;
@@ -10,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.jms.JMSException;
 import java.util.Date;
 import java.util.List;
 
@@ -37,6 +41,7 @@ public class AppController {
         app.setStatus(request.getStatus());
         app.setReferralPartner(referralPartner);
         app.setCreatedOn(new Date());
+        app.setAccessToken(request.getAccessToken());
 
         appRepository.save(app);
 
@@ -90,10 +95,28 @@ public class AppController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteApp(@PathVariable Long id) {
         try {
+            // First get the existing app record
+            App app = appRepository.findOne(id);
+            ObjectMapper mapper = new ObjectMapper();
+            String appJson = mapper.writeValueAsString(app);
+
+            // Now delete the record
             appRepository.delete(id);
+
+            // Send message about the deletion
+            MessagingController controller = new MessagingController();
+            controller.sendMessage("udccs_app_delete.fifo", appJson);
+
             return ResponseEntity.noContent().build();
+
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.notFound().build();
+        } catch (JMSException e) {
+            // This situation is okay although we'll have to
+            // manually clean up any Cognito records later
+            return ResponseEntity.noContent().build();
         }
     }
 
