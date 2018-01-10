@@ -36,7 +36,7 @@ public class ReferralPartner {
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
-    @OneToMany(mappedBy = "referralPartner")
+    @OneToMany(mappedBy = "referralPartner", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("referralPartner")
     private List<App> apps;
 

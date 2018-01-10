@@ -9,15 +9,17 @@ public class AppRequest {
     private String description;
     private String status;
     private Long partnerId;
+    private String accessToken;
 
     public AppRequest() {
     }
 
-    public AppRequest(String name, String description, String status, Long partnerId) {
+    public AppRequest(String name, String description, String status, Long partnerId, String accessToken) {
         this.name = name;
         this.description = description;
         this.status = status;
         this.partnerId = partnerId;
+        this.accessToken = accessToken;
     }
 
     public String getName() {
@@ -50,5 +52,13 @@ public class AppRequest {
 
     public void setPartnerId(Long partnerId) {
         this.partnerId = partnerId;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }

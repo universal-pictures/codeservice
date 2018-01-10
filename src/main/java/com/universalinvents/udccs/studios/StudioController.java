@@ -39,7 +39,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation("Update a Studio Entry")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Studio> updateStudio(@PathVariable Long id, @RequestBody(required = false) StudioRequest request) {
         // Get existing Studio record
         Studio studio = studioRepository.findOne(id);

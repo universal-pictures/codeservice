@@ -62,7 +62,7 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation("Update a Content Entry")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> updateContent(@PathVariable Long id, @RequestBody(required = false) ContentRequest request) {
 
         // Get existing Content record

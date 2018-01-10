@@ -38,7 +38,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation("Update a Retailer Entry")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Retailer> updateRetailer(@PathVariable Long id, @RequestBody(required = false) RetailerRequest request) {
         // Get existing Retailer record
         Retailer retailer = retailerRepository.findOne(id);
