@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -145,7 +146,13 @@ public class MasterCodeController {
         }
 
         if (status != null) {
-            masterCode.setStatus(MasterCode.Status.valueOf(status));
+            try {
+                masterCode.setStatus(MasterCode.Status.valueOf(status));
+            } catch (IllegalArgumentException e) {
+                return new ResponseEntity(new ApiError(
+                        "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
+                                          HttpStatus.BAD_REQUEST);
+            }
         }
 
         List<MasterCode> masterCodes = masterCodeRepository.findAll(Example.of(masterCode));
