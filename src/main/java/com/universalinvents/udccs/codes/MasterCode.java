@@ -23,6 +23,8 @@ public class MasterCode {
 
     private String createdBy;
     private Date createdOn;
+    private Status status;
+    private enum Status {UNALLOCATED, ISSUED, PAIRED, REDEEMED}
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
