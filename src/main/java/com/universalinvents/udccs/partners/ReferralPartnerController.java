@@ -47,6 +47,7 @@ public class ReferralPartnerController {
         referralPartner.setContactEmail(request.getEmail());
         referralPartner.setContactPhone(request.getPhone());
         referralPartner.setRetailers(retailers);
+        referralPartner.setStatus(request.getStatus());
         referralPartner.setCreatedOn(new Date());
 
         referralPartnerRepository.save(referralPartner);
@@ -93,6 +94,10 @@ public class ReferralPartnerController {
         }
         if (request.getPhone() != null) {
             referralPartner.setContactPhone(request.getPhone());
+            isModified = true;
+        }
+        if (request.getStatus() != null) {
+            referralPartner.setStatus(request.getStatus());
             isModified = true;
         }
 
