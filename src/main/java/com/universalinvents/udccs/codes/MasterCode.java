@@ -18,13 +18,19 @@ import java.util.List;
 @Entity
 @Table(name = "master_code", uniqueConstraints = {@UniqueConstraint(name = "uk_master_code", columnNames = {"code"})})
 public class MasterCode {
+    // Legal status values
+    public enum Status {UNALLOCATED, ISSUED, PAIRED, REDEEMED}
+
     @Id
     private String code;
 
     private String createdBy;
     private Date createdOn;
+    private Date modifiedOn;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
     private Status status;
-    private enum Status {UNALLOCATED, ISSUED, PAIRED, REDEEMED}
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "partnerId")
@@ -48,13 +54,14 @@ public class MasterCode {
     }
 
     public MasterCode(String code, String createdBy, Date createdOn, ReferralPartner referralPartner, App app,
-                      Content content) {
+                      Content content, Status status) {
         this.code = code;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
         this.referralPartner = referralPartner;
         this.app = app;
         this.content = content;
+        this.status = status;
     }
 
     public String getCode() {
@@ -79,6 +86,14 @@ public class MasterCode {
 
     public void setCreatedOn(Date createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 
     public ReferralPartner getReferralPartner() {
@@ -115,6 +130,14 @@ public class MasterCode {
 
     public boolean isPaired() {
         return pairings != null && pairings.size() > 0;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 //
 //    public boolean isRedeemed() { return redeemedOn != null; }

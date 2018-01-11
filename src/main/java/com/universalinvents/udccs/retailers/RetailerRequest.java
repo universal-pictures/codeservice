@@ -11,10 +11,11 @@ public class RetailerRequest
 
     public RetailerRequest() {}
 
-    public RetailerRequest(String name, String regionCode)
+    public RetailerRequest(String name, String regionCode, String status)
     {
         this.name = name;
         this.regionCode = regionCode;
+        this.status = status;
     }
 
     public String getName()
@@ -35,5 +36,13 @@ public class RetailerRequest
     public void setRegionCode(String regionCode)
     {
         this.regionCode = regionCode;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

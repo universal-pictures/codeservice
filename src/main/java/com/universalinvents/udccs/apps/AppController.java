@@ -9,6 +9,7 @@ import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -134,20 +135,35 @@ public class AppController {
     @CrossOrigin
     @ApiOperation("Get App List")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<App>> getApps() {
-        List<App> apps = appRepository.findAll();
-        return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
-    }
+    public ResponseEntity<List<App>> getApps(
+            @RequestParam(name = "partnerId", required = false) Long partnerId,
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "accessToken", required = false) String accessToken,
+            @RequestParam(name = "status", required = false) String status) {
 
-    @CrossOrigin
-    @ApiOperation("Get Apps for a given Referral Partner id")
-    @RequestMapping(method = RequestMethod.GET, value = "/partners/{partnerId}", produces = "application/json")
-    public ResponseEntity<List<App>> getAppsByPartnerId(@PathVariable Long partnerId) {
-        final ReferralPartner partner = referralPartnerRepository.findOne(partnerId);
-        if (partner == null)
-            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
+        // Build an App object with the values passed in
+        App app = new App();
 
-        List<App> apps = appRepository.findByReferralPartner(partner);
+        if (partnerId != null) {
+            ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
+            if (referralPartner != null) {
+                app.setReferralPartner(referralPartner);
+            }
+        }
+
+        if (name != null) {
+            app.setName(name);
+        }
+
+        if (accessToken != null) {
+            app.setAccessToken(accessToken);
+        }
+
+        if (status != null) {
+            app.setStatus(status);
+        }
+
+        List<App> apps = appRepository.findAll(Example.of(app));
         return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
     }
 }

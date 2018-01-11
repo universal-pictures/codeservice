@@ -1,15 +1,19 @@
 package com.universalinvents.udccs.retailers;
 
 import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.partners.ReferralPartner;
+import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +25,12 @@ public class RetailerController
     @Autowired
     private RetailerRepository retailerRepository;
 
+    @Autowired
+    private ReferralPartnerRepository referralPartnerRepository;
+
+    @Autowired
+    private ContentRepository contentRepository;
+
     @CrossOrigin
     @ApiOperation("Create a Retailer Entry")
     @RequestMapping(method= RequestMethod.POST, produces = "application/json")
@@ -29,6 +39,7 @@ public class RetailerController
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
         retailer.setRegionCode(request.getRegionCode());
+        retailer.setStatus(request.getStatus());
         retailer.setCreatedOn(new Date());
 
         retailerRepository.save(retailer);
@@ -53,6 +64,11 @@ public class RetailerController
         }
         if (request.getRegionCode() != null) {
             retailer.setRegionCode(request.getRegionCode());
+            isModified = true;
+        }
+
+        if (request.getStatus() != null) {
+            retailer.setStatus(request.getStatus());
             isModified = true;
         }
 
@@ -117,9 +133,43 @@ public class RetailerController
     @CrossOrigin
     @ApiOperation("Get Retailer List")
     @RequestMapping(method= RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Retailer>> getRetailers()
-    {
-        List<Retailer> retailers = retailerRepository.findAll();
+    public ResponseEntity<List<Retailer>> getRetailers(
+            @RequestParam(name = "contentId", required = false) Long contentId,
+            @RequestParam(name = "partnerId", required = false) Long partnerId,
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "regionCode", required = false) String regionCode,
+            @RequestParam(name = "status", required = false) String status) {
+
+        // Build a Retailer object with the values passed in
+        Retailer retailer = new Retailer();
+
+        if (contentId != null) {
+            Content content = contentRepository.findOne(contentId);
+            if (content != null) {
+                retailer.setContents(Collections.singleton(content));
+            }
+        }
+
+        if (partnerId != null) {
+            ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
+            if (referralPartner != null) {
+                retailer.setReferralPartners(Collections.singleton(referralPartner));
+            }
+        }
+
+        if (name != null) {
+            retailer.setName(name);
+        }
+
+        if (regionCode != null) {
+            retailer.setRegionCode(regionCode);
+        }
+
+        if (status != null) {
+            retailer.setStatus(status);
+        }
+
+        List<Retailer> retailers = retailerRepository.findAll(Example.of(retailer));
         return new ResponseEntity<List<Retailer>>(retailers, HttpStatus.OK);
     }
 }

@@ -12,10 +12,11 @@ public class MasterCodeRequest
     private String createdBy;
     private Long partnerId;
     private Long appId;
+    private String status;
 
     public MasterCodeRequest() {}
 
-    public MasterCodeRequest(String code, Long studioId, Long contentId, String createdBy, Long partnerId, Long appId)
+    public MasterCodeRequest(String code, Long studioId, Long contentId, String createdBy, Long partnerId, Long appId, String status)
     {
         this.code = code;
         this.studioId = studioId;
@@ -23,6 +24,7 @@ public class MasterCodeRequest
         this.createdBy = createdBy;
         this.partnerId = partnerId;
         this.appId = appId;
+        this.status = status;
     }
 
     public Long getStudioId() {
@@ -72,5 +74,13 @@ public class MasterCodeRequest
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,6 +1,5 @@
 package com.universalinvents.udccs.partners;
 
-import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.retailers.Retailer;
@@ -8,14 +7,15 @@ import com.universalinvents.udccs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/partners")
@@ -148,43 +148,44 @@ public class ReferralPartnerController {
     @CrossOrigin
     @ApiOperation("Get ReferralPartner List")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<ReferralPartner>> getPartners() {
-        List<ReferralPartner> referralPartners = referralPartnerRepository.findAll();
+    public ResponseEntity<List<ReferralPartner>> getPartners(
+            @RequestParam(name = "retailerId", required = false) Long retailerId,
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "contactName", required = false) String contactName,
+            @RequestParam(name = "contactEmail", required = false) String contactEmail,
+            @RequestParam(name = "regionCode", required = false) String regionCode,
+            @RequestParam(name = "status", required = false) String status) {
+
+        // Build a ReferralPartner object with the values passed in
+        ReferralPartner referralPartner = new ReferralPartner();
+
+        if (retailerId != null) {
+            Retailer retailer = retailerRepository.findOne(retailerId);
+            if (retailer != null) {
+                referralPartner.setRetailers(Collections.singleton(retailer));
+            }
+        }
+
+        if (name != null) {
+            referralPartner.setName(name);
+        }
+
+        if (contactName != null) {
+            referralPartner.setContactName(contactName);
+        }
+
+        if (contactEmail != null) {
+            referralPartner.setContactEmail(contactEmail);
+        }
+        if (regionCode != null) {
+            referralPartner.setRegionCode(regionCode);
+        }
+
+        if (status != null) {
+            referralPartner.setStatus(status);
+        }
+
+        List<ReferralPartner> referralPartners = referralPartnerRepository.findAll(Example.of(referralPartner));
         return new ResponseEntity<List<ReferralPartner>>(referralPartners, HttpStatus.OK);
-    }
-
-
-    @CrossOrigin
-    @ApiOperation("Get all Apps for the given ReferralPartner id")
-    @RequestMapping(method = RequestMethod.GET, value = "/{id}/apps")
-    public ResponseEntity<List<App>> getAppsByPartnerId(@PathVariable Long id) {
-        ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
-        if (referralPartner == null)
-            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
-
-        List<App> apps = appRepository.findByReferralPartner(referralPartner);
-        return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
-    }
-
-    @CrossOrigin
-    @ApiOperation("Get ReferralPartner information for a given ReferralPartner name")
-    @RequestMapping(method = RequestMethod.GET, value = "/name/{name}", produces = "application/json")
-    public ResponseEntity<List<ReferralPartner>> getPartnerByName(@PathVariable String name) {
-        List<ReferralPartner> referralPartners = referralPartnerRepository.findByName(name);
-        if (referralPartners == null || referralPartners.isEmpty())
-            return new ResponseEntity(new ApiError("ReferralPartner name expressed is not found."), HttpStatus.NOT_FOUND);
-
-        return new ResponseEntity<List<ReferralPartner>>(referralPartners, HttpStatus.OK);
-    }
-
-    @CrossOrigin
-    @ApiOperation("Get all Partners related to the given Retailer id")
-    @RequestMapping(method = RequestMethod.GET, value = "/retailers/{retailerId}", produces = "application/json")
-    public ResponseEntity<Set<ReferralPartner>> getPartnersByRetailerId(@PathVariable Long retailerId) {
-        Retailer retailer = retailerRepository.findOne(retailerId);
-        if (retailer == null)
-            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
-
-        return new ResponseEntity<Set<ReferralPartner>>(retailer.getReferralPartners(), HttpStatus.OK);
     }
 }
