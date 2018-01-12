@@ -1,13 +1,17 @@
 package com.universalinvents.udccs.studios;
 
+import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +20,9 @@ import java.util.List;
 public class StudioController {
     @Autowired
     private StudioRepository studioRepository;
+
+    @Autowired
+    private ContentRepository contentRepository;
 
     @CrossOrigin
     @ApiOperation("Create a Studio Entry")
@@ -117,19 +124,50 @@ public class StudioController {
     @CrossOrigin
     @ApiOperation("Get Studio List")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Studio>> getStudios() {
-        List<Studio> studios = studioRepository.findAll();
-        return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
-    }
+    public ResponseEntity<List<Studio>> getStudios(
+            @RequestParam(name = "contentId", required = false) Long contentId,
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "contactName", required = false) String contactName,
+            @RequestParam(name = "contactEmail", required = false) String contactEmail,
+            @RequestParam(name = "codePrefix", required = false) String codePrefix,
+            @RequestParam(name = "flags", required = false) Long flags,
+            @RequestParam(name = "status", required = false) String status) {
 
-    @CrossOrigin
-    @ApiOperation("Get studio information for a given Studio name")
-    @RequestMapping(method = RequestMethod.GET, value = "/name/{name}", produces = "application/json")
-    public ResponseEntity<List<Studio>> getStudioByName(@PathVariable String name) {
-        List<Studio> studios = studioRepository.findByName(name);
-        if (studios == null || studios.isEmpty())
-            return new ResponseEntity(new ApiError("Studio name expressed is not found."), HttpStatus.NOT_FOUND);
+        // Build a Studio object with the values passed in
+        Studio studio = new Studio();
 
+        if (contentId != null) {
+            Content content = contentRepository.findOne(contentId);
+            if (content == null) {
+                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                studio.setContents(Collections.singletonList(content));
+            }
+        }
+
+        if (name != null) {
+            studio.setName(name);
+        }
+
+        if (contactName != null) {
+            studio.setContactName(contactName);
+        }
+
+        if (contactEmail != null) {
+            studio.setContactEmail(contactEmail);
+        }
+        if (codePrefix != null) {
+            studio.setCodePrefix(codePrefix);
+        }
+        if (flags != null) {
+            studio.setFlags(flags);
+        }
+
+        if (status != null) {
+            studio.setStatus(status);
+        }
+
+        List<Studio> studios = studioRepository.findAll(Example.of(studio));
         return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
     }
 }

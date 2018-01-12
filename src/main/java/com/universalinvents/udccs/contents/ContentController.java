@@ -8,6 +8,7 @@ import com.universalinvents.udccs.studios.StudioRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -162,8 +163,46 @@ public class ContentController {
     @CrossOrigin
     @ApiOperation("Get Content List")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Content>> getContents() {
-        List<Content> contents = contentRepository.findAll();
+    public ResponseEntity<List<Content>> getContents(
+            @RequestParam(name = "eidr", required = false) String eidr,
+            @RequestParam(name = "eidrv", required = false) String eidrv,
+            @RequestParam(name = "gtm", required = false) String gtm,
+            @RequestParam(name = "title", required = false) String title,
+            @RequestParam(name = "studioId", required = false) Long studioId,
+            @RequestParam(name = "status", required = false) String status) {
+
+        // Build a Content object with the values passed in
+        Content content = new Content();
+
+        if (studioId != null) {
+            Studio studio = studioRepository.findOne(studioId);
+            if (studio == null) {
+                return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                content.setStudio(studio);
+            }
+        }
+
+        if (eidr != null) {
+            content.setEidr(eidr);
+        }
+
+        if (eidrv != null) {
+            content.setEidrv(eidrv);
+        }
+
+        if (gtm != null) {
+            content.setGtm(gtm);
+        }
+        if (title != null) {
+            content.setTitle(title);
+        }
+
+        if (status != null) {
+            content.setStatus(status);
+        }
+
+        List<Content> contents = contentRepository.findAll(Example.of(content));
         return new ResponseEntity<List<Content>>(contents, HttpStatus.OK);
     }
 
