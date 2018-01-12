@@ -138,7 +138,9 @@ public class StudioController {
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
-            if (content != null) {
+            if (content == null) {
+                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 studio.setContents(Collections.singletonList(content));
             }
         }

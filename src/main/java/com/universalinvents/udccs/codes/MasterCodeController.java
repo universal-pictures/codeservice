@@ -126,21 +126,27 @@ public class MasterCodeController {
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
-            if (referralPartner != null) {
+            if (referralPartner == null) {
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 masterCode.setReferralPartner(referralPartner);
             }
         }
 
         if (appId != null) {
             App app = appRepository.findOne(appId);
-            if (app != null) {
+            if (app == null) {
+                return new ResponseEntity(new ApiError("App id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 masterCode.setApp(app);
             }
         }
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
-            if (content != null) {
+            if (content == null) {
+                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 masterCode.setContent(content);
             }
         }

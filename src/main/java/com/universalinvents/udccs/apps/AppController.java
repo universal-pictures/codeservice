@@ -146,7 +146,9 @@ public class AppController {
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
-            if (referralPartner != null) {
+            if (referralPartner == null) {
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 app.setReferralPartner(referralPartner);
             }
         }

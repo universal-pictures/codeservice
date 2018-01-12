@@ -161,7 +161,9 @@ public class ReferralPartnerController {
 
         if (retailerId != null) {
             Retailer retailer = retailerRepository.findOne(retailerId);
-            if (retailer != null) {
+            if (retailer == null) {
+                return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 referralPartner.setRetailers(Collections.singleton(retailer));
             }
         }

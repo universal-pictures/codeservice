@@ -176,7 +176,9 @@ public class ContentController {
 
         if (studioId != null) {
             Studio studio = studioRepository.findOne(studioId);
-            if (studio != null) {
+            if (studio == null) {
+                return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
                 content.setStudio(studio);
             }
         }
