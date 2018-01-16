@@ -19,6 +19,7 @@ import com.universalinvents.udccs.utilities.CCFUtility;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -271,7 +272,11 @@ public class MasterCodeController {
                     "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values()));
         }
 
-        return masterCodeRepository.findOne(Example.of(masterCode));
+        // Find all of the matches sorted by their creation date
+        List<MasterCode> masterCodes = masterCodeRepository.findAll(Example.of(masterCode), new Sort("createdOn"));
+
+        // Return just the first record found
+        return masterCodes.get(0);
     }
 
 //    @CrossOrigin
