@@ -22,11 +22,11 @@ public class RetailerCode {
     private Date createdOn;
     private String format;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "contentId")
     private Content content;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "retailerId")
     private Retailer retailer;
 
