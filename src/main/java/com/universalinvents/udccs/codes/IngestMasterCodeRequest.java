@@ -4,27 +4,22 @@ package com.universalinvents.udccs.codes;
  * Created by dsherman on 2/27/17.
  * Updated by kkirkland on 11/7/17.
  */
-public class MasterCodeRequest
-{
-    private String code;
+public class IngestMasterCodeRequest {
     private Long studioId;
     private Long contentId;
     private String createdBy;
     private Long partnerId;
     private Long appId;
-    private String status;
 
-    public MasterCodeRequest() {}
+    public IngestMasterCodeRequest() {
+    }
 
-    public MasterCodeRequest(String code, Long studioId, Long contentId, String createdBy, Long partnerId, Long appId, String status)
-    {
-        this.code = code;
+    public IngestMasterCodeRequest(Long studioId, Long contentId, String createdBy, Long partnerId, Long appId) {
         this.studioId = studioId;
         this.contentId = contentId;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
         this.appId = appId;
-        this.status = status;
     }
 
     public Long getStudioId() {
@@ -65,22 +60,5 @@ public class MasterCodeRequest
 
     public void setAppId(Long appId) {
         this.appId = appId;
-    }
-
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 }
