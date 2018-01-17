@@ -19,8 +19,10 @@ import com.universalinvents.udccs.utilities.CCFUtility;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -57,7 +59,56 @@ public class MasterCodeController {
     @CrossOrigin
     @ApiOperation("Create initial Master Code")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<MasterCode> createMasterCode(@RequestBody MasterCodeRequest request) {
+    @Transactional
+    public ResponseEntity<MasterCode> createMasterCode(@RequestBody CreateMasterCodeRequest request) {
+
+        //
+        // If request.create is true:
+        //   1) Simply create a new ISSUED code and return to the user
+        //
+        // If request.create is false:
+        //   1) Find an UNALLOCATED code for the given content
+        //   2) Update that code's status to ISSUED
+        //   3) Return the updated code to the user
+        //
+        if (request.getCreate()) {
+            Content content = contentRepository.findOne(request.getContentId());
+            if (content == null)
+                return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
+
+            ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+            if (referralPartner == null)
+                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+
+            Studio studio = studioRepository.findOne(request.getStudioId());
+            if (studio == null)
+                return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
+
+            App app = appRepository.findOne(request.getAppId());
+            if (app == null)
+                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+
+            String code = CCFUtility.generateCode(studio.getCodePrefix());
+            MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content,
+                                                   MasterCode.Status.ISSUED);
+            masterCodeRepository.save(masterCode);
+            return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+        } else {
+            try {
+                MasterCode masterCode = getMasterCode(request.getContentId(), MasterCode.Status.UNALLOCATED);
+                masterCode.setStatus(MasterCode.Status.ISSUED);
+                masterCodeRepository.save(masterCode);
+                return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+            } catch (ApiError apiError) {
+                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    @CrossOrigin
+    @ApiOperation("Ingest a Master Code")
+    @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
+    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable String code, @RequestBody IngestMasterCodeRequest request) {
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -74,13 +125,8 @@ public class MasterCodeController {
         if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        String code = request.getCode();
-        if (code == null)
-            // Generate a code if one wasn't specified
-            code = CCFUtility.generateCode(studio.getCodePrefix());
-
         MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content,
-                                               MasterCode.Status.valueOf(request.getStatus()));
+                                               MasterCode.Status.UNALLOCATED);
         masterCodeRepository.save(masterCode);
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
@@ -127,7 +173,8 @@ public class MasterCodeController {
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
-                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
+                                          HttpStatus.BAD_REQUEST);
             } else {
                 masterCode.setReferralPartner(referralPartner);
             }
@@ -205,6 +252,31 @@ public class MasterCodeController {
         masterCodeRepository.save(masterCode);
 
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+    }
+
+    private MasterCode getMasterCode(Long contentId, MasterCode.Status status) throws ApiError {
+        // Build a MasterCode object with the values passed in
+        MasterCode masterCode = new MasterCode();
+
+        Content content = contentRepository.findOne(contentId);
+        if (content == null) {
+            throw new ApiError("Content id specified not found.");
+        } else {
+            masterCode.setContent(content);
+        }
+
+        try {
+            masterCode.setStatus(status);
+        } catch (IllegalArgumentException e) {
+            throw new ApiError(
+                    "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values()));
+        }
+
+        // Find all of the matches sorted by their creation date
+        List<MasterCode> masterCodes = masterCodeRepository.findAll(Example.of(masterCode), new Sort("createdOn"));
+
+        // Return just the first record found
+        return masterCodes.get(0);
     }
 
 //    @CrossOrigin

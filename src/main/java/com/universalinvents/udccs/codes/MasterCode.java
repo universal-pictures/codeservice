@@ -32,7 +32,7 @@ public class MasterCode {
     @Column(name="status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
     private Status status;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "partnerId")
     @JsonIgnoreProperties(value = {"codes", "apps"})
     private ReferralPartner referralPartner;
