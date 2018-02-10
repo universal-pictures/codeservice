@@ -44,8 +44,8 @@ public class ReferralPartnerController {
         referralPartner.setName(request.getName());
         referralPartner.setDescription(request.getDescription());
         referralPartner.setContactName(request.getContactName());
-        referralPartner.setContactEmail(request.getEmail());
-        referralPartner.setContactPhone(request.getPhone());
+        referralPartner.setContactEmail(request.getContactEmail());
+        referralPartner.setContactPhone(request.getContactPhone());
         referralPartner.setRetailers(retailers);
         referralPartner.setStatus(request.getStatus());
         referralPartner.setCreatedOn(new Date());
@@ -88,12 +88,12 @@ public class ReferralPartnerController {
             referralPartner.setContactName(request.getContactName());
             isModified = true;
         }
-        if (request.getEmail() != null) {
-            referralPartner.setContactEmail(request.getEmail());
+        if (request.getContactEmail() != null) {
+            referralPartner.setContactEmail(request.getContactEmail());
             isModified = true;
         }
-        if (request.getPhone() != null) {
-            referralPartner.setContactPhone(request.getPhone());
+        if (request.getContactPhone() != null) {
+            referralPartner.setContactPhone(request.getContactPhone());
             isModified = true;
         }
         if (request.getStatus() != null) {

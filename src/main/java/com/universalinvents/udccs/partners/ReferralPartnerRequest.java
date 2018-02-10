@@ -9,21 +9,21 @@ public class ReferralPartnerRequest {
     private String name;
     private String description;
     private String contactName;
-    private String email;
-    private String phone;
+    private String contactEmail;
+    private String contactPhone;
     private Set<Long> retailerIds;
     private String status;
 
     public ReferralPartnerRequest() {
     }
 
-    public ReferralPartnerRequest(String name, String description, String contactName, String email, String phone,
-                                  Set<Long> retailerIds, String status) {
+    public ReferralPartnerRequest(String name, String description, String contactName, String contactEmail,
+                                  String contactPhone, Set<Long> retailerIds, String status) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
-        this.email = email;
-        this.phone = phone;
+        this.contactEmail = contactEmail;
+        this.contactPhone = contactPhone;
         this.retailerIds = retailerIds;
         this.status = status;
     }
@@ -52,20 +52,20 @@ public class ReferralPartnerRequest {
         this.contactName = contactName;
     }
 
-    public String getEmail() {
-        return email;
+    public String getContactEmail() {
+        return contactEmail;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setContactEmail(String contactEmail) {
+        this.contactEmail = contactEmail;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getContactPhone() {
+        return contactPhone;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setContactPhone(String contactPhone) {
+        this.contactPhone = contactPhone;
     }
 
     public Set<Long> getRetailerIds() {

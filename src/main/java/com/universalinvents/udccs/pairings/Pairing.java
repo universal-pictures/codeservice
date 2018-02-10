@@ -1,8 +1,10 @@
 package com.universalinvents.udccs.pairings;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.universalinvents.udccs.codes.MasterCode;
+import com.universalinvents.udccs.codes.RetailerCode;
+
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -12,28 +14,32 @@ import java.util.Date;
 @Table(name = "pairing")
 public class Pairing {
 
-    @EmbeddedId
-    private PairingPK id;  // masterCode & retailerCode
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String pairedBy;
     private Date pairedOn;
     private String status;
 
+    @OneToOne
+    @JoinColumn(name = "masterCode")
+    @JsonIgnoreProperties(value = {"pairing"})
+    private MasterCode masterCode;
+
+    @OneToOne
+    @JoinColumn(name = "retailerCode")
+    @JsonIgnoreProperties(value = {"pairing"})
+    private RetailerCode retailerCode;
+
     public Pairing () {}
 
-    public Pairing(PairingPK id, String pairedBy, String status) {
-        this.id = id;
+    public Pairing(MasterCode masterCode, RetailerCode retailerCode, String pairedBy, String status) {
+        this.masterCode = masterCode;
+        this.retailerCode = retailerCode;
         this.pairedBy = pairedBy;
         this.pairedOn = new Date();
         this.status = status;
-    }
-
-    public PairingPK getId() {
-        return id;
-    }
-
-    public void setId(PairingPK id) {
-        this.id = id;
     }
 
     public String getPairedBy() {
@@ -58,6 +64,30 @@ public class Pairing {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public MasterCode getMasterCode() {
+        return masterCode;
+    }
+
+    public void setMasterCode(MasterCode masterCode) {
+        this.masterCode = masterCode;
+    }
+
+    public RetailerCode getRetailerCode() {
+        return retailerCode;
+    }
+
+    public void setRetailerCode(RetailerCode retailerCode) {
+        this.retailerCode = retailerCode;
     }
 }
 
