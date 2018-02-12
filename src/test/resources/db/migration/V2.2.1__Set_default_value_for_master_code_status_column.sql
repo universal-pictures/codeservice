@@ -1,1 +1,0 @@
-ALTER TABLE udccs.master_code ALTER status SET DEFAULT 'UNALLOCATED';

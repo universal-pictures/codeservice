@@ -7,15 +7,13 @@ public class PairMasterCodeRequest
 {
     private Long retailerId;
     private String pairedBy;
-    private String status;
 
     public PairMasterCodeRequest() {}
 
-    public PairMasterCodeRequest(Long retailerId, String pairedBy, String status)
+    public PairMasterCodeRequest(Long retailerId, String pairedBy)
     {
         this.retailerId = retailerId;
         this.pairedBy = pairedBy;
-        this.status = status;
     }
 
     public String getPairedBy()
@@ -34,13 +32,5 @@ public class PairMasterCodeRequest
 
     public void setRetailerId(Long retailerId) {
         this.retailerId = retailerId;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 }

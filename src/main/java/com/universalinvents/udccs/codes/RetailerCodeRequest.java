@@ -6,16 +6,14 @@ package com.universalinvents.udccs.codes;
  */
 public class RetailerCodeRequest
 {
-    private String code;
     private Long contentId;
     private Long retailerId;
     private String format;
 
     public RetailerCodeRequest() {}
 
-    public RetailerCodeRequest(String code, Long contentId, Long partnerId, String format)
+    public RetailerCodeRequest(Long contentId, Long partnerId, String format)
     {
-        this.code = code;
         this.contentId = contentId;
         this.retailerId = partnerId;
         this.format = format;
@@ -35,14 +33,6 @@ public class RetailerCodeRequest
 
     public void setRetailerId(Long retailerId) {
         this.retailerId = retailerId;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public String getFormat() {

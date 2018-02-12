@@ -7,7 +7,6 @@ import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.pairings.PairMasterCodeRequest;
 import com.universalinvents.udccs.pairings.Pairing;
-import com.universalinvents.udccs.pairings.PairingPK;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -42,7 +41,7 @@ public class MasterCodeController {
     private RetailerRepository retailerRepository;
 
     @Autowired
-    private RetailerCodeRepository retailerCodesRepository;
+    private RetailerCodeRepository retailerCodeRepository;
 
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
@@ -57,7 +56,7 @@ public class MasterCodeController {
     private StudioRepository studioRepository;
 
     @CrossOrigin
-    @ApiOperation("Create initial Master Code")
+    @ApiOperation("Create a Master Code")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     @Transactional
     public ResponseEntity<MasterCode> createMasterCode(@RequestBody CreateMasterCodeRequest request) {
@@ -78,7 +77,8 @@ public class MasterCodeController {
 
             ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
             if (referralPartner == null)
-                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+                                          HttpStatus.NOT_FOUND);
 
             Studio studio = studioRepository.findOne(request.getStudioId());
             if (studio == null)
@@ -89,8 +89,8 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
             String code = CCFUtility.generateCode(studio.getCodePrefix());
-            MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content,
-                                                   MasterCode.Status.ISSUED);
+            MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app,
+                                                   content, MasterCode.Status.ISSUED);
             masterCodeRepository.save(masterCode);
             return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
         } else {
@@ -108,7 +108,8 @@ public class MasterCodeController {
     @CrossOrigin
     @ApiOperation("Ingest a Master Code")
     @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
-    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable String code, @RequestBody IngestMasterCodeRequest request) {
+    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable String code,
+                                                       @RequestBody IngestMasterCodeRequest request) {
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -215,6 +216,7 @@ public class MasterCodeController {
     @CrossOrigin
     @ApiOperation("Pair Master Code to a Retailer Code")
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/pair", produces = "application/json")
+    @Transactional
     public ResponseEntity<MasterCode> pairMasterCode(@PathVariable String code,
                                                      @RequestBody PairMasterCodeRequest request) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
@@ -235,23 +237,50 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("ReferralPartner does not have access to selected Retailer."),
                                       HttpStatus.NOT_FOUND);
 
-        // = Check if the code in the request is in the list of codes of RetailerCodes.
-        final RetailerCode retailerCode = retailerCodesRepository.findFirstByContentAndRetailer(masterCode.getContent(),
-                                                                                                retailer);
+        // TODO: Use the following method for getting a retailerCode when we're no longer importing MA codes as both Master & Retailer Codes
+        // Get a Retailer Code for the related Content
+        //final RetailerCode retailerCode = getRetailerCode(masterCode.getContent(), retailer);
+
+        // HARDCODED!!!  Replace with above later
+        // Get a retailerCode with the same value as the masterCode
+        final RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
         if (retailerCode == null) {
             return new ResponseEntity(new ApiError("Retailer Code not available for selected Content"),
                                       HttpStatus.NOT_FOUND);
         }
 
         // Insert new pairings record
-        Pairing pairing = new Pairing(new PairingPK(masterCode.getCode(), retailerCode.getCode()),
-                                      request.getPairedBy(), request.getStatus());
-        pairingRepository.save(pairing);
+        Date modifiedDate = new Date();
+        Pairing pairing = new Pairing(masterCode, retailerCode,
+                                      request.getPairedBy(), "ACTIVE");
+        pairingRepository.saveAndFlush(pairing);
+
+        // Update the status of both MasterCode and RetailerCode
         masterCode.setStatus(MasterCode.Status.PAIRED);
-        masterCode.setModifiedOn(new Date());
-        masterCodeRepository.save(masterCode);
+        masterCode.setModifiedOn(modifiedDate);
+        masterCodeRepository.saveAndFlush(masterCode);
+        retailerCode.setStatus(RetailerCode.Status.PAIRED);
+        retailerCode.setModifiedOn(modifiedDate);
+        retailerCodeRepository.saveAndFlush(retailerCode);
 
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+    }
+
+    private RetailerCode getRetailerCode(Content content, Retailer retailer) {
+        // Build a RetailerCode object with the values passed in
+        RetailerCode retailerCode = new RetailerCode();
+
+        // Unpaired RetailerCodes for the given Content & Retailer
+        retailerCode.setContent(content);
+        retailerCode.setRetailer(retailer);
+        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
+
+        // Find all of the matches sorted by their creation date
+        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
+                                                                          new Sort("createdOn"));
+
+        // Return just the first record found
+        return retailerCodes.get(0);
     }
 
     private MasterCode getMasterCode(Long contentId, MasterCode.Status status) throws ApiError {

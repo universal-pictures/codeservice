@@ -6,7 +6,6 @@ import com.universalinvents.udccs.retailers.Retailer;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by mmonti on 3/20/17.
@@ -16,37 +15,48 @@ import java.util.List;
 @Table(name = "retailer_code")
 public class RetailerCode {
 
+    // Legal status values
+    public enum Status {
+        UNALLOCATED, PAIRED, REDEEMED
+    }
+
     @Id
     private String code;
 
     private Date createdOn;
+    private Date modifiedOn;
     private String format;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'PAIRED', 'REDEEMED')")
+    private Status status;
+
+    @ManyToOne
     @JoinColumn(name = "contentId")
     private Content content;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "retailerId")
     private Retailer retailer;
 
-    @OneToMany(mappedBy = "id.retailerCode")
-    private List<Pairing> pairings;
+    @OneToOne(mappedBy = "retailerCode")
+    private Pairing pairing;
 
-    public RetailerCode() {}
+    public RetailerCode() {
+    }
 
     /**
-     *
      * @param content
      * @param retailer
      * @param code
      */
-    public RetailerCode(final String code, final Content content, final String format, final Retailer retailer)
-    {
+    public RetailerCode(final String code, final Content content, final String format, final Status status,
+                        final Retailer retailer) {
         this.code = code;
         this.content = content;
         this.format = format;
         this.retailer = retailer;
+        this.status = status;
         this.createdOn = new Date();
     }
 
@@ -64,6 +74,14 @@ public class RetailerCode {
 
     public void setCreatedOn(Date createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 
     public Content getContent() {
@@ -90,15 +108,23 @@ public class RetailerCode {
         this.format = format;
     }
 
-    public List<Pairing> getPairings() {
-        return pairings;
+    public Status getStatus() {
+        return status;
     }
 
-    public void setPairings(List<Pairing> pairings) {
-        this.pairings = pairings;
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Pairing getPairing() {
+        return pairing;
+    }
+
+    public void setPairing(Pairing pairing) {
+        this.pairing = pairing;
     }
 
     public boolean isPaired() {
-        return pairings != null && pairings.size() > 0;
+        return pairing != null;
     }
 }

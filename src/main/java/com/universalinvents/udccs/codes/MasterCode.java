@@ -9,7 +9,6 @@ import com.universalinvents.udccs.partners.ReferralPartner;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by dsherman on 2/27/17.
@@ -47,8 +46,8 @@ public class MasterCode {
     @JsonIgnoreProperties("masterCodes")
     private App app;
 
-    @OneToMany(mappedBy = "id.masterCode")
-    private List<Pairing> pairings;
+    @OneToOne(mappedBy = "masterCode")
+    private Pairing pairing;
 
     public MasterCode() {
     }
@@ -120,16 +119,16 @@ public class MasterCode {
         this.app = app;
     }
 
-    public List<Pairing> getPairings() {
-        return pairings;
+    public Pairing getPairing() {
+        return pairing;
     }
 
-    public void setPairings(List<Pairing> pairings) {
-        this.pairings = pairings;
+    public void setPairing(Pairing pairing) {
+        this.pairing = pairing;
     }
 
     public boolean isPaired() {
-        return pairings != null && pairings.size() > 0;
+        return pairing != null;
     }
 
     public Status getStatus() {
