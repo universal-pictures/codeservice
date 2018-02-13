@@ -67,43 +67,6 @@ public class RetailerCodeController {
     public ResponseEntity<List<RetailerCode>> getRetailerCodes(
             @RequestParam(name = "contentId", required = false) Long contentId,
             @RequestParam(name = "retailerId", required = false) Long retailerId,
-            @RequestParam(name = "format", required = false) String format) {
-
-        // Build a RetailerCode object with the values passed in
-        RetailerCode retailerCode = new RetailerCode();
-
-        if (contentId != null) {
-            Content content = contentRepository.findOne(contentId);
-            if (content == null) {
-                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
-            } else {
-                retailerCode.setContent(content);
-            }
-        }
-
-        if (retailerId != null) {
-            Retailer retailer = retailerRepository.findOne(retailerId);
-            if (retailer == null) {
-                return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
-            } else {
-                retailerCode.setRetailer(retailer);
-            }
-        }
-
-        if (format != null) {
-            retailerCode.setFormat(format);
-        }
-
-        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode));
-        return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
-    }
-
-    @CrossOrigin
-    @ApiOperation("Get Retailer Codes")
-    @RequestMapping(method = RequestMethod.GET, value = "/test", produces = "application/json")
-    public ResponseEntity<List<RetailerCode>> getRetailerCodesTest(
-            @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "retailerId", required = false) Long retailerId,
             @RequestParam(name = "format", required = false) String format,
             @RequestParam(name = "status", required = false) String status) {
 
