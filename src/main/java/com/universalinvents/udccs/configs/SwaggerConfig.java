@@ -14,6 +14,9 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 /**
  * Created by dsherman on 2/24/17.
  * Updated by kkirkland on 11/7/17.
@@ -43,6 +46,9 @@ public class SwaggerConfig {
         // Allow anyone and anything access. Probably ok for Swagger spec
         CorsConfiguration config = new CorsConfiguration();
         config.applyPermitDefaultValues();
+        config.setAllowedOrigins(Collections.singletonList("*"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Content-Type", "api_key", "Authorization"));
 
         source.registerCorsConfiguration("/api.*", config);
         return new CorsFilter(source);
