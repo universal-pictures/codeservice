@@ -12,7 +12,6 @@ import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
-import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.CCFUtility;
 import io.swagger.annotations.ApiOperation;
@@ -80,15 +79,11 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
                                           HttpStatus.NOT_FOUND);
 
-            Studio studio = studioRepository.findOne(request.getStudioId());
-            if (studio == null)
-                return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
-
             App app = appRepository.findOne(request.getAppId());
             if (app == null)
                 return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
-            String code = CCFUtility.generateCode(studio.getCodePrefix());
+            String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
             MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app,
                                                    content, MasterCode.Status.ISSUED);
             masterCodeRepository.save(masterCode);
@@ -117,10 +112,6 @@ public class MasterCodeController {
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
         if (referralPartner == null)
             return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
-
-        Studio studio = studioRepository.findOne(request.getStudioId());
-        if (studio == null)
-            return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
 
         App app = appRepository.findOne(request.getAppId());
         if (app == null)
@@ -251,8 +242,7 @@ public class MasterCodeController {
 
         // Insert new pairings record
         Date modifiedDate = new Date();
-        Pairing pairing = new Pairing(masterCode, retailerCode,
-                                      request.getPairedBy(), "ACTIVE");
+        Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
         pairingRepository.saveAndFlush(pairing);
 
         // Update the status of both MasterCode and RetailerCode
