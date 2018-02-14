@@ -8,26 +8,26 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.Date;
 
-public class MasterCodeSpecification implements Specification<MasterCode> {
+public class RetailerCodeSpecification implements Specification<RetailerCode> {
 
     private CodeCriteria criteria;
 
-    public MasterCodeSpecification(CodeCriteria criteria) {
+    public RetailerCodeSpecification(CodeCriteria criteria) {
         this.criteria = criteria;
     }
 
     @Override
-    public Predicate toPredicate(Root<MasterCode> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public Predicate toPredicate(Root<RetailerCode> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         if (criteria.getOperand().equalsIgnoreCase(":")) {
             return cb.equal(root.get(criteria.getKey()), criteria.getValue());
         } else if (criteria.getOperand().equalsIgnoreCase(">")) {
-            if (criteria.getValue() instanceof java.util.Date) {
+            if (criteria.getValue() instanceof Date) {
                 return cb.greaterThan(root.get(criteria.getKey()), (Date)criteria.getValue());
             } else {
                 return cb.greaterThan(root.<String>get(criteria.getKey()), criteria.getValue().toString());
             }
         } else if (criteria.getOperand().equalsIgnoreCase("<")) {
-            if (criteria.getValue() instanceof java.util.Date) {
+            if (criteria.getValue() instanceof Date) {
                 return cb.lessThan(root.get(criteria.getKey()), (Date)criteria.getValue());
             } else {
                 return cb.lessThan(root.<String>get(criteria.getKey()), criteria.getValue().toString());

@@ -162,12 +162,16 @@ public class MasterCodeController {
             @RequestParam(name = "appId", required = false) Long appId,
             @RequestParam(name = "contentId", required = false) Long contentId,
             @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "createdOnAfter", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
+            @RequestParam(name = "createdOnBefore", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
             @RequestParam(name = "modifiedOnAfter", required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
             @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
-        ArrayList<MasterCodeCriteria> params = new ArrayList<MasterCodeCriteria>();
+        ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
@@ -175,7 +179,7 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
                                           HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new MasterCodeCriteria("referralPartner", ":", partnerId));
+                params.add(new CodeCriteria("referralPartner", ":", partnerId));
             }
         }
 
@@ -184,7 +188,7 @@ public class MasterCodeController {
             if (app == null) {
                 return new ResponseEntity(new ApiError("App id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new MasterCodeCriteria("app", ":", appId));
+                params.add(new CodeCriteria("app", ":", appId));
             }
         }
 
@@ -193,13 +197,13 @@ public class MasterCodeController {
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new MasterCodeCriteria("content", ":", contentId));
+                params.add(new CodeCriteria("content", ":", contentId));
             }
         }
 
         if (status != null) {
             try {
-                params.add(new MasterCodeCriteria("status", ":", MasterCode.Status.valueOf(status)));
+                params.add(new CodeCriteria("status", ":", MasterCode.Status.valueOf(status)));
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
@@ -207,15 +211,21 @@ public class MasterCodeController {
             }
         }
 
+        if (createdOnAfter != null) {
+            params.add(new CodeCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new CodeCriteria("createdOn", "<", createdOnBefore));
+        }
         if (modifiedOnAfter != null) {
-            params.add(new MasterCodeCriteria("modifiedOn", ">", modifiedOnAfter));
+            params.add(new CodeCriteria("modifiedOn", ">", modifiedOnAfter));
         }
         if (modifiedOnBefore != null) {
-            params.add(new MasterCodeCriteria("modifiedOn", "<", modifiedOnBefore));
+            params.add(new CodeCriteria("modifiedOn", "<", modifiedOnBefore));
         }
 
         List<Specification<MasterCode>> specs = new ArrayList<>();
-        for (MasterCodeCriteria param : params) {
+        for (CodeCriteria param : params) {
             specs.add(new MasterCodeSpecification(param));
         }
 

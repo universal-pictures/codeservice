@@ -1,11 +1,11 @@
 package com.universalinvents.udccs.codes;
 
-public class MasterCodeCriteria {
+public class CodeCriteria {
     private String key;
     private String operand;
     private Object value;
 
-    public MasterCodeCriteria(String key, String operand, Object value) {
+    public CodeCriteria(String key, String operand, Object value) {
         this.key = key;
         this.operand = operand;
         this.value = value;
