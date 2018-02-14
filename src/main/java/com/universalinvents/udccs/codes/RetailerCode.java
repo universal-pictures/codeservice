@@ -58,6 +58,7 @@ public class RetailerCode {
         this.retailer = retailer;
         this.status = status;
         this.createdOn = new Date();
+        this.modifiedOn = createdOn; // Use the same date for new objects
     }
 
     public String getCode() {

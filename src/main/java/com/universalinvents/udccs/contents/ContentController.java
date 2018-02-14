@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -169,6 +170,7 @@ public class ContentController {
             @RequestParam(name = "gtm", required = false) String gtm,
             @RequestParam(name = "title", required = false) String title,
             @RequestParam(name = "studioId", required = false) Long studioId,
+            @RequestParam(name = "retailerId", required = false) Long retailerId,
             @RequestParam(name = "status", required = false) String status) {
 
         // Build a Content object with the values passed in
@@ -180,6 +182,15 @@ public class ContentController {
                 return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
                 content.setStudio(studio);
+            }
+        }
+
+        if (retailerId != null) {
+            Retailer retailer = retailerRepository.findOne(retailerId);
+            if (retailer == null) {
+                return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                content.setRetailers(Collections.singleton(retailer));
             }
         }
 

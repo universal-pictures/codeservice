@@ -8,13 +8,17 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -68,17 +72,24 @@ public class RetailerCodeController {
             @RequestParam(name = "contentId", required = false) Long contentId,
             @RequestParam(name = "retailerId", required = false) Long retailerId,
             @RequestParam(name = "format", required = false) String format,
-            @RequestParam(name = "status", required = false) String status) {
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "createdOnAfter", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
+            @RequestParam(name = "createdOnBefore", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
+            @RequestParam(name = "modifiedOnAfter", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
+            @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
-        // Build a RetailerCode object with the values passed in
-        RetailerCode retRetailerCode = new RetailerCode();
+        ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                retRetailerCode.setContent(content);
+                params.add(new CodeCriteria("content", ":", contentId));
             }
         }
 
@@ -87,17 +98,17 @@ public class RetailerCodeController {
             if (retailer == null) {
                 return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                retRetailerCode.setRetailer(retailer);
+                params.add(new CodeCriteria("retailer", ":", retailerId));
             }
         }
 
         if (format != null) {
-            retRetailerCode.setFormat(format);
+            params.add(new CodeCriteria("format", ":", format));
         }
 
         if (status != null) {
             try {
-                retRetailerCode.setStatus(RetailerCode.Status.valueOf(status));
+                params.add(new CodeCriteria("status", ":", RetailerCode.Status.valueOf(status)));
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(RetailerCode.Status.values())),
@@ -105,7 +116,30 @@ public class RetailerCodeController {
             }
         }
 
-        return new ResponseEntity<List<RetailerCode>>(retailerCodeRepository.findAll(Example.of(retRetailerCode)),
+        if (createdOnAfter != null) {
+            params.add(new CodeCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new CodeCriteria("createdOn", "<", createdOnBefore));
+        }
+        if (modifiedOnAfter != null) {
+            params.add(new CodeCriteria("modifiedOn", ">", modifiedOnAfter));
+        }
+        if (modifiedOnBefore != null) {
+            params.add(new CodeCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+
+        List<Specification<RetailerCode>> specs = new ArrayList<>();
+        for (CodeCriteria param : params) {
+            specs.add(new RetailerCodeSpecification(param));
+        }
+
+        Specification<RetailerCode> query = specs.get(0);
+        for (int i = 1; i < specs.size(); i++) {
+            query = Specifications.where(query).and(specs.get(i));
+        }
+
+        return new ResponseEntity<List<RetailerCode>>(retailerCodeRepository.findAll(query),
                                                       HttpStatus.OK);
     }
 

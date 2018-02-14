@@ -18,11 +18,15 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -157,10 +161,17 @@ public class MasterCodeController {
             @RequestParam(name = "partnerId", required = false) Long partnerId,
             @RequestParam(name = "appId", required = false) Long appId,
             @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "status", required = false) String status) {
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "createdOnAfter", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
+            @RequestParam(name = "createdOnBefore", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
+            @RequestParam(name = "modifiedOnAfter", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
+            @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
-        // Build a MasterCode object with the values passed in
-        MasterCode masterCode = new MasterCode();
+        ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
@@ -168,7 +179,7 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
                                           HttpStatus.BAD_REQUEST);
             } else {
-                masterCode.setReferralPartner(referralPartner);
+                params.add(new CodeCriteria("referralPartner", ":", partnerId));
             }
         }
 
@@ -177,7 +188,7 @@ public class MasterCodeController {
             if (app == null) {
                 return new ResponseEntity(new ApiError("App id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                masterCode.setApp(app);
+                params.add(new CodeCriteria("app", ":", appId));
             }
         }
 
@@ -186,13 +197,13 @@ public class MasterCodeController {
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                masterCode.setContent(content);
+                params.add(new CodeCriteria("content", ":", contentId));
             }
         }
 
         if (status != null) {
             try {
-                masterCode.setStatus(MasterCode.Status.valueOf(status));
+                params.add(new CodeCriteria("status", ":", MasterCode.Status.valueOf(status)));
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
@@ -200,7 +211,30 @@ public class MasterCodeController {
             }
         }
 
-        List<MasterCode> masterCodes = masterCodeRepository.findAll(Example.of(masterCode));
+        if (createdOnAfter != null) {
+            params.add(new CodeCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new CodeCriteria("createdOn", "<", createdOnBefore));
+        }
+        if (modifiedOnAfter != null) {
+            params.add(new CodeCriteria("modifiedOn", ">", modifiedOnAfter));
+        }
+        if (modifiedOnBefore != null) {
+            params.add(new CodeCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+
+        List<Specification<MasterCode>> specs = new ArrayList<>();
+        for (CodeCriteria param : params) {
+            specs.add(new MasterCodeSpecification(param));
+        }
+
+        Specification<MasterCode> query = specs.get(0);
+        for (int i = 1; i < specs.size(); i++) {
+            query = Specifications.where(query).and(specs.get(i));
+        }
+
+        List<MasterCode> masterCodes = masterCodeRepository.findAll(query);
         return new ResponseEntity<List<MasterCode>>(masterCodes, HttpStatus.OK);
     }
 
