@@ -61,6 +61,7 @@ public class MasterCode {
         this.app = app;
         this.content = content;
         this.status = status;
+        this.modifiedOn = createdOn; // Make the dates match for new objects
     }
 
     public String getCode() {
