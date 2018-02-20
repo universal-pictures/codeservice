@@ -78,14 +78,18 @@ public class MasterCodeController {
             if (content == null)
                 return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
 
-            ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-            if (referralPartner == null)
-                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
-                                          HttpStatus.NOT_FOUND);
+            ReferralPartner referralPartner = null;
+            if (request.getPartnerId() != null) {
+                referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+                if (referralPartner == null)
+                    return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+            }
 
-            App app = appRepository.findOne(request.getAppId());
-            if (app == null)
-                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+            App app = null;
+            if (request.getAppId() != null) {
+                app = appRepository.findOne(request.getAppId());
+                if (app == null) return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+            }
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
             MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app,
@@ -113,13 +117,18 @@ public class MasterCodeController {
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
 
-        ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-        if (referralPartner == null)
-            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+        ReferralPartner referralPartner = null;
+        if (request.getPartnerId() != null) {
+            referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+            if (referralPartner == null)
+                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+        }
 
-        App app = appRepository.findOne(request.getAppId());
-        if (app == null)
-            return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+        App app = null;
+        if (request.getAppId() != null) {
+            app = appRepository.findOne(request.getAppId());
+            if (app == null) return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+        }
 
         MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content,
                                                MasterCode.Status.UNALLOCATED);
