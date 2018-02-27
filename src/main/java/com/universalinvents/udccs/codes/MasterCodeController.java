@@ -238,12 +238,18 @@ public class MasterCodeController {
             specs.add(new MasterCodeSpecification(param));
         }
 
-        Specification<MasterCode> query = specs.get(0);
-        for (int i = 1; i < specs.size(); i++) {
-            query = Specifications.where(query).and(specs.get(i));
+        List<MasterCode> masterCodes = new ArrayList<MasterCode>();
+        if (params.isEmpty()) {
+            masterCodes = masterCodeRepository.findAll();
+        } else {
+            Specification<MasterCode> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            masterCodes = masterCodeRepository.findAll(query);
         }
 
-        List<MasterCode> masterCodes = masterCodeRepository.findAll(query);
+
         return new ResponseEntity<List<MasterCode>>(masterCodes, HttpStatus.OK);
     }
 

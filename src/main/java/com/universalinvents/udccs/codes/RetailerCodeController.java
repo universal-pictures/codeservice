@@ -134,13 +134,18 @@ public class RetailerCodeController {
             specs.add(new RetailerCodeSpecification(param));
         }
 
-        Specification<RetailerCode> query = specs.get(0);
-        for (int i = 1; i < specs.size(); i++) {
-            query = Specifications.where(query).and(specs.get(i));
+        List<RetailerCode> retailerCodes = new ArrayList<RetailerCode>();
+        if (params.isEmpty()) {
+            retailerCodes = retailerCodeRepository.findAll();
+        } else {
+            Specification<RetailerCode> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            retailerCodes = retailerCodeRepository.findAll(query);
         }
 
-        return new ResponseEntity<List<RetailerCode>>(retailerCodeRepository.findAll(query),
-                                                      HttpStatus.OK);
+        return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
 
 }
