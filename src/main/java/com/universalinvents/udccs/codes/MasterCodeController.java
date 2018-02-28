@@ -277,16 +277,17 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("ReferralPartner does not have access to selected Retailer."),
                                       HttpStatus.NOT_FOUND);
 
-        // TODO: Use the following method for getting a retailerCode when we're no longer importing MA codes as both Master & Retailer Codes
-        // Get a Retailer Code for the related Content
-        //final RetailerCode retailerCode = getRetailerCode(masterCode.getContent(), retailer);
-
-        // HARDCODED!!!  Replace with above later
-        // Get a retailerCode with the same value as the masterCode
-        final RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
+        // First:
+        // Try to get a retailerCode with the same value as the masterCode
+        RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
         if (retailerCode == null) {
-            return new ResponseEntity(new ApiError("Retailer Code not available for selected Content"),
-                                      HttpStatus.NOT_FOUND);
+            // Second:
+            // If one wasn't found, get a random retailerCode for the related Content
+            try {
+                retailerCode = getRetailerCode(masterCode.getContent(), retailer);
+            } catch (ApiError apiError) {
+                return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
+            }
         }
 
         // Insert new pairings record
@@ -305,7 +306,7 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
 
-    private RetailerCode getRetailerCode(Content content, Retailer retailer) {
+    private RetailerCode getRetailerCode(Content content, Retailer retailer) throws ApiError {
         // Build a RetailerCode object with the values passed in
         RetailerCode retailerCode = new RetailerCode();
 
@@ -317,6 +318,10 @@ public class MasterCodeController {
         // Find all of the matches sorted by their creation date
         List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
                                                                           new Sort("createdOn"));
+
+        if (retailerCodes == null || retailerCodes.isEmpty()) {
+            throw new ApiError("Retailer Code not available for selected Content");
+        }
 
         // Return just the first record found
         return retailerCodes.get(0);
