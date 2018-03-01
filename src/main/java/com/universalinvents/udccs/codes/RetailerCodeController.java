@@ -41,6 +41,13 @@ public class RetailerCodeController {
     @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
     public ResponseEntity<RetailerCode> importRetailerCode(@PathVariable String code,
                                                            @RequestBody @Valid RetailerCodeRequest request) {
+
+        // See if the code already exists and error if it does
+        RetailerCode rc = retailerCodeRepository.findOne(code);
+        if (rc != null) {
+            return new ResponseEntity(new ApiError("Retailer code already exists"), HttpStatus.CONFLICT);
+        }
+
         final Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);

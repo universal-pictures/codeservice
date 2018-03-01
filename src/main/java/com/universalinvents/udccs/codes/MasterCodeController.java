@@ -113,6 +113,12 @@ public class MasterCodeController {
     @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
     public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable String code,
                                                        @RequestBody IngestMasterCodeRequest request) {
+        // See if the code already exists and error if it does
+        MasterCode mc = masterCodeRepository.findOne(code);
+        if (mc != null) {
+            return new ResponseEntity(new ApiError("Master code already exists"), HttpStatus.CONFLICT);
+        }
+
         Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
