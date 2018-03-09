@@ -110,18 +110,17 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>external.atlassian.jgitflow</groupId>
-                <artifactId>jgitflow-maven-plugin</artifactId>
-                <version>1.0-m5.1</version>
+                <groupId>com.amashchenko.maven.plugin</groupId>
+                <artifactId>gitflow-maven-plugin</artifactId>
+                <version>1.9.0</version>
                 <configuration>
                     <!-- Follow steps from here to configure your SSH access to github:
                     https://help.github.com/articles/connecting-to-github-with-ssh/ -->
-                    <enableSshAgent>true</enableSshAgent>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <pushFeatures>true</pushFeatures>
-                    <pushReleases>true</pushReleases>
-                    <pushHotfixes>true</pushHotfixes>
-                    <noDeploy>true</noDeploy>
+                    <pushRemote>true</pushRemote>
+                    <fetchRemote>true</fetchRemote>
+                    <keepBranch>false</keepBranch>
+                    <postReleaseGoals>install</postReleaseGoals>
+                    <postHotfixGoals>install</postHotfixGoals>
                 </configuration>
             </plugin>
         </plugins>
