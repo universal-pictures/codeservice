@@ -6,6 +6,7 @@ package com.universalinvents.udccs.codes;
  */
 public class CreateMasterCodeRequest {
     private Long contentId;
+    private String format;
     private String createdBy;
     private Long partnerId;
     private Long appId;
@@ -14,9 +15,10 @@ public class CreateMasterCodeRequest {
     public CreateMasterCodeRequest() {
     }
 
-    public CreateMasterCodeRequest(Long contentId, String createdBy, Long partnerId, Long appId,
+    public CreateMasterCodeRequest(Long contentId, String format, String createdBy, Long partnerId, Long appId,
                                    Boolean create) {
         this.contentId = contentId;
+        this.format = format;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
         this.appId = appId;
@@ -29,6 +31,14 @@ public class CreateMasterCodeRequest {
 
     public void setContentId(Long contentId) {
         this.contentId = contentId;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     public String getCreatedBy() {

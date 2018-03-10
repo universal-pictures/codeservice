@@ -82,23 +82,26 @@ public class MasterCodeController {
             if (request.getPartnerId() != null) {
                 referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
                 if (referralPartner == null)
-                    return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+                    return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+                                              HttpStatus.NOT_FOUND);
             }
 
             App app = null;
             if (request.getAppId() != null) {
                 app = appRepository.findOne(request.getAppId());
-                if (app == null) return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+                if (app == null)
+                    return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
             }
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
-            MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app,
-                                                   content, MasterCode.Status.ISSUED);
+            MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
+                                                   referralPartner, app, content, MasterCode.Status.ISSUED);
             masterCodeRepository.save(masterCode);
             return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
         } else {
             try {
-                MasterCode masterCode = getMasterCode(request.getContentId(), MasterCode.Status.UNALLOCATED);
+                MasterCode masterCode = getMasterCode(request.getContentId(), request.getFormat(),
+                                                      MasterCode.Status.UNALLOCATED);
                 masterCode.setStatus(MasterCode.Status.ISSUED);
                 masterCodeRepository.save(masterCode);
                 return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
@@ -127,17 +130,19 @@ public class MasterCodeController {
         if (request.getPartnerId() != null) {
             referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
             if (referralPartner == null)
-                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+                                          HttpStatus.NOT_FOUND);
         }
 
         App app = null;
         if (request.getAppId() != null) {
             app = appRepository.findOne(request.getAppId());
-            if (app == null) return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+            if (app == null)
+                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
         }
 
-        MasterCode masterCode = new MasterCode(code, request.getCreatedBy(), new Date(), referralPartner, app, content,
-                                               MasterCode.Status.UNALLOCATED);
+        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
+                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED);
         masterCodeRepository.save(masterCode);
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
@@ -176,15 +181,14 @@ public class MasterCodeController {
             @RequestParam(name = "partnerId", required = false) Long partnerId,
             @RequestParam(name = "appId", required = false) Long appId,
             @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "createdOnAfter", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
-            @RequestParam(name = "createdOnBefore", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
-            @RequestParam(name = "modifiedOnAfter", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
-            @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
+            @RequestParam(name = "status", required = false) String status, @RequestParam(name = "createdOnAfter",
+                                                                                          required = false) @DateTimeFormat(
+            iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter, @RequestParam(name = "createdOnBefore",
+                                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
+            @RequestParam(name = "modifiedOnAfter",
+                          required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
+            @RequestParam(name = "modifiedOnBefore",
+                          required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
         ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
 
@@ -290,7 +294,7 @@ public class MasterCodeController {
             // Second:
             // If one wasn't found, get a random retailerCode for the related Content
             try {
-                retailerCode = getRetailerCode(masterCode.getContent(), retailer);
+                retailerCode = getRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
             } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
             }
@@ -312,13 +316,14 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
 
-    private RetailerCode getRetailerCode(Content content, Retailer retailer) throws ApiError {
+    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
         // Build a RetailerCode object with the values passed in
         RetailerCode retailerCode = new RetailerCode();
 
         // Unpaired RetailerCodes for the given Content & Retailer
         retailerCode.setContent(content);
         retailerCode.setRetailer(retailer);
+        retailerCode.setFormat(format);
         retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
 
         // Find all of the matches sorted by their creation date
@@ -333,7 +338,7 @@ public class MasterCodeController {
         return retailerCodes.get(0);
     }
 
-    private MasterCode getMasterCode(Long contentId, MasterCode.Status status) throws ApiError {
+    private MasterCode getMasterCode(Long contentId, String format, MasterCode.Status status) throws ApiError {
         // Build a MasterCode object with the values passed in
         MasterCode masterCode = new MasterCode();
 
@@ -343,6 +348,8 @@ public class MasterCodeController {
         } else {
             masterCode.setContent(content);
         }
+
+        masterCode.setFormat(format);
 
         try {
             masterCode.setStatus(status);

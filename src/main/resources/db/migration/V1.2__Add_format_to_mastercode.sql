@@ -1,0 +1,1 @@
+ALTER TABLE udccs.master_code ADD COLUMN format varchar(255);
