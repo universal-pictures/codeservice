@@ -5,15 +5,18 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
-import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -65,7 +68,8 @@ public class ContentController {
     @CrossOrigin
     @ApiOperation("Update a Content Entry")
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Content> updateContent(@PathVariable Long id, @RequestBody(required = false) ContentRequest request) {
+    public ResponseEntity<Content> updateContent(@PathVariable Long id,
+                                                 @RequestBody(required = false) ContentRequest request) {
 
         // Get existing Content record
         Content content = contentRepository.findOne(id);
@@ -164,14 +168,24 @@ public class ContentController {
     @CrossOrigin
     @ApiOperation("Get Content List")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Content>> getContents(
-            @RequestParam(name = "eidr", required = false) String eidr,
-            @RequestParam(name = "eidrv", required = false) String eidrv,
-            @RequestParam(name = "gtm", required = false) String gtm,
-            @RequestParam(name = "title", required = false) String title,
-            @RequestParam(name = "studioId", required = false) Long studioId,
-            @RequestParam(name = "retailerId", required = false) Long retailerId,
-            @RequestParam(name = "status", required = false) String status) {
+    public ResponseEntity<List<Content>> getContents(@RequestParam(name = "eidr", required = false) String eidr,
+                                                     @RequestParam(name = "eidrv", required = false) String eidrv,
+                                                     @RequestParam(name = "gtm", required = false) String gtm,
+                                                     @RequestParam(name = "title", required = false) String title,
+                                                     @RequestParam(name = "studioId", required = false) Long studioId,
+                                                     @RequestParam(name = "retailerId",
+                                                                   required = false) Long retailerId,
+                                                     @RequestParam(name = "status", required = false) String status,
+                                                     @RequestParam(name = "createdOnAfter",
+                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
+                                                     @RequestParam(name = "createdOnBefore",
+                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
+                                                     @RequestParam(name = "modifiedOnAfter",
+                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
+                                                     @RequestParam(name = "modifiedOnBefore",
+                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
+
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         // Build a Content object with the values passed in
         Content content = new Content();
@@ -181,7 +195,7 @@ public class ContentController {
             if (studio == null) {
                 return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                content.setStudio(studio);
+                params.add(new SqlCriteria("studio", ":", studioId));
             }
         }
 
@@ -190,51 +204,59 @@ public class ContentController {
             if (retailer == null) {
                 return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                content.setRetailers(Collections.singleton(retailer));
+                params.add(new SqlCriteria("retailerId", ":", retailerId));
             }
         }
 
         if (eidr != null) {
-            content.setEidr(eidr);
+            params.add(new SqlCriteria("eidr", ":", eidr));
         }
 
         if (eidrv != null) {
-            content.setEidrv(eidrv);
+            params.add(new SqlCriteria("eidrv", ":", eidrv));
         }
 
         if (gtm != null) {
-            content.setGtm(gtm);
+            params.add(new SqlCriteria("gtm", ":", gtm));
         }
         if (title != null) {
-            content.setTitle(title);
+            params.add(new SqlCriteria("title", ":", title));
         }
 
         if (status != null) {
-            content.setStatus(status);
+            params.add(new SqlCriteria("status", ":", status));
         }
 
-        List<Content> contents = contentRepository.findAll(Example.of(content));
+        if (createdOnAfter != null) {
+            params.add(new SqlCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new SqlCriteria("createdOn", "<", createdOnBefore));
+        }
+        if (modifiedOnAfter != null) {
+            params.add(new SqlCriteria("modifiedOn", ">", modifiedOnAfter));
+        }
+        if (modifiedOnBefore != null) {
+            params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+
+        List<Specification<Content>> specs = new ArrayList<>();
+        for (SqlCriteria param : params) {
+            specs.add(new ContentSpecification(param));
+        }
+
+        List<Content> contents = new ArrayList<Content>();
+        if (params.isEmpty()) {
+            contents = contentRepository.findAll();
+        } else {
+            Specification<Content> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            contents = contentRepository.findAll(query);
+        }
+
         return new ResponseEntity<List<Content>>(contents, HttpStatus.OK);
     }
 
-//    @CrossOrigin
-//    @ApiOperation("Add a Retailer for Content")
-//    @RequestMapping(method = RequestMethod.PUT, value = "/{id}", produces = "application/json")
-//    public ResponseEntity<Content> addRetailerToContent(@PathVariable Long id,
-//                                                        @RequestBody AddRetailerToContentRequest request) {
-//        Retailer retailer = retailerRepository.findOne(request.getRetailerId());
-//        if (retailer == null)
-//            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
-//
-//        Content content = contentRepository.findOne(id);
-//        if (content == null)
-//            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
-//
-//        retailer.getContents().add(content);
-//        content.getRetailers().add(retailer);
-//
-//        contentRepository.save(content);
-//
-//        return new ResponseEntity<Content>(content, HttpStatus.CREATED);
-//    }
 }

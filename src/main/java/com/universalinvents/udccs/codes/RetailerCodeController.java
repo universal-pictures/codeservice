@@ -6,6 +6,7 @@ import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
@@ -89,14 +90,14 @@ public class RetailerCodeController {
             @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
                     iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
-        ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new CodeCriteria("content", ":", contentId));
+                params.add(new SqlCriteria("content", ":", contentId));
             }
         }
 
@@ -105,17 +106,17 @@ public class RetailerCodeController {
             if (retailer == null) {
                 return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new CodeCriteria("retailer", ":", retailerId));
+                params.add(new SqlCriteria("retailer", ":", retailerId));
             }
         }
 
         if (format != null) {
-            params.add(new CodeCriteria("format", ":", format));
+            params.add(new SqlCriteria("format", ":", format));
         }
 
         if (status != null) {
             try {
-                params.add(new CodeCriteria("status", ":", RetailerCode.Status.valueOf(status)));
+                params.add(new SqlCriteria("status", ":", RetailerCode.Status.valueOf(status)));
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(RetailerCode.Status.values())),
@@ -124,20 +125,20 @@ public class RetailerCodeController {
         }
 
         if (createdOnAfter != null) {
-            params.add(new CodeCriteria("createdOn", ">", createdOnAfter));
+            params.add(new SqlCriteria("createdOn", ">", createdOnAfter));
         }
         if (createdOnBefore != null) {
-            params.add(new CodeCriteria("createdOn", "<", createdOnBefore));
+            params.add(new SqlCriteria("createdOn", "<", createdOnBefore));
         }
         if (modifiedOnAfter != null) {
-            params.add(new CodeCriteria("modifiedOn", ">", modifiedOnAfter));
+            params.add(new SqlCriteria("modifiedOn", ">", modifiedOnAfter));
         }
         if (modifiedOnBefore != null) {
-            params.add(new CodeCriteria("modifiedOn", "<", modifiedOnBefore));
+            params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
         }
 
         List<Specification<RetailerCode>> specs = new ArrayList<>();
-        for (CodeCriteria param : params) {
+        for (SqlCriteria param : params) {
             specs.add(new RetailerCodeSpecification(param));
         }
 

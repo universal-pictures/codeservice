@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -10,9 +11,9 @@ import java.util.Date;
 
 public class MasterCodeSpecification implements Specification<MasterCode> {
 
-    private CodeCriteria criteria;
+    private SqlCriteria criteria;
 
-    public MasterCodeSpecification(CodeCriteria criteria) {
+    public MasterCodeSpecification(SqlCriteria criteria) {
         this.criteria = criteria;
     }
 
