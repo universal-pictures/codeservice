@@ -138,4 +138,33 @@ public class Content {
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
     }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer("Content Object:");
+        sb.append("\n\tId: ").append(getId());
+        sb.append("\n\tTitle: ").append(getTitle());
+        sb.append("\n\tEidr: ").append(getEidr());
+        sb.append("\n\tEidrv: ").append(getEidrv());
+        sb.append("\n\tGtm: ").append(getGtm());
+        sb.append("\n\tStudio: ");
+        if (getStudio() == null) {
+            sb.append("null");
+        } else {
+            sb.append(getStudio().getName());
+        }
+        sb.append("\n\tMSRP: ").append(getMsrp());
+        sb.append("\n\tCreated On: ").append(getCreatedOn());
+        sb.append("\n\tModified On: ").append(getModifiedOn());
+        sb.append("\n\tStatus: ").append(getStatus());
+        sb.append("\n\tRetailers: ");
+        if (retailers == null) {
+            sb.append("\n\t\t- null");
+        } else {
+            for (Retailer retailer : retailers) {
+                sb.append("\n\t\t- ").append(retailer.getName());
+            }
+        }
+
+        return sb.toString();
+    }
 }

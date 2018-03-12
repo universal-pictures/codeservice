@@ -14,6 +14,7 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.CCFUtility;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -190,7 +191,7 @@ public class MasterCodeController {
             @RequestParam(name = "modifiedOnBefore",
                           required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
 
-        ArrayList<CodeCriteria> params = new ArrayList<CodeCriteria>();
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
@@ -198,7 +199,7 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
                                           HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new CodeCriteria("referralPartner", ":", partnerId));
+                params.add(new SqlCriteria("referralPartner", ":", partnerId));
             }
         }
 
@@ -207,7 +208,7 @@ public class MasterCodeController {
             if (app == null) {
                 return new ResponseEntity(new ApiError("App id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new CodeCriteria("app", ":", appId));
+                params.add(new SqlCriteria("app", ":", appId));
             }
         }
 
@@ -216,13 +217,13 @@ public class MasterCodeController {
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                params.add(new CodeCriteria("content", ":", contentId));
+                params.add(new SqlCriteria("content", ":", contentId));
             }
         }
 
         if (status != null) {
             try {
-                params.add(new CodeCriteria("status", ":", MasterCode.Status.valueOf(status)));
+                params.add(new SqlCriteria("status", ":", MasterCode.Status.valueOf(status)));
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
@@ -231,20 +232,20 @@ public class MasterCodeController {
         }
 
         if (createdOnAfter != null) {
-            params.add(new CodeCriteria("createdOn", ">", createdOnAfter));
+            params.add(new SqlCriteria("createdOn", ">", createdOnAfter));
         }
         if (createdOnBefore != null) {
-            params.add(new CodeCriteria("createdOn", "<", createdOnBefore));
+            params.add(new SqlCriteria("createdOn", "<", createdOnBefore));
         }
         if (modifiedOnAfter != null) {
-            params.add(new CodeCriteria("modifiedOn", ">", modifiedOnAfter));
+            params.add(new SqlCriteria("modifiedOn", ">", modifiedOnAfter));
         }
         if (modifiedOnBefore != null) {
-            params.add(new CodeCriteria("modifiedOn", "<", modifiedOnBefore));
+            params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
         }
 
         List<Specification<MasterCode>> specs = new ArrayList<>();
-        for (CodeCriteria param : params) {
+        for (SqlCriteria param : params) {
             specs.add(new MasterCodeSpecification(param));
         }
 

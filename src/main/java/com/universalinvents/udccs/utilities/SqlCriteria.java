@@ -1,11 +1,11 @@
-package com.universalinvents.udccs.codes;
+package com.universalinvents.udccs.utilities;
 
-public class CodeCriteria {
+public class SqlCriteria {
     private String key;
     private String operand;
     private Object value;
 
-    public CodeCriteria(String key, String operand, Object value) {
+    public SqlCriteria(String key, String operand, Object value) {
         this.key = key;
         this.operand = operand;
         this.value = value;
