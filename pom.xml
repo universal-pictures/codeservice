@@ -110,6 +110,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <!-- We moved from jgitflow because of this bug: -->
+                <!--   https://ecosystem.atlassian.net/browse/MJF-301 -->
+                <!-- Config details here: https://github.com/aleksandr-m/gitflow-maven-plugin -->
                 <groupId>com.amashchenko.maven.plugin</groupId>
                 <artifactId>gitflow-maven-plugin</artifactId>
                 <version>1.9.0</version>
@@ -121,6 +124,7 @@
                     <keepBranch>false</keepBranch>
                     <postReleaseGoals>install</postReleaseGoals>
                     <postHotfixGoals>install</postHotfixGoals>
+                    <skipFeatureVersion>true</skipFeatureVersion>
                 </configuration>
             </plugin>
         </plugins>

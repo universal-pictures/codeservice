@@ -18,7 +18,9 @@ import java.util.Date;
 @Table(name = "master_code", uniqueConstraints = {@UniqueConstraint(name = "uk_master_code", columnNames = {"code"})})
 public class MasterCode {
     // Legal status values
-    public enum Status {UNALLOCATED, ISSUED, PAIRED, REDEEMED}
+    public enum Status {
+        UNALLOCATED, ISSUED, PAIRED, REDEEMED
+    }
 
     @Id
     private String code;
@@ -26,9 +28,10 @@ public class MasterCode {
     private String createdBy;
     private Date createdOn;
     private Date modifiedOn;
+    private String format;
 
     @Enumerated(EnumType.STRING)
-    @Column(name="status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
     private Status status;
 
     @ManyToOne
@@ -52,9 +55,10 @@ public class MasterCode {
     public MasterCode() {
     }
 
-    public MasterCode(String code, String createdBy, Date createdOn, ReferralPartner referralPartner, App app,
-                      Content content, Status status) {
+    public MasterCode(String code, String format, String createdBy, Date createdOn, ReferralPartner referralPartner,
+                      App app, Content content, Status status) {
         this.code = code;
+        this.format = format;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
         this.referralPartner = referralPartner;
@@ -70,6 +74,14 @@ public class MasterCode {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
     }
 
     public String getCreatedBy() {
