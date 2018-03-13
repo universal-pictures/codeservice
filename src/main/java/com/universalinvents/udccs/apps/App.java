@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.apps;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.partners.ReferralPartner;
@@ -31,6 +32,7 @@ public class App {
     private ReferralPartner referralPartner;
 
     @OneToMany(mappedBy = "app")
+    @JsonIgnore
     private List<MasterCode> masterCodes;
 
     public App() {
