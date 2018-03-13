@@ -1,14 +1,23 @@
 package com.universalinvents.udccs.apps;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Created by kkirkland on 11/7/17.
  */
+@ApiModel("AppRequest")
 public class AppRequest {
 
+    @ApiModelProperty(value="The name of the app (i.e. iOS App)")
     private String name;
+    @ApiModelProperty(value="A short description of the app")
     private String description;
+    @ApiModelProperty(value="ACTIVE or INACTIVE")
     private String status;
+    @ApiModelProperty(value="The id of the related Referral Partner")
     private Long partnerId;
+    @ApiModelProperty(value="Unique api access token")
     private String accessToken;
 
     public AppRequest() {

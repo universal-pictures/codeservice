@@ -7,6 +7,7 @@ import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
@@ -28,9 +29,14 @@ public class AppController {
     private ReferralPartnerRepository referralPartnerRepository;
 
     @CrossOrigin
-    @ApiOperation("Create an App Entry")
-    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<App> createApp(@RequestBody AppRequest request) {
+    @ApiOperation(value = "Create an App Entry",
+                  notes = "Use this endpoint to create a new App entry.<br/>" +
+                          "Here's a new line.")
+    @RequestMapping(method = RequestMethod.POST,
+                    produces = "application/json")
+    public ResponseEntity<App> createApp(@RequestBody(required = true)
+                                         @ApiParam(value = "Provide values for a new App.  See the Model view for descriptions of each parameter")
+                                                 AppRequest request) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
         if (referralPartner == null)
@@ -51,7 +57,9 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Update an App Entry")
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PATCH,
+                    value = "/{id}",
+                    produces = "application/json")
     public ResponseEntity<App> updateApp(@PathVariable Long id, @RequestBody(required = false) AppRequest request) {
         // Get existing App record
         App app = appRepository.findOne(id);
@@ -93,7 +101,9 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Delete an App Entry")
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.DELETE,
+                    value = "/{id}",
+                    produces = "application/json")
     public ResponseEntity deleteApp(@PathVariable Long id) {
         try {
             // First get the existing app record
@@ -123,7 +133,9 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get app information for a given App id")
-    @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET,
+                    value = "/{id}",
+                    produces = "application/json")
     public ResponseEntity<App> getAppById(@PathVariable Long id) {
         App app = appRepository.findOne(id);
         if (app == null)
@@ -134,12 +146,16 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation("Get App List")
-    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<App>> getApps(
-            @RequestParam(name = "partnerId", required = false) Long partnerId,
-            @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "accessToken", required = false) String accessToken,
-            @RequestParam(name = "status", required = false) String status) {
+    @RequestMapping(method = RequestMethod.GET,
+                    produces = "application/json")
+    public ResponseEntity<List<App>> getApps(@RequestParam(name = "partnerId",
+                                                           required = false) Long partnerId,
+                                             @RequestParam(name = "name",
+                                                           required = false) String name,
+                                             @RequestParam(name = "accessToken",
+                                                           required = false) String accessToken,
+                                             @RequestParam(name = "status",
+                                                           required = false) String status) {
 
         // Build an App object with the values passed in
         App app = new App();
@@ -147,7 +163,8 @@ public class AppController {
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
-                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
+                                          HttpStatus.BAD_REQUEST);
             } else {
                 app.setReferralPartner(referralPartner);
             }
