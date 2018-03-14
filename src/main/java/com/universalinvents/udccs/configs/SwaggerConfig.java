@@ -29,8 +29,7 @@ public class SwaggerConfig {
     private String BUILD_VERSION;
 
     @Bean
-    public Docket api()
-    {
+    public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 .select()
@@ -54,14 +53,21 @@ public class SwaggerConfig {
         return new CorsFilter(source);
     }
 
-    private ApiInfo apiInfo()
-    {
+    private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("Movies Everywhere")
-                .description("NBCUniversal Movies Everywhere API")
+                .title("Code API")
+                .description(getDescription())
                 .license("License TBD")
                 .licenseUrl("License TBD")
                 .version(BUILD_VERSION)
                 .build();
+    }
+
+    private String getDescription() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("NBCUniversal Digital Movie Code API<p/>");
+        sb.append("<u><b>Database Schema:</b></u><br/>");
+        sb.append("<img src='/images/APIIG_DB_Schema_V2.png'>");
+        return (sb.toString());
     }
 }

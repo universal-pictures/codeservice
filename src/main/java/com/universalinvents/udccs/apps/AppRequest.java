@@ -13,7 +13,7 @@ public class AppRequest {
     private String name;
     @ApiModelProperty(value="A short description of the app")
     private String description;
-    @ApiModelProperty(value="ACTIVE or INACTIVE")
+    @ApiModelProperty(value="ACTIVE or INACTIVE", example = "ACTIVE", required = true)
     private String status;
     @ApiModelProperty(value="The id of the related Referral Partner")
     private Long partnerId;

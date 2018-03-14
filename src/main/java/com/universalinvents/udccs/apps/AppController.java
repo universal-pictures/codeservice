@@ -30,8 +30,8 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation(value = "Create an App Entry",
-                  notes = "Use this endpoint to create a new App entry.<br/>" +
-                          "Here's a new line.")
+                  notes = "Use this endpoint to create a new App entry.<p/>" +
+                          "This is a new line")
     @RequestMapping(method = RequestMethod.POST,
                     produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody(required = true)
