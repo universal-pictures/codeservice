@@ -30,12 +30,11 @@ public class SwaggerConfig {
 
     @Bean
     public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(apiInfo())
-                .select()
-                .apis(RequestHandlerSelectors.any())
-                .paths(PathSelectors.regex("/api.*"))
-                .build();
+        return new Docket(DocumentationType.SWAGGER_2).apiInfo(apiInfo())
+                                                      .select()
+                                                      .apis(RequestHandlerSelectors.any())
+                                                      .paths(PathSelectors.regex("/api.*"))
+                                                      .build();
     }
 
     @Bean
@@ -54,20 +53,29 @@ public class SwaggerConfig {
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder()
-                .title("Code API")
-                .description(getDescription())
-                .license("License TBD")
-                .licenseUrl("License TBD")
-                .version(BUILD_VERSION)
-                .build();
+        return new ApiInfoBuilder().title("Code API")
+                                   .description(getDescription())
+                                   .license("License TBD")
+                                   .licenseUrl("License TBD")
+                                   .version(BUILD_VERSION)
+                                   .build();
     }
 
     private String getDescription() {
         StringBuffer sb = new StringBuffer();
-        sb.append("NBCUniversal Digital Movie Code API<p/>");
-        sb.append("<u><b>Database Schema:</b></u><br/>");
-        sb.append("<img src='/images/APIIG_DB_Schema_V2.png'>");
+        sb.append("This API service provides digital e-Copy codes associated ")
+          .append("to specific movie titles. The e-Copy code can later be paired ")
+          .append("to a specific digital retailer redemption code, which would be ")
+          .append("recognized and redeemable at a retailer platform such as:")
+          .append("<ul>")
+          .append("<li>Movies Anywhere</li>")
+          .append("<li>iTunes</li>")
+          .append("<li>Google Play</li>")
+          .append("<li>Amazon Video</li>")
+          .append("<li>Vudu</li>")
+          .append("<li>Fandango Now</li>")
+          .append("<li>Sky</li>")
+          .append("</ul>");
         return (sb.toString());
     }
 }

@@ -9,15 +9,25 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel("AppRequest")
 public class AppRequest {
 
-    @ApiModelProperty(value="The name of the app (i.e. iOS App)")
+    @ApiModelProperty(value = "The name of the app",
+                      example = "iOS App",
+                      required = true)
     private String name;
-    @ApiModelProperty(value="A short description of the app")
+    @ApiModelProperty(value = "A short description of the app",
+                      example = "My Company's iOS Application",
+                      required = true)
     private String description;
-    @ApiModelProperty(value="ACTIVE or INACTIVE", example = "ACTIVE", required = true)
+    @ApiModelProperty(value = "ACTIVE or INACTIVE",
+                      example = "ACTIVE",
+                      required = true)
     private String status;
-    @ApiModelProperty(value="The id of the related Referral Partner")
+    @ApiModelProperty(value = "The id of the related Referral Partner",
+                      example = "1",
+                      required = true)
     private Long partnerId;
-    @ApiModelProperty(value="Unique api access token")
+    @ApiModelProperty(value = "Unique api access token (received from AWS)",
+                      example = "2mmu5pbq316h6tu2g44e5rx43ba",
+                      required = true)
     private String accessToken;
 
     public AppRequest() {

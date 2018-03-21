@@ -7,7 +7,6 @@ import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
@@ -45,7 +44,6 @@ public class MasterCode {
 
     @ManyToOne
     @JoinColumn(name = "appId")
-    @NotNull
     @JsonIgnoreProperties("masterCodes")
     private App app;
 
