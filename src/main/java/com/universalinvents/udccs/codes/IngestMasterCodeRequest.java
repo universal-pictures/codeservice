@@ -1,14 +1,34 @@
 package com.universalinvents.udccs.codes;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Created by dsherman on 2/27/17.
  * Updated by kkirkland on 11/7/17.
  */
+@ApiModel("IngestMasterCodeRequest")
 public class IngestMasterCodeRequest {
+
+    @ApiModelProperty(value = "The id of the related content (title)",
+                      example = "1",
+                      required = true)
     private Long contentId;
+    @ApiModelProperty(value = "The video format of the content related to this code",
+                      example = "HD",
+                      required = true)
     private String format;
+    @ApiModelProperty(value = "Who ingested this code? Value can be any string but an external customer id is preferred.",
+                      example = "qas8fcw00sddergwpjkn4weiibnc925z",
+                      required = false)
     private String createdBy;
+    @ApiModelProperty(value = "The id of the referral partner that's importing this code.",
+                      example = "1",
+                      required = false)
     private Long partnerId;
+    @ApiModelProperty(value = "The id of the app that's being used to import this code.",
+                      example = "2",
+                      required = false)
     private Long appId;
 
     public IngestMasterCodeRequest() {

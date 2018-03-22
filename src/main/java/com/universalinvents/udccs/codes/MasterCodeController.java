@@ -15,7 +15,9 @@ import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.CCFUtility;
 import com.universalinvents.udccs.utilities.SqlCriteria;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -32,6 +34,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@Api(tags = {"Master Code Controller"},
+     description = "Operations pertaining to master codes")
 @RestController
 @RequestMapping("/api/codes/master")
 public class MasterCodeController {
@@ -60,10 +64,25 @@ public class MasterCodeController {
     private StudioRepository studioRepository;
 
     @CrossOrigin
-    @ApiOperation("Create a Master Code")
-    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
+    @ApiOperation(value = "Obtain a Master Code",
+                  notes = "A Master Code is given to a customer for future redemption of its related content. " +
+                  "You may either generate a code on the fly or retrieve one that was previously ingested. " +
+                  "Here's how that works:\n\n<br/>" +
+                  "If *request.create* is *true*:\n" +
+                  "1. Generate a new ISSUED code and return it to the user\n\n" +
+                  "If *request.create* is *false* (or undefined):\n" +
+                  "1. Find an UNALLOCATED code for the given content\n" +
+                  "2. Update that code's status to ISSUED\n" +
+                  "3. Return the updated code to the user\n\n" +
+                  "Additionally, if *request.create* is *true* then the following parameters are required:\n" +
+                  "* *request.appId*\n" +
+                  "* *request.partnerId*")
+    @RequestMapping(method = RequestMethod.POST,
+                    produces = "application/json")
     @Transactional
-    public ResponseEntity<MasterCode> createMasterCode(@RequestBody CreateMasterCodeRequest request) {
+    public ResponseEntity<MasterCode> createMasterCode(@RequestBody
+                                                       @ApiParam(value = "Provide properties for the Master Code.")
+                                                                   CreateMasterCodeRequest request) {
 
         //
         // If request.create is true:
@@ -85,6 +104,9 @@ public class MasterCodeController {
                 if (referralPartner == null)
                     return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
                                               HttpStatus.NOT_FOUND);
+            } else {
+                return new ResponseEntity(new ApiError("partnerId parameter is required when create is true."),
+                                          HttpStatus.BAD_REQUEST);
             }
 
             App app = null;
@@ -92,6 +114,9 @@ public class MasterCodeController {
                 app = appRepository.findOne(request.getAppId());
                 if (app == null)
                     return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
+            } else {
+                return new ResponseEntity(new ApiError("appId parameter is required when create is true."),
+                                          HttpStatus.BAD_REQUEST);
             }
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
@@ -113,10 +138,19 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation("Ingest a Master Code")
-    @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
-    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable String code,
-                                                       @RequestBody IngestMasterCodeRequest request) {
+    @ApiOperation(value = "Ingest a Master Code",
+                  notes = "Use this endpoint if you need to ingest codes from an external source. Master Codes " +
+                  "entered this way will be given an UNALLOCATED status and will be utilized by future *POST " +
+                  "/api/codes/master* calls where *create* is 'false'.")
+    @RequestMapping(method = RequestMethod.POST,
+                    value = "/{code}",
+                    produces = "application/json")
+    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
+                                                           @ApiParam(value = "The Master Code to ingest")
+                                                                   String code,
+                                                       @RequestBody
+                                                       @ApiParam(value = "Provide properties for the Master Code.")
+                                                               IngestMasterCodeRequest request) {
         // See if the code already exists and error if it does
         MasterCode mc = masterCodeRepository.findOne(code);
         if (mc != null) {
@@ -149,9 +183,23 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation("Update the status of a Master Code")
-    @RequestMapping(method = RequestMethod.PATCH, value = "/{code}", produces = "application/json")
-    public ResponseEntity<MasterCode> updateMasterCode(@PathVariable String code, @RequestBody String newStatus) {
+    @ApiOperation(value = "Update the status of a Master Code",
+                  notes = "Master Codes can have one of the following status values:\n\n" +
+                  "| Status      | Description                                            |\n" +
+                  "| ----------- | ------------------------------------------------------ |\n" +
+                  "| UNALLOCATED | Code has been ingested and is available for a customer |\n" +
+                  "| ISSUED      | Code has been given to a customer                      |\n" +
+                  "| PAIRED      | Code has been related with a Retailer Code             |\n" +
+                  "| REDEEMED    | Code has been redeemed at the Retailer                 |\n")
+    @RequestMapping(method = RequestMethod.PATCH,
+                    value = "/{code}",
+                    produces = "application/json")
+    public ResponseEntity<MasterCode> updateMasterCode(@PathVariable
+                                                           @ApiParam(value = "The Master Code you wish to update")
+                                                                   String code,
+                                                       @RequestBody
+                                                       @ApiParam(value = "The new status value")
+                                                               String newStatus) {
         // Get existing MasterCode record
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
@@ -166,8 +214,12 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation("Get Master Code information for a given code")
-    @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
-    public ResponseEntity<MasterCode> getMasterCode(@PathVariable String code) {
+    @RequestMapping(method = RequestMethod.GET,
+                    value = "/{code}",
+                    produces = "application/json")
+    public ResponseEntity<MasterCode> getMasterCode(@PathVariable
+                                                        @ApiParam(value = "The code you wish to retrieve")
+                                                                String code) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -176,20 +228,44 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get Master Codes")
-    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
+    @ApiOperation(value = "Search Master Codes",
+                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                          "to filter the results (AND as opposed to OR)")
+    @RequestMapping(method = RequestMethod.GET,
+                    produces = "application/json")
     public ResponseEntity<List<MasterCode>> getMasterCodes(
-            @RequestParam(name = "partnerId", required = false) Long partnerId,
-            @RequestParam(name = "appId", required = false) Long appId,
-            @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "status", required = false) String status, @RequestParam(name = "createdOnAfter",
-                                                                                          required = false) @DateTimeFormat(
-            iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter, @RequestParam(name = "createdOnBefore",
-                                                                                   required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
+            @ApiParam(value = "Referral Partner related to Master Codes.")
+            @RequestParam(name = "partnerId",
+                          required = false) Long partnerId,
+            @ApiParam(value = "App related to Master Codes.")
+            @RequestParam(name = "appId",
+                          required = false) Long appId,
+            @ApiParam(value = "Content related to Master Codes.")
+            @RequestParam(name = "contentId",
+                          required = false) Long contentId,
+            @ApiParam(value = "Master Codes with this status.")
+            @RequestParam(name = "status",
+                          required = false) String status,
+            @ApiParam(value = "Master Codes created after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "createdOnAfter",
+                          required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date createdOnAfter,
+            @ApiParam(value = "Master Codes created before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "createdOnBefore",
+                          required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date createdOnBefore,
+            @ApiParam(value = "Master Codes modified after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedOnAfter",
-                          required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
+                          required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnAfter,
+            @ApiParam(value = "Master Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedOnBefore",
-                          required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
+                          required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -266,7 +342,9 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation("Pair Master Code to a Retailer Code")
-    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/pair", produces = "application/json")
+    @RequestMapping(method = RequestMethod.PUT,
+                    value = "/{code}/pair",
+                    produces = "application/json")
     @Transactional
     public ResponseEntity<MasterCode> pairMasterCode(@PathVariable String code,
                                                      @RequestBody PairMasterCodeRequest request) {
@@ -376,7 +454,8 @@ public class MasterCodeController {
 //            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
 //
 //        if (masterCode.isRedeemed())
-//            return new ResponseEntity(new ApiError("Master Code expressed is already redeemed."), HttpStatus.CONFLICT);
+//            return new ResponseEntity(new ApiError("Master Code expressed is already redeemed."), HttpStatus
+// .CONFLICT);
 //
 //        masterCode.setRedeemedOn(new Date());
 //        masterCode.setRedeemedBy(request.getRedeemedBy());

@@ -39,8 +39,7 @@ public class AppController {
     @RequestMapping(method = RequestMethod.POST,
                     produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody(required = true)
-                                         @ApiParam(value = "Provide values for a new App.<br/>Look at the Model view " +
-                                                 "for descriptions of each parameter.")
+                                         @ApiParam(value = "Provide properties for a new App.")
                                                  AppRequest request) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
@@ -66,8 +65,7 @@ public class AppController {
     public ResponseEntity<App> updateApp(
             @PathVariable @ApiParam(value = "The id of the App you wish to change") Long id,
             @RequestBody(required = false)
-            @ApiParam(value = "Provide updated values for the App.<br/>Look at the Model view for descriptions of " +
-                    "each parameter.")
+            @ApiParam(value = "Provide updated properties for the App")
                     AppRequest request) {
         // Get existing App record
         App app = appRepository.findOne(id); if (app == null)
@@ -100,9 +98,9 @@ public class AppController {
     @CrossOrigin
     @ApiOperation(value = "Delete an App Entry",
                   notes = "Delete an App that has not yet been associated with any codes.  If it has been associated " +
-                          "with codes, it will not be deleted and will result in an error" +
-                          ".<p>After successful deletion, an SQS message is emitted on the <i>udccs_app_delete" +
-                          ".fifo</i> queue in AWS to allow for additional processing if necessary.")
+                          "with codes, it will not be deleted and will result in an error.\n\n" +
+                          "After successful deletion, an SQS message is emitted on the *udccs_app_delete.fifo* queue " +
+                          "in AWS to allow for additional processing if necessary.")
     @RequestMapping(method = RequestMethod.DELETE,
                     value = "/{id}",
                     produces = "application/json")
