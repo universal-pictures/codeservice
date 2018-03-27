@@ -4,7 +4,7 @@ import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+@Api(tags = {"Referral Partner Controller"},
+     description = "Operations pertaining to referral partners")
 @RestController
 @RequestMapping("/api/partners")
 public class ReferralPartnerController {
@@ -30,14 +32,25 @@ public class ReferralPartnerController {
     private AppRepository appRepository;
 
     @CrossOrigin
-    @ApiOperation("Create a ReferralPartner Entry")
+    @ApiOperation(value = "Create a Referral Partner Entry",
+                  notes = "A Referral Partner represents a company that orchestrates the purchasing and " +
+                          "management of Master Codes (usually through a number of Apps they maintain).")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created", response = ReferralPartner.class),
+            @ApiResponse(code = 400, message = "Specified Retailer Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<ReferralPartner> createPartner(@RequestBody ReferralPartnerRequest request) {
+    public ResponseEntity<ReferralPartner> createPartner(
+            @RequestBody
+            @ApiParam(value = "Provide properties for the Referral Partner.")
+                    CreateReferralPartnerRequest request) {
+
         HashSet<Retailer> retailers = null;
         try {
             retailers = getRetailers(request);
         } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
+            return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
         }
 
         ReferralPartner referralPartner = new ReferralPartner();
@@ -56,14 +69,30 @@ public class ReferralPartnerController {
     }
 
     @CrossOrigin
-    @ApiOperation("Update a ReferralPartner Entry")
+    @ApiOperation(value = "Update a Referral Partner Entry",
+                  notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
+                          "specifying any of these values, they will overwrite existing values; especially " +
+                          "retailerIds.  If you wish to add a Retailer to the list, you must ensure to include " +
+                          "any of the current values here.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 304, message = "Referral Partner was not modified", response = ReferralPartner.class),
+            @ApiResponse(code = 404, message = "Referral Partner is Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Specified Retailer Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
-    public ResponseEntity<ReferralPartner> updatePartner(@PathVariable Long id,
-                                                         @RequestBody(required = false) ReferralPartnerRequest request) {
+    public ResponseEntity<ReferralPartner> updatePartner(
+            @PathVariable
+            @ApiParam(value = "The Referral Partner id to update")
+                    Long id,
+            @RequestBody(required = false)
+            @ApiParam(value = "Provide updated properties for the Referral Partner")
+                    UpdateReferralPartnerRequest request) {
+
         // Get existing Partner record
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
         if (referralPartner == null)
-            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Referral Partner id expressed is not found."), HttpStatus.NOT_FOUND);
 
         // Update values from request - if set
         boolean isModified = false;
@@ -72,7 +101,7 @@ public class ReferralPartnerController {
                 referralPartner.setRetailers(getRetailers(request));
                 isModified = true;
             } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.NOT_FOUND);
+                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -123,9 +152,17 @@ public class ReferralPartnerController {
     }
 
     @CrossOrigin
-    @ApiOperation("Delete a ReferralPartner Entry")
+    @ApiOperation(value = "Delete a Referral Partner Entry",
+                  notes = "Delete a Referral Partner record that has not yet been associated with a Master Code.")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "No Content"),
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
-    public ResponseEntity deletePartner(@PathVariable Long id) {
+    public ResponseEntity deletePartner(@PathVariable
+                                            @ApiParam(value = "The id of the Referral Partner to delete")
+                                                    Long id) {
         try {
             referralPartnerRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -135,9 +172,17 @@ public class ReferralPartnerController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get ReferralPartner information for a given ReferralPartner id")
+    @ApiOperation(value = "Get Referral Partner information for a given Referral Partner id")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
-    public ResponseEntity<ReferralPartner> getPartnerById(@PathVariable Long id) {
+    public ResponseEntity<ReferralPartner> getPartnerById(
+            @PathVariable
+            @ApiParam(value = "The id of the Referral Partner to retrieve")
+                    Long id) {
+
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
         if (referralPartner == null)
             return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -146,15 +191,30 @@ public class ReferralPartnerController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get ReferralPartner List")
+    @ApiOperation(value = "Search Referral Partners",
+                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                          "to filter the results (AND as opposed to OR)")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Specified Retailer Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<ReferralPartner>> getPartners(
-            @RequestParam(name = "retailerId", required = false) Long retailerId,
-            @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "contactName", required = false) String contactName,
-            @RequestParam(name = "contactEmail", required = false) String contactEmail,
-            @RequestParam(name = "regionCode", required = false) String regionCode,
-            @RequestParam(name = "status", required = false) String status) {
+            @RequestParam(name = "retailerId", required = false)
+            @ApiParam(value = "Referral Partners related with this Retailer.")
+                    Long retailerId,
+            @RequestParam(name = "name", required = false)
+            @ApiParam(value = "The name of a Referral Partner to find. Exact match only.")
+                    String name,
+            @RequestParam(name = "contactName", required = false)
+            @ApiParam(value = "Referral Partners with this contact name. Exact match only.")
+                    String contactName,
+            @RequestParam(name = "contactEmail", required = false)
+            @ApiParam(value = "Referral Partners with this contact email. Exact match only.")
+                    String contactEmail,
+            @RequestParam(name = "status", required = false)
+            @ApiParam(value = "ACTIVE or INACTIVE")
+                    String status) {
 
         // Build a ReferralPartner object with the values passed in
         ReferralPartner referralPartner = new ReferralPartner();
@@ -178,9 +238,6 @@ public class ReferralPartnerController {
 
         if (contactEmail != null) {
             referralPartner.setContactEmail(contactEmail);
-        }
-        if (regionCode != null) {
-            referralPartner.setRegionCode(regionCode);
         }
 
         if (status != null) {

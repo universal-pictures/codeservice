@@ -6,9 +6,7 @@ import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
@@ -36,6 +34,11 @@ public class AppController {
                   notes = "A Referral Partner can define multiple Apps that they provide to their users (i.e. iOS " +
                           "App, Android App, etc.). Most activity dealing with codes is then related to the app a " +
                           "user is using.")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created", response = App.class),
+            @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.POST,
                     produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody(required = true)
@@ -44,10 +47,14 @@ public class AppController {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
         if (referralPartner == null)
-            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.BAD_REQUEST);
 
-        App app = new App(); app.setDescription(request.getDescription()); app.setName(request.getName());
-        app.setStatus(request.getStatus()); app.setReferralPartner(referralPartner); app.setCreatedOn(new Date());
+        App app = new App();
+        app.setDescription(request.getDescription());
+        app.setName(request.getName());
+        app.setStatus(request.getStatus());
+        app.setReferralPartner(referralPartner);
+        app.setCreatedOn(new Date());
         app.setAccessToken(request.getAccessToken());
 
         appRepository.save(app);
@@ -59,14 +66,23 @@ public class AppController {
     @ApiOperation(value = "Update an App Entry",
                   notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
                           "its existing value.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 304, message = "App was not modified", response = App.class),
+            @ApiResponse(code = 404, message = "App is Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.PATCH,
                     value = "/{id}",
                     produces = "application/json")
     public ResponseEntity<App> updateApp(
-            @PathVariable @ApiParam(value = "The id of the App you wish to change") Long id,
+            @PathVariable
+            @ApiParam(value = "The id of the App to change")
+                    Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the App")
                     AppRequest request) {
+
         // Get existing App record
         App app = appRepository.findOne(id); if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -75,20 +91,26 @@ public class AppController {
         boolean isModified = false; if (request.getPartnerId() != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
             if (referralPartner == null)
-                return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.NOT_FOUND);
-            app.setReferralPartner(referralPartner); isModified = true;
+                return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.BAD_REQUEST);
+            app.setReferralPartner(referralPartner);
+            isModified = true;
         }
 
         if (request.getDescription() != null) {
-            app.setDescription(request.getDescription()); isModified = true;
+            app.setDescription(request.getDescription());
+            isModified = true;
         } if (request.getName() != null) {
-            app.setName(request.getName()); isModified = true;
+            app.setName(request.getName());
+            isModified = true;
         } if (request.getStatus() != null) {
-            app.setStatus(request.getStatus()); isModified = true;
+            app.setStatus(request.getStatus());
+            isModified = true;
         }
 
         if (isModified) {
-            app.setModifiedOn(new Date()); appRepository.save(app); return new ResponseEntity<App>(app, HttpStatus.OK);
+            app.setModifiedOn(new Date());
+            appRepository.save(app);
+            return new ResponseEntity<App>(app, HttpStatus.OK);
         }
 
         // Nothing was updated.  Just return the found App.
@@ -101,13 +123,19 @@ public class AppController {
                           "with codes, it will not be deleted and will result in an error.\n\n" +
                           "After successful deletion, an SQS message is emitted on the *udccs_app_delete.fifo* queue " +
                           "in AWS to allow for additional processing if necessary.")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "No Content"),
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.DELETE,
                     value = "/{id}",
                     produces = "application/json")
-    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App you wish to delete") Long id) {
+    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App to delete") Long id) {
         try {
             // First get the existing app record
-            App app = appRepository.findOne(id); ObjectMapper mapper = new ObjectMapper();
+            App app = appRepository.findOne(id);
+            ObjectMapper mapper = new ObjectMapper();
             String appJson = mapper.writeValueAsString(app);
 
             // Now delete the record
@@ -132,11 +160,15 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation(value = "Get App information for a given App id")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET,
                     value = "/{id}",
                     produces = "application/json")
     public ResponseEntity<App> getAppById(
-            @PathVariable @ApiParam(value = "The id of the App you wish to retrieve") Long id) {
+            @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id) {
         App app = appRepository.findOne(id); if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
@@ -147,6 +179,10 @@ public class AppController {
     @ApiOperation(value = "Search Apps",
                   notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
                           "to filter the results (AND as opposed to OR)")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET,
                     produces = "application/json")
     public ResponseEntity<List<App>> getApps(@ApiParam(value = "Referral Partner related to Apps.")

@@ -7,7 +7,7 @@ import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.utilities.SqlCriteria;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@Api(tags = {"Retailer Code Controller"},
+     description = "Operations pertaining to retailer codes")
 @RestController
 @RequestMapping("/api/codes/retailer")
 public class RetailerCodeController {
@@ -38,10 +40,26 @@ public class RetailerCodeController {
     private PairingRepository pairingRepository;
 
     @CrossOrigin
-    @ApiOperation("Import a Retailer Code")
+    @ApiOperation(value = "Ingest a Retailer Code",
+                  notes = "Use this endpoint to ingest codes from an external source. Retailer Codes " +
+                          "will be given an UNALLOCATED status and will be utilized by future " +
+                          "*POST /api/codes/master/{code}/pair* calls.")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created", response = RetailerCode.class),
+            @ApiResponse(code = 400, message = "Specified Content or Retailer Not Found",
+                         response = ApiError.class),
+            @ApiResponse(code = 409, message = "Retailer Code already exists", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
-    public ResponseEntity<RetailerCode> importRetailerCode(@PathVariable String code,
-                                                           @RequestBody @Valid RetailerCodeRequest request) {
+    public ResponseEntity<RetailerCode> ingestRetailerCode(
+            @PathVariable
+            @ApiParam(value = "The Retailer Code to ingest")
+                    String code,
+            @RequestBody
+            @Valid
+            @ApiParam(value = "Provide properties for the Retailer Code.")
+                    RetailerCodeRequest request) {
 
         // See if the code already exists and error if it does
         RetailerCode rc = retailerCodeRepository.findOne(code);
@@ -51,11 +69,11 @@ public class RetailerCodeController {
 
         final Content content = contentRepository.findOne(request.getContentId());
         if (content == null)
-            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
 
         final Retailer retailer = retailerRepository.findOne(request.getRetailerId());
         if (retailer == null)
-            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
+            return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
         final RetailerCode retailerCode = new RetailerCode(code, content, request.getFormat(),
                                                            RetailerCode.Status.UNALLOCATED, retailer);
@@ -63,7 +81,11 @@ public class RetailerCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get Retailer Code information for a given code")
+    @ApiOperation(value = "Get Retailer Code information for a given code")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
     public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable String code) {
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);

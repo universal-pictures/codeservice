@@ -37,7 +37,8 @@ public class SwaggerConfig {
                                                       .select()
                                                       .apis(RequestHandlerSelectors.any())
                                                       .paths(PathSelectors.regex("/api.*"))
-                                                      .build();
+                                                      .build()
+                                                      .useDefaultResponseMessages(false);
     }
 
     @Bean
