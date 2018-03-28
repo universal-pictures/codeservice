@@ -1,9 +1,13 @@
 package com.universalinvents.udccs.reports;
 
+import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.codes.MasterCodeRepository;
+import com.universalinvents.udccs.codes.RetailerCode;
+import com.universalinvents.udccs.codes.RetailerCodeRepository;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+@Api(tags = {"Report Controller"},
+     description = "Basic Reporting operations")
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController
@@ -29,8 +35,11 @@ public class ReportController
     @Autowired
     private MasterCodeRepository masterCodeRepository;
 
+    @Autowired
+    private RetailerCodeRepository retailerCodeRepository;
+
     @CrossOrigin
-    @ApiOperation("Get a summarized report of UDCCS stats")
+    @ApiOperation(value = "Get a summarized report of code stats")
     @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<SummaryReport> getSummaryReport()
     {
@@ -38,11 +47,14 @@ public class ReportController
         report.setPartners(referralPartnerRepository.count());
         report.setRetailers(retailerRepository.count());
         report.setContents(contentRepository.count());
-
-        long totalCodes = masterCodeRepository.count();
-        report.setStudioCodes(totalCodes);
-//        report.setStudioCodesPaired(totalCodes - masterCodeRepository.countByPairedBy(null));
-//        report.setStudioCodesRedeemed(totalCodes - masterCodeRepository.countByRedeemedBy(null));
+        report.setMasterCodes(masterCodeRepository.count());
+        report.setMasterCodesUnallocated(masterCodeRepository.countByStatus(MasterCode.Status.UNALLOCATED));
+        report.setMasterCodesPaired(masterCodeRepository.countByStatus(MasterCode.Status.PAIRED));
+        report.setMasterCodesRedeemed(masterCodeRepository.countByStatus(MasterCode.Status.REDEEMED));
+        report.setRetailerCodes(retailerCodeRepository.count());
+        report.setRetailerCodesUnallocated(retailerCodeRepository.countByStatus(RetailerCode.Status.UNALLOCATED));
+        report.setRetailerCodesPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
+        report.setRetailerCodesRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
 
         return new ResponseEntity<SummaryReport>(report, HttpStatus.OK);
     }

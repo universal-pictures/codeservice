@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
  */
 public interface RetailerCodeRepository extends JpaRepository<RetailerCode, String>, JpaSpecificationExecutor<RetailerCode>
 {
+    long countByStatus(RetailerCode.Status status);
 }

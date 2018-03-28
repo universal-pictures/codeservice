@@ -13,7 +13,6 @@ public interface MasterCodeRepository extends JpaRepository<MasterCode, String>,
 //    List<MasterCode> findByReferralPartner(final ReferralPartner referralPartner);
 //    List<MasterCode> findByStatus(final MasterCode.Status status);
 
-//    long countByPairedBy(String pairedBy);
-//
+    long countByStatus(MasterCode.Status status);
 //    long countByRedeemedBy(String redeemedBy);
 }

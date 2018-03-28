@@ -3,7 +3,7 @@ package com.universalinvents.udccs.studios;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+@Api(tags = {"Studio Controller"},
+     description = "Operations pertaining to studios")
 @RestController
 @RequestMapping("/api/studios")
 public class StudioController {
@@ -25,9 +27,18 @@ public class StudioController {
     private ContentRepository contentRepository;
 
     @CrossOrigin
-    @ApiOperation("Create a Studio Entry")
+    @ApiOperation(value = "Create a Studio Entry",
+                  notes = "A Studio represents a company that creates Content.")
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Created", response = Studio.class)
+    })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<Studio> createStudio(@RequestBody StudioRequest request) {
+    public ResponseEntity<Studio> createStudio(
+            @RequestBody
+            @ApiParam(value = "Provide properties for the Studio.", required = true)
+                    CreateStudioRequest request) {
+
         Studio studio = new Studio();
         studio.setName(request.getName());
         studio.setDescription(request.getDescription());
@@ -45,9 +56,23 @@ public class StudioController {
     }
 
     @CrossOrigin
-    @ApiOperation("Update a Studio Entry")
+    @ApiOperation(value = "Update a Studio Entry",
+                  notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
+                          "its existing value.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 304, message = "Studio was not modified", response = Studio.class),
+            @ApiResponse(code = 404, message = "Studio is Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Studio> updateStudio(@PathVariable Long id, @RequestBody(required = false) StudioRequest request) {
+    public ResponseEntity<Studio> updateStudio(
+            @PathVariable
+            @ApiParam(value = "The id of the Studio to change")
+                    Long id,
+            @RequestBody(required = false)
+            @ApiParam(value = "Provide updated properties for the Studio")
+                    UpdateStudioRequest request) {
+
         // Get existing Studio record
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
@@ -99,9 +124,14 @@ public class StudioController {
     }
 
     @CrossOrigin
-    @ApiOperation("Delete a Studio Entry")
+    @ApiOperation(value = "Delete a Studio Entry")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "No Content"),
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
-    public ResponseEntity deleteStudio(@PathVariable Long id) {
+    public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id) {
         try {
             studioRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -111,9 +141,15 @@ public class StudioController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get studio information for a given Studio id")
+    @ApiOperation(value = "Get Studio information for a given Studio id")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
-    public ResponseEntity<Studio> getStudioById(@PathVariable Long id) {
+    public ResponseEntity<Studio> getStudioById(
+            @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id) {
+
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
             return new ResponseEntity(new ApiError("Studio id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -122,16 +158,36 @@ public class StudioController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get Studio List")
+    @ApiOperation(value = "Search Studios",
+                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                          "to filter the results (AND as opposed to OR)")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Specified Content Not Found", response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Studio>> getStudios(
-            @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "contactName", required = false) String contactName,
-            @RequestParam(name = "contactEmail", required = false) String contactEmail,
-            @RequestParam(name = "codePrefix", required = false) String codePrefix,
-            @RequestParam(name = "flags", required = false) Long flags,
-            @RequestParam(name = "status", required = false) String status) {
+            @RequestParam(name = "contentId", required = false)
+            @ApiParam(value = "Content related to Studios.")
+                    Long contentId,
+            @RequestParam(name = "name", required = false)
+            @ApiParam(value = "The name of a Studio to find.  Exact match only.")
+                    String name,
+            @RequestParam(name = "contactName", required = false)
+            @ApiParam(value = "Studios with this contact name. Exact match only.")
+                    String contactName,
+            @RequestParam(name = "contactEmail", required = false)
+            @ApiParam(value = "Studios with this contact email. Exact match only.")
+                    String contactEmail,
+            @RequestParam(name = "codePrefix", required = false)
+            @ApiParam(value = "Studios with this code prefix value. Exact match only.")
+                    String codePrefix,
+            @RequestParam(name = "flags", required = false)
+            @ApiParam(value = "Studios with this flag value. Exact match only.")
+                    Long flags,
+            @RequestParam(name = "status", required = false)
+            @ApiParam(value = "ACTIVE or INACTIVE")
+                    String status) {
 
         // Build a Studio object with the values passed in
         Studio studio = new Studio();
