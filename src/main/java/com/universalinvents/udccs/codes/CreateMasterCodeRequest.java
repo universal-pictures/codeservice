@@ -32,8 +32,8 @@ public class CreateMasterCodeRequest {
                       example = "2",
                       required = false)
     private Long appId;
-    @ApiModelProperty(value = "Should a new code be generated or just use an already ingested one? 'true' = create, " +
-                      "'false' or not specified (default) = use generated",
+    @ApiModelProperty(value = "Should a new code be generated or just use an already ingested one? 'true' = " +
+                      "generate new code, 'false' or not specified (default) = use ingested code",
                       example = "true",
                       required = false)
     private Boolean create = Boolean.TRUE;  // Default to TRUE
