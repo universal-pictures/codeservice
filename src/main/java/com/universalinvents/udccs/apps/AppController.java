@@ -84,11 +84,13 @@ public class AppController {
                     AppRequest request) {
 
         // Get existing App record
-        App app = appRepository.findOne(id); if (app == null)
+        App app = appRepository.findOne(id);
+        if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
         // Update values from request - if set
-        boolean isModified = false; if (request.getPartnerId() != null) {
+        boolean isModified = false;
+        if (request.getPartnerId() != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
             if (referralPartner == null)
                 return new ResponseEntity(new ApiError("Partner id expressed is not found."), HttpStatus.BAD_REQUEST);
