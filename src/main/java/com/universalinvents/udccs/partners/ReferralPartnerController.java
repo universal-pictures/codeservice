@@ -43,7 +43,7 @@ public class ReferralPartnerController {
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<ReferralPartner> createPartner(
             @RequestBody
-            @ApiParam(value = "Provide properties for the Referral Partner.")
+            @ApiParam(value = "Provide properties for the Referral Partner.", required = true)
                     CreateReferralPartnerRequest request) {
 
         HashSet<Retailer> retailers = null;
@@ -83,7 +83,7 @@ public class ReferralPartnerController {
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<ReferralPartner> updatePartner(
             @PathVariable
-            @ApiParam(value = "The Referral Partner id to update")
+            @ApiParam(value = "The id of the Referral Partner to update", required = true)
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Referral Partner")

@@ -85,7 +85,8 @@ public class MasterCodeController {
                     produces = "application/json")
     @Transactional
     public ResponseEntity<MasterCode> createMasterCode(@RequestBody
-                                                       @ApiParam(value = "Provide properties for the Master Code.")
+                                                       @ApiParam(value = "Provide properties for the Master Code.",
+                                                                 required = true)
                                                                    CreateMasterCodeRequest request) {
 
         //
@@ -158,10 +159,12 @@ public class MasterCodeController {
                     value = "/{code}",
                     produces = "application/json")
     public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
-                                                           @ApiParam(value = "The Master Code to ingest")
+                                                           @ApiParam(value = "The Master Code to ingest",
+                                                                     required = true)
                                                                    String code,
                                                        @RequestBody
-                                                       @ApiParam(value = "Provide properties for the Master Code.")
+                                                       @ApiParam(value = "Provide properties for the Master Code.",
+                                                                 required = true)
                                                                IngestMasterCodeRequest request) {
         // See if the code already exists and error if it does
         MasterCode mc = masterCodeRepository.findOne(code);

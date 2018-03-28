@@ -1,54 +1,62 @@
-package com.universalinvents.udccs.partners;
+package com.universalinvents.udccs.studios;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.util.Set;
+/**
+ * Created by kkirkland on 11/8/17.
+ */
+@ApiModel("CreateStudioRequest")
+public class CreateStudioRequest {
 
-@ApiModel("CreateReferralPartnerRequest")
-public class CreateReferralPartnerRequest implements ReferralPartnerRequest {
-
-    @ApiModelProperty(value = "The name of the Referral Partner",
-                      example = "My Disturbing Tech",
+    @ApiModelProperty(value = "The name of the studio",
+                      example = "Universal Pictures",
                       required = true)
     private String name;
-    @ApiModelProperty(value = "A simple description of the Referral Partner",
-                      example = "We will disturb all industries with our tech!",
+    @ApiModelProperty(value = "A short description of the studio",
+                      example = "Universal Pictures is an American film studio, owned by Comcast through its wholly " +
+                              "owned subsidiary NBCUniversal, and is one of Hollywood's \"Big Six\" film studios.",
                       required = true)
     private String description;
-    @ApiModelProperty(value = "The name of a contact at the Referral Partner",
+    @ApiModelProperty(value = "The name of a contact at the Studio",
                       example = "Jane Doe",
                       required = false)
     private String contactName;
-    @ApiModelProperty(value = "The email address of the contact at the Referral Partner",
+    @ApiModelProperty(value = "The email address of the contact at the Studio",
                       example = "janedoe@mydomain.com",
                       required = false)
     private String contactEmail;
-    @ApiModelProperty(value = "The phone number of the contact at the Referral Partner",
+    @ApiModelProperty(value = "The phone number of the contact at the Studio",
                       example = "+1-555-555-1234",
                       required = false)
     private String contactPhone;
-    @ApiModelProperty(value = "A list of Retailer id's that this Referral Partner has business relations with",
-                      example = "[1, 2]",
-                      required = true)
-    private Set<Long> retailerIds;
     @ApiModelProperty(value = "ACTIVE or INACTIVE",
                       example = "ACTIVE",
                       required = true)
     private String status;
+    @ApiModelProperty(value = "A placeholder field to store bitwise flags for future use",
+                      example = "1024",
+                      required = false)
+    private Long flags;
+    @ApiModelProperty(value = "A 2 character prefix to prepend to all Master Codes generated for Content from " +
+                              "this Studio.",
+                      example = "UP",
+                      required = true)
+    private String codePrefix;
 
-    public CreateReferralPartnerRequest() {
+    public CreateStudioRequest() {
     }
 
-    public CreateReferralPartnerRequest(String name, String description, String contactName, String contactEmail,
-                                        String contactPhone, Set<Long> retailerIds, String status) {
+    public CreateStudioRequest(String name, String description, String contactName, String contactEmail, String contactPhone,
+                               String status, Long flags, String codePrefix) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.contactEmail = contactEmail;
         this.contactPhone = contactPhone;
-        this.retailerIds = retailerIds;
         this.status = status;
+        this.flags = flags;
+        this.codePrefix = codePrefix;
     }
 
     public String getName() {
@@ -91,19 +99,27 @@ public class CreateReferralPartnerRequest implements ReferralPartnerRequest {
         this.contactPhone = contactPhone;
     }
 
-    public Set<Long> getRetailerIds() {
-        return retailerIds;
-    }
-
-    public void setRetailerIds(Set<Long> retailerIds) {
-        this.retailerIds = retailerIds;
-    }
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getFlags() {
+        return flags;
+    }
+
+    public void setFlags(Long flags) {
+        this.flags = flags;
+    }
+
+    public String getCodePrefix() {
+        return codePrefix;
+    }
+
+    public void setCodePrefix(String codePrefix) {
+        this.codePrefix = codePrefix;
     }
 }

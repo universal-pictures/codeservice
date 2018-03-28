@@ -1,24 +1,52 @@
 package com.universalinvents.udccs.studios;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * Created by kkirkland on 11/8/17.
  */
-public class StudioRequest {
+public class UpdateStudioRequest {
 
+    @ApiModelProperty(value = "The name of the studio",
+                      example = "Universal Pictures",
+                      required = false)
     private String name;
+    @ApiModelProperty(value = "A short description of the studio",
+                      example = "Universal Pictures is an American film studio, owned by Comcast through its wholly " +
+                              "owned subsidiary NBCUniversal, and is one of Hollywood's \"Big Six\" film studios.",
+                      required = false)
     private String description;
+    @ApiModelProperty(value = "The name of a contact at the Studio",
+                      example = "Jane Doe",
+                      required = false)
     private String contactName;
+    @ApiModelProperty(value = "The email address of the contact at the Studio",
+                      example = "janedoe@mydomain.com",
+                      required = false)
     private String contactEmail;
+    @ApiModelProperty(value = "The phone number of the contact at the Studio",
+                      example = "+1-555-555-1234",
+                      required = false)
     private String contactPhone;
+    @ApiModelProperty(value = "ACTIVE or INACTIVE",
+                      example = "ACTIVE",
+                      required = false)
     private String status;
+    @ApiModelProperty(value = "A placeholder field to store bitwise flags for future use",
+                      example = "1024",
+                      required = false)
     private Long flags;
+    @ApiModelProperty(value = "A 2 character prefix to prepend to all Master Codes generated for Content from " +
+            "this Studio.",
+                      example = "UP",
+                      required = false)
     private String codePrefix;
 
-    public StudioRequest() {
+    public UpdateStudioRequest() {
     }
 
-    public StudioRequest(String name, String description, String contactName, String contactEmail, String contactPhone,
-                         String status, Long flags, String codePrefix) {
+    public UpdateStudioRequest(String name, String description, String contactName, String contactEmail, String contactPhone,
+                               String status, Long flags, String codePrefix) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;

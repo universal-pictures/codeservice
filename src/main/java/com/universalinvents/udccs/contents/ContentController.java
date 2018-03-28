@@ -47,7 +47,8 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody
-                                                     @ApiParam(value = "Provide properties for the Content.")
+                                                     @ApiParam(value = "Provide properties for the Content.",
+                                                               required = true)
                                                          CreateContentRequest request) {
 
         HashSet<Retailer> retailers = null;
@@ -91,7 +92,7 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> updateContent(@PathVariable
-                                                     @ApiParam(value = "The Content id to update")
+                                                     @ApiParam(value = "The Content id to update", required = true)
                                                              Long id,
                                                  @RequestBody(required = false)
                                                  @ApiParam(value = "Provide updated properties for the Content")

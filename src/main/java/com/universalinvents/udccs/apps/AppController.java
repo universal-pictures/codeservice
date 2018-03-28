@@ -41,8 +41,8 @@ public class AppController {
     })
     @RequestMapping(method = RequestMethod.POST,
                     produces = "application/json")
-    public ResponseEntity<App> createApp(@RequestBody(required = true)
-                                         @ApiParam(value = "Provide properties for a new App.")
+    public ResponseEntity<App> createApp(@RequestBody
+                                         @ApiParam(value = "Provide properties for a new App.", required = true)
                                                  AppRequest request) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());

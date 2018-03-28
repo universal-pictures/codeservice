@@ -54,11 +54,11 @@ public class RetailerCodeController {
     @RequestMapping(method = RequestMethod.POST, value = "/{code}", produces = "application/json")
     public ResponseEntity<RetailerCode> ingestRetailerCode(
             @PathVariable
-            @ApiParam(value = "The Retailer Code to ingest")
+            @ApiParam(value = "The Retailer Code to ingest", required = true)
                     String code,
             @RequestBody
             @Valid
-            @ApiParam(value = "Provide properties for the Retailer Code.")
+            @ApiParam(value = "Provide properties for the Retailer Code.", required = true)
                     RetailerCodeRequest request) {
 
         // See if the code already exists and error if it does
@@ -87,7 +87,9 @@ public class RetailerCodeController {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
-    public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable String code) {
+    public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable
+                                                            @ApiParam(value = "The Retailer Code to retrieve")
+                                                                    String code) {
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
         if (retailerCode == null)
             return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -96,21 +98,46 @@ public class RetailerCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation("Get Retailer Codes")
+    @ApiOperation(value = "Search Retailer Codes",
+                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                          "to filter the results (AND as opposed to OR)")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 400,
+                         message = "Specified Content or Retailer Not Found\n" +
+                                   "Bad status value specified",
+                         response = ApiError.class)
+    })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<RetailerCode>> getRetailerCodes(
-            @RequestParam(name = "contentId", required = false) Long contentId,
-            @RequestParam(name = "retailerId", required = false) Long retailerId,
-            @RequestParam(name = "format", required = false) String format,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "createdOnAfter", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnAfter,
-            @RequestParam(name = "createdOnBefore", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date createdOnBefore,
-            @RequestParam(name = "modifiedOnAfter", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnAfter,
-            @RequestParam(name = "modifiedOnBefore", required = false) @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME) Date modifiedOnBefore) {
+            @ApiParam(value = "Content related to Retailer Codes.")
+            @RequestParam(name = "contentId", required = false)
+                    Long contentId,
+            @ApiParam(value = "Retailer related to Retailer Codes.")
+            @RequestParam(name = "retailerId", required = false)
+                    Long retailerId,
+            @ApiParam(value = "The format of the related Content for Retailer Codes.")
+            @RequestParam(name = "format", required = false)
+                    String format,
+            @ApiParam(value = "Retailer Codes with this status.")
+            @RequestParam(name = "status", required = false)
+                    String status,
+            @ApiParam(value = "Retailer Codes created after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "createdAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date createdOnAfter,
+            @ApiParam(value = "Retailer Codes created before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "createdBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date createdOnBefore,
+            @ApiParam(value = "Retailer Codes modified after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "modifiedAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnAfter,
+            @ApiParam(value = "Retailer Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "modifiedBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
