@@ -101,10 +101,14 @@ public class AppController {
         if (request.getDescription() != null) {
             app.setDescription(request.getDescription());
             isModified = true;
-        } if (request.getName() != null) {
+        }
+
+        if (request.getName() != null) {
             app.setName(request.getName());
             isModified = true;
-        } if (request.getStatus() != null) {
+        }
+
+        if (request.getStatus() != null) {
             app.setStatus(request.getStatus());
             isModified = true;
         }
@@ -171,7 +175,9 @@ public class AppController {
                     produces = "application/json")
     public ResponseEntity<App> getAppById(
             @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id) {
-        App app = appRepository.findOne(id); if (app == null)
+
+        App app = appRepository.findOne(id);
+        if (app == null)
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<App>(app, HttpStatus.OK);
