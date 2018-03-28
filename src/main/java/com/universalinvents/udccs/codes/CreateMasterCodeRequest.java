@@ -36,7 +36,7 @@ public class CreateMasterCodeRequest {
                       "generate new code, 'false' or not specified (default) = use ingested code",
                       example = "true",
                       required = false)
-    private Boolean create = Boolean.TRUE;  // Default to TRUE
+    private Boolean create = Boolean.FALSE;  // Default to FALSE
 
     public CreateMasterCodeRequest() {
     }
