@@ -1,12 +1,11 @@
 package com.universalinvents.udccs.codes;
 
+import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.Date;
 
 public class MasterCodeSpecification implements Specification<MasterCode> {
@@ -20,7 +19,14 @@ public class MasterCodeSpecification implements Specification<MasterCode> {
     @Override
     public Predicate toPredicate(Root<MasterCode> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         if (criteria.getOperand().equalsIgnoreCase(":")) {
-            return cb.equal(root.get(criteria.getKey()), criteria.getValue());
+            // Handle joins with studio by looking for a '.studio' within the criteria key
+            if (criteria.getKey().contains(".studio")) {
+                Join<MasterCode, Content> contentJoin = root.join("content");
+                Join<Content, Studio> studioJoin = contentJoin.join("studio");
+                return cb.equal(studioJoin.get("id"), criteria.getValue());
+            } else {
+                return cb.equal(root.get(criteria.getKey()), criteria.getValue());
+            }
         } else if (criteria.getOperand().equalsIgnoreCase(">")) {
             if (criteria.getValue() instanceof java.util.Date) {
                 return cb.greaterThan(root.get(criteria.getKey()), (Date)criteria.getValue());

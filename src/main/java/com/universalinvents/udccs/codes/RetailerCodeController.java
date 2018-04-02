@@ -4,8 +4,12 @@ import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.pairings.PairingRepository;
+import com.universalinvents.udccs.partners.ReferralPartner;
+import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import com.universalinvents.udccs.studios.Studio;
+import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +39,12 @@ public class RetailerCodeController {
 
     @Autowired
     private RetailerRepository retailerRepository;
+
+    @Autowired
+    private StudioRepository studioRepository;
+
+    @Autowired
+    private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
     private PairingRepository pairingRepository;
@@ -116,6 +126,12 @@ public class RetailerCodeController {
             @ApiParam(value = "Retailer related to Retailer Codes.")
             @RequestParam(name = "retailerId", required = false)
                     Long retailerId,
+            @ApiParam(value = "Studio related to Retailer Code Content.")
+            @RequestParam(name = "studioId", required = false)
+                    Long studioId,
+            @ApiParam(value = "Referral Partner related to Retailer Code Retailers.")
+            @RequestParam(name = "partnerId", required = false)
+                    Long partnerId,
             @ApiParam(value = "The format of the related Content for Retailer Codes.")
             @RequestParam(name = "format", required = false)
                     String format,
@@ -156,6 +172,24 @@ public class RetailerCodeController {
                 return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("retailer", ":", retailerId));
+            }
+        }
+
+        if (studioId != null) {
+            Studio studio = studioRepository.findOne(studioId);
+            if (studio == null) {
+                return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                params.add(new SqlCriteria("content.studio", ":", studioId));
+            }
+        }
+
+        if (partnerId != null) {
+            ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
+            if (referralPartner == null) {
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                params.add(new SqlCriteria("retailer.partner", ":", partnerId));
             }
         }
 
