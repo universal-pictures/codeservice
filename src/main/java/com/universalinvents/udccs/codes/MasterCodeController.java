@@ -12,6 +12,7 @@ import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.CCFUtility;
 import com.universalinvents.udccs.utilities.SqlCriteria;
@@ -286,6 +287,9 @@ public class MasterCodeController {
             @ApiParam(value = "Content related to Master Codes.")
             @RequestParam(name = "contentId", required = false)
                     Long contentId,
+            @ApiParam(value = "Studio related to Master Code Content.")
+            @RequestParam(name = "studioId", required = false)
+                    Long studioId,
             @ApiParam(value = "Master Codes with this status.")
             @RequestParam(name = "status", required = false)
                     String status,
@@ -333,6 +337,15 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("content", ":", contentId));
+            }
+        }
+
+        if (studioId != null) {
+            Studio studio = studioRepository.findOne(studioId);
+            if (studio == null) {
+                return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
+            } else {
+                params.add(new SqlCriteria("content.studio", ":", studioId));
             }
         }
 
