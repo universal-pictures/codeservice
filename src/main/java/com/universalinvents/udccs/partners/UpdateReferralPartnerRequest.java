@@ -9,11 +9,11 @@ import java.util.Set;
 public class UpdateReferralPartnerRequest implements ReferralPartnerRequest {
 
     @ApiModelProperty(value = "The name of the Referral Partner",
-                      example = "My Disturbing Tech",
+                      example = "My Disrupting Tech",
                       required = false)
     private String name;
     @ApiModelProperty(value = "A simple description of the Referral Partner",
-                      example = "We will disturb all industries with our tech!",
+                      example = "We will disrupt all industries with our tech!",
                       required = false)
     private String description;
     @ApiModelProperty(value = "The name of a contact at the Referral Partner",
