@@ -133,6 +133,8 @@
                     <postReleaseGoals>install</postReleaseGoals>
                     <postHotfixGoals>install</postHotfixGoals>
                     <skipFeatureVersion>true</skipFeatureVersion>
+                    <!-- TODO: set this to false when springfox-swagger2 2.8.1 is released -->
+                    <allowSnapshots>true</allowSnapshots>
                 </configuration>
             </plugin>
         </plugins>
