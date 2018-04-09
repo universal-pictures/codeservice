@@ -5,7 +5,7 @@
 
     <groupId>com.universalinvents.udccs</groupId>
     <artifactId>udccs-poc</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
 
     <name>udccs-poc</name>
