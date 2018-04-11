@@ -1,9 +1,11 @@
 package com.universalinvents.udccs.partners;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.retailers.Retailer;
+import com.universalinvents.udccs.studios.Studio;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -36,12 +38,18 @@ public class ReferralPartner {
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "partner_studio",
+               joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "studio_id", referencedColumnName = "id"))
+    private Set<Studio> studios;
+
     @OneToMany(mappedBy = "referralPartner", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("referralPartner")
     private List<App> apps;
 
     @OneToMany(mappedBy = "referralPartner")
-    @JsonIgnoreProperties("referralPartner")
+    @JsonIgnore
     private List<MasterCode> codes;
 
     public ReferralPartner() {
@@ -162,5 +170,13 @@ public class ReferralPartner {
 
     public void setCodes(List<MasterCode> codes) {
         this.codes = codes;
+    }
+
+    public Set<Studio> getStudios() {
+        return studios;
+    }
+
+    public void setStudios(Set<Studio> studios) {
+        this.studios = studios;
     }
 }
