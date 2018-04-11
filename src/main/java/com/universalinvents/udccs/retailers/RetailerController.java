@@ -5,15 +5,18 @@ import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
-import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -161,38 +164,86 @@ public class RetailerController
                     String name,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "Retailers with the given status (ACTIVE or INACTIVE)")
-                    String status) {
+                    String status,
+            @RequestParam(name = "createdAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @ApiParam(value = "Retailers created after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+                    Date createdOnAfter,
+            @RequestParam(name = "createdBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @ApiParam(value = "Retailers created before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+                    Date createdOnBefore,
+            @RequestParam(name = "modifiedAfter", required = false)
+            @ApiParam(value = "Retailers modified after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnAfter,
+            @RequestParam(name = "modifiedBefore", required = false)
+            @ApiParam(value = "Retailers modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnBefore) {
 
-        // Build a Retailer object with the values passed in
-        Retailer retailer = new Retailer();
+
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
             if (content == null) {
-                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ApiError("Content id specified not found."),
+                                          HttpStatus.BAD_REQUEST);
             } else {
-                retailer.setContents(Collections.singleton(content));
+                params.add(new SqlCriteria("contentId", ":", contentId));
             }
         }
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
-                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
+                                          HttpStatus.BAD_REQUEST);
             } else {
-                retailer.setReferralPartners(Collections.singleton(referralPartner));
+                params.add(new SqlCriteria("partnerId", ":", partnerId));
             }
         }
 
+
         if (name != null) {
-            retailer.setName(name);
+            params.add(new SqlCriteria("name", ":", name));
         }
 
         if (status != null) {
-            retailer.setStatus(status);
+            params.add(new SqlCriteria("status", ":", status));
         }
 
-        List<Retailer> retailers = retailerRepository.findAll(Example.of(retailer));
+        if (createdOnAfter != null) {
+            params.add(new SqlCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new SqlCriteria("createdOn", "<", createdOnBefore));
+        }
+        if (modifiedOnAfter != null) {
+            params.add(new SqlCriteria("modifiedOn", ">", modifiedOnAfter));
+        }
+        if (modifiedOnBefore != null) {
+            params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+
+        List<Specification<Retailer>> specs = new ArrayList<>();
+        for (SqlCriteria param : params) {
+            specs.add(new RetailerSpecification(param));
+        }
+
+        List<Retailer> retailers = new ArrayList<Retailer>();
+        if (params.isEmpty()) {
+            retailers = retailerRepository.findAll();
+        } else {
+            Specification<Retailer> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            retailers = retailerRepository.findAll(query);
+        }
+
+
         return new ResponseEntity<List<Retailer>>(retailers, HttpStatus.OK);
     }
 }

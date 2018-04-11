@@ -1,12 +1,15 @@
 package com.universalinvents.udccs.studios;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by kkirkland on 10/25/17.
@@ -36,6 +39,10 @@ public class Studio {
     @OneToMany(mappedBy = "studio")
     @JsonIgnoreProperties("studio")
     private List<Content> contents;
+
+    @ManyToMany(mappedBy = "studios")
+    @JsonBackReference
+    private Set<ReferralPartner> referralPartners;
 
     public Studio() {}
 
@@ -146,5 +153,13 @@ public class Studio {
 
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
+    }
+
+    public Set<ReferralPartner> getReferralPartners() {
+        return referralPartners;
+    }
+
+    public void setReferralPartners(Set<ReferralPartner> referralPartners) {
+        this.referralPartners = referralPartners;
     }
 }
