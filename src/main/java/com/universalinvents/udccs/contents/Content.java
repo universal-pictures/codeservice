@@ -28,13 +28,13 @@ public class Content {
     private Date createdOn;
     private Date modifiedOn;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(name = "content_retailer",
                joinColumns = @JoinColumn(name = "content_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "studioId")
     @JsonIgnoreProperties("contents")
     private Studio studio;
