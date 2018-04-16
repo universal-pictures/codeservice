@@ -7,6 +7,7 @@ import com.universalinvents.udccs.codes.RetailerCodeRepository;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.RetailerRepository;
+import com.universalinvents.udccs.studios.StudioRepository;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/reports")
 public class ReportController
 {
+    @Autowired
+    private StudioRepository studioRepository;
+
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
 
@@ -44,6 +48,7 @@ public class ReportController
     public ResponseEntity<SummaryReport> getSummaryReport()
     {
         SummaryReport report = new SummaryReport();
+        report.setStudios(studioRepository.count());
         report.setPartners(referralPartnerRepository.count());
         report.setRetailers(retailerRepository.count());
         report.setContents(contentRepository.count());

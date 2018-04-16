@@ -4,6 +4,7 @@ package com.universalinvents.udccs.reports;
  * Created by dsherman on 2/27/17.
  */
 public class SummaryReport {
+    private long studios;
     private long partners;
     private long retailers;
     private long contents;
@@ -18,9 +19,11 @@ public class SummaryReport {
 
     public SummaryReport() {}
 
-    public SummaryReport(long partners, long retailers, long contents, long masterCodes, long masterCodesUnallocated,
-                         long masterCodesPaired, long masterCodesRedeemed, long retailerCodes,
-                         long retailerCodesUnallocated, long retailerCodesPaired, long retailerCodesRedeemed) {
+    public SummaryReport(long studios, long partners, long retailers, long contents, long masterCodes,
+                         long masterCodesUnallocated, long masterCodesPaired, long masterCodesRedeemed,
+                         long retailerCodes, long retailerCodesUnallocated, long retailerCodesPaired,
+                         long retailerCodesRedeemed) {
+        this.studios = studios;
         this.partners = partners;
         this.retailers = retailers;
         this.contents = contents;
@@ -32,6 +35,14 @@ public class SummaryReport {
         this.retailerCodesUnallocated = retailerCodesUnallocated;
         this.retailerCodesPaired = retailerCodesPaired;
         this.retailerCodesRedeemed = retailerCodesRedeemed;
+    }
+
+    public long getStudios() {
+        return studios;
+    }
+
+    public void setStudios(long studios) {
+        this.studios = studios;
     }
 
     public long getPartners() {
@@ -121,4 +132,6 @@ public class SummaryReport {
     public void setRetailerCodesRedeemed(long retailerCodesRedeemed) {
         this.retailerCodesRedeemed = retailerCodesRedeemed;
     }
+
+
 }
