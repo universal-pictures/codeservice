@@ -1,9 +1,8 @@
 package com.universalinvents.udccs.partners;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-/**
- * Created by dsherman on 2/27/17.
- */
-public interface ReferralPartnerRepository extends JpaRepository<ReferralPartner, Long> {
+
+public interface ReferralPartnerRepository extends JpaRepository<ReferralPartner, Long>, JpaSpecificationExecutor<ReferralPartner> {
 }

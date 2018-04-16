@@ -20,10 +20,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import java.util.Arrays;
 import java.util.Collections;
 
-/**
- * Created by dsherman on 2/24/17.
- * Updated by kkirkland on 11/7/17.
- */
+
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {
@@ -31,9 +28,17 @@ public class SwaggerConfig {
     @Value("${build.version}")
     private String BUILD_VERSION;
 
+    @Value("${swagger.ui.host}")
+    private String SWAGGER_UI_HOST;
+
+    @Value("${swagger.ui.protocol}")
+    private String SWAGGER_UI_PROTOCOL;
+
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2).apiInfo(apiInfo())
+                                                      .protocols(Collections.singleton(SWAGGER_UI_PROTOCOL))
+                                                      .host(SWAGGER_UI_HOST)
                                                       .select()
                                                       .apis(RequestHandlerSelectors.any())
                                                       .paths(PathSelectors.regex("/api.*"))
