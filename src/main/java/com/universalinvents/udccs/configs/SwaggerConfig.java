@@ -51,7 +51,7 @@ public class SwaggerConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         // Allow anyone and anything access. Probably ok for Swagger spec
-        CorsConfiguration config = new CorsConfiguration().applyPermitDefaultValues();
+        CorsConfiguration config = new CorsConfiguration();
 //        config.setAllowCredentials(true);
         config.setAllowedOrigins(Collections.singletonList("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"));
