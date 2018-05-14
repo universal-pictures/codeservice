@@ -1,9 +1,11 @@
 package com.universalinvents.udccs.contents;
 
+import com.universalinvents.udccs.studios.Studio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-/**
- * Created by dsherman on 2/27/17.
- */
-public interface ContentRepository extends JpaRepository<Content, Long>, JpaSpecificationExecutor<Content> {}
+import java.util.List;
+
+public interface ContentRepository extends JpaRepository<Content, Long>, JpaSpecificationExecutor<Content> {
+    List<Content> findByStudio(Studio studio);
+}
