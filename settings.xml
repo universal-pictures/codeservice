@@ -14,7 +14,7 @@
                     </releases>
                 </repository>
                 <repository>
-                    <id>central2</id>
+                    <id>jcenter</id>
                     <name>bintray</name>
                     <url>https://jcenter.bintray.com</url>
                 </repository>
