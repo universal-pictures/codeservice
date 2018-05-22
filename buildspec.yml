@@ -3,6 +3,10 @@
 version: 0.2
 
 phases:
+  install:
+    commands:
+      - echo Copying settings.xml file...
+      - cp ./settings.xml /root/.m2/settings.xml
   build:
     commands:
       - echo Entered the build phase...

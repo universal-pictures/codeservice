@@ -22,13 +22,16 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <springfox.version>2.9.0</springfox.version>
     </properties>
 
+    <!-- Repository required for Springfox 2.9.0                -->
+    <!-- See https://github.com/springfox/springfox/issues/2372 -->
     <repositories>
         <repository>
-            <id>jcenter-snapshots</id>
-            <name>jcenter</name>
-            <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+            <id>central</id>
+            <name>bintray</name>
+            <url>https://jcenter.bintray.com</url>
         </repository>
     </repositories>
 
@@ -62,13 +65,13 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
-            <version>2.8.1-SNAPSHOT</version>
+            <version>${springfox.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.8.1-SNAPSHOT</version>
+            <version>${springfox.version}</version>
         </dependency>
 
         <dependency>
@@ -133,8 +136,7 @@
                     <postReleaseGoals>install</postReleaseGoals>
                     <postHotfixGoals>install</postHotfixGoals>
                     <skipFeatureVersion>true</skipFeatureVersion>
-                    <!-- TODO: set this to false when springfox-swagger2 2.8.1 is released -->
-                    <allowSnapshots>true</allowSnapshots>
+                    <allowSnapshots>false</allowSnapshots>
                 </configuration>
             </plugin>
         </plugins>
