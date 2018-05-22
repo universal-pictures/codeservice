@@ -62,7 +62,7 @@ public class SwaggerConfig {
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder().title("Code API")
+        return new ApiInfoBuilder().title("Code Service")
                                    .description(getDescription())
                                    .license("License TBD")
                                    .licenseUrl("License TBD")
