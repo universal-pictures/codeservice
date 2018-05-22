@@ -127,7 +127,8 @@ public class MasterCodeController {
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
             MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                                                   referralPartner, app, content, MasterCode.Status.ISSUED);
+                                                   referralPartner, app, content, MasterCode.Status.ISSUED,
+                                                   request.getExternalId());
             masterCodeRepository.save(masterCode);
             return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
         } else {
@@ -135,6 +136,7 @@ public class MasterCodeController {
                 MasterCode masterCode = getMasterCode(request.getContentId(), request.getFormat(),
                                                       MasterCode.Status.UNALLOCATED);
                 masterCode.setStatus(MasterCode.Status.ISSUED);
+                masterCode.setExternalId(request.getExternalId());
                 masterCodeRepository.save(masterCode);
                 return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
             } catch (ApiError apiError) {
@@ -200,7 +202,7 @@ public class MasterCodeController {
         }
 
         MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED);
+                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED, null);
         masterCodeRepository.save(masterCode);
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
@@ -293,6 +295,9 @@ public class MasterCodeController {
             @ApiParam(value = "Master Codes with this status.")
             @RequestParam(name = "status", required = false)
                     String status,
+            @ApiParam(value = "Master Code(s) with this external id.")
+            @RequestParam(name = "externalId", required = false)
+                    String externalId,
             @ApiParam(value = "Master Codes created after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "createdAfter", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -357,6 +362,10 @@ public class MasterCodeController {
                         "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
                                           HttpStatus.BAD_REQUEST);
             }
+        }
+
+        if (externalId != null) {
+            params.add(new SqlCriteria("externalId", ":", externalId));
         }
 
         if (createdOnAfter != null) {

@@ -16,6 +16,7 @@ import java.util.Date;
 @Entity
 @Table(name = "master_code", uniqueConstraints = {@UniqueConstraint(name = "uk_master_code", columnNames = {"code"})})
 public class MasterCode {
+
     // Legal status values
     public enum Status {
         UNALLOCATED, ISSUED, PAIRED, REDEEMED
@@ -28,6 +29,7 @@ public class MasterCode {
     private Date createdOn;
     private Date modifiedOn;
     private String format;
+    private String externalId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
@@ -54,7 +56,7 @@ public class MasterCode {
     }
 
     public MasterCode(String code, String format, String createdBy, Date createdOn, ReferralPartner referralPartner,
-                      App app, Content content, Status status) {
+                      App app, Content content, Status status, String externalId) {
         this.code = code;
         this.format = format;
         this.createdBy = createdBy;
@@ -63,6 +65,7 @@ public class MasterCode {
         this.app = app;
         this.content = content;
         this.status = status;
+        this.externalId = externalId;
         this.modifiedOn = createdOn; // Make the dates match for new objects
     }
 
@@ -148,6 +151,14 @@ public class MasterCode {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 //
 //    public boolean isRedeemed() { return redeemedOn != null; }
