@@ -51,6 +51,9 @@ public class RetailerController
     {
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
+        retailer.setGenerateCodes(request.getGenerateCodes());
+        retailer.setLogoUrl(request.getLogoUrl());
+        retailer.setRedemptionUrl(request.getRedemptionUrl());
         retailer.setStatus(request.getStatus());
         retailer.setCreatedOn(new Date());
 
@@ -86,6 +89,21 @@ public class RetailerController
         boolean isModified = false;
         if (request.getName() != null) {
             retailer.setName(request.getName());
+            isModified = true;
+        }
+
+        if (request.getGenerateCodes() != null) {
+            retailer.setGenerateCodes(request.getGenerateCodes());
+            isModified = true;
+        }
+
+        if (request.getLogoUrl() != null) {
+            retailer.setLogoUrl(request.getLogoUrl());
+            isModified = true;
+        }
+
+        if (request.getRedemptionUrl() != null) {
+            retailer.setRedemptionUrl(request.getRedemptionUrl());
             isModified = true;
         }
 

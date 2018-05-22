@@ -30,6 +30,7 @@ public class ReferralPartner {
     private Date createdOn;
     private Date modifiedOn;
     private String regionCode;
+    private String logoUrl;
     private String status;
 
     @ManyToMany(cascade = CascadeType.ALL)
@@ -56,7 +57,8 @@ public class ReferralPartner {
     }
 
     public ReferralPartner(String name, String description, String contactName, String contactEmail,
-                           String contactPhone, Date createdOn, Date modifiedOn, String regionCode, String status) {
+                           String contactPhone, Date createdOn, Date modifiedOn, String regionCode, String logoUrl,
+                           String status) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
@@ -65,6 +67,7 @@ public class ReferralPartner {
         this.createdOn = createdOn;
         this.modifiedOn = modifiedOn;
         this.regionCode = regionCode;
+        this.logoUrl = logoUrl;
         this.status = status;
     }
 
@@ -178,5 +181,13 @@ public class ReferralPartner {
 
     public void setStudios(Set<Studio> studios) {
         this.studios = studios;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }
