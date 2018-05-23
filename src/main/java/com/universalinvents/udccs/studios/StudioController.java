@@ -48,6 +48,7 @@ public class StudioController {
         studio.setStatus(request.getStatus());
         studio.setFlags(request.getFlags());
         studio.setCodePrefix(request.getCodePrefix());
+        studio.setLogoUrl(request.getLogoUrl());
         studio.setCreatedOn(new Date());
 
         studioRepository.save(studio);
@@ -110,6 +111,10 @@ public class StudioController {
         }
         if (request.getCodePrefix() != null) {
             studio.setCodePrefix(request.getCodePrefix());
+            isModified = true;
+        }
+        if (request.getLogoUrl() != null) {
+            studio.setLogoUrl(request.getLogoUrl());
             isModified = true;
         }
 

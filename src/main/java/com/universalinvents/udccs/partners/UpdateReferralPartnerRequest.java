@@ -36,6 +36,10 @@ public class UpdateReferralPartnerRequest implements ReferralPartnerRequest {
                       example = "[1, 2]",
                       required = false)
     private Set<Long> studioIds;
+    @ApiModelProperty(value = "A URL pointing to a logo for this Referral Partner",
+                      example = "http://example.com/mylogoimage.png",
+                      required = false)
+    private String logoUrl;
     @ApiModelProperty(value = "ACTIVE or INACTIVE",
                       example = "ACTIVE",
                       required = false)
@@ -45,7 +49,7 @@ public class UpdateReferralPartnerRequest implements ReferralPartnerRequest {
     }
 
     public UpdateReferralPartnerRequest(String name, String description, String contactName, String contactEmail,
-                                        String contactPhone, Set<Long> retailerIds, Set<Long> studioIds,
+                                        String contactPhone, Set<Long> retailerIds, Set<Long> studioIds, String logoUrl,
                                         String status) {
         this.name = name;
         this.description = description;
@@ -54,6 +58,7 @@ public class UpdateReferralPartnerRequest implements ReferralPartnerRequest {
         this.contactPhone = contactPhone;
         this.retailerIds = retailerIds;
         this.studioIds = studioIds;
+        this.logoUrl = logoUrl;
         this.status = status;
     }
 
@@ -119,5 +124,13 @@ public class UpdateReferralPartnerRequest implements ReferralPartnerRequest {
 
     public void setStudioIds(Set<Long> studioIds) {
         this.studioIds = studioIds;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

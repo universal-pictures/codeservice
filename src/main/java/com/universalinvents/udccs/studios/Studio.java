@@ -28,6 +28,7 @@ public class Studio {
     private String contactPhone;
     private Date createdOn;
     private Date modifiedOn;
+    private String logoUrl;
 
     @NotNull
     @Column(nullable = false)
@@ -47,13 +48,14 @@ public class Studio {
     public Studio() {}
 
     public Studio(String name, String description, String contactName, String contactEmail, String contactPhone,
-                  String codePrefix, String status, Long flags) {
+                  String codePrefix, String logoUrl, String status, Long flags) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.contactEmail = contactEmail;
         this.contactPhone = contactPhone;
         this.codePrefix = codePrefix;
+        this.logoUrl = logoUrl;
         this.status = status;
         this.flags = flags;
         this.createdOn = new Date();
@@ -161,5 +163,13 @@ public class Studio {
 
     public void setReferralPartners(Set<ReferralPartner> referralPartners) {
         this.referralPartners = referralPartners;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

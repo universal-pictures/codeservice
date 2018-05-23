@@ -72,6 +72,7 @@ public class ReferralPartnerController {
         referralPartner.setContactPhone(request.getContactPhone());
         referralPartner.setRetailers(retailers);
         referralPartner.setStudios(studios);
+        referralPartner.setLogoUrl(request.getLogoUrl());
         referralPartner.setStatus(request.getStatus());
         referralPartner.setCreatedOn(new Date());
 
@@ -144,6 +145,10 @@ public class ReferralPartnerController {
         }
         if (request.getContactPhone() != null) {
             referralPartner.setContactPhone(request.getContactPhone());
+            isModified = true;
+        }
+        if (request.getLogoUrl() != null) {
+            referralPartner.setLogoUrl(request.getLogoUrl());
             isModified = true;
         }
         if (request.getStatus() != null) {
