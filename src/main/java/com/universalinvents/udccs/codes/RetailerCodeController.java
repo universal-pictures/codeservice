@@ -18,6 +18,7 @@ import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,6 +34,9 @@ import java.util.List;
 public class RetailerCodeController {
     @Autowired
     private RetailerCodeRepository retailerCodeRepository;
+
+    @Autowired
+    private MasterCodeRepository masterCodeRepository;
 
     @Autowired
     private ContentRepository contentRepository;
@@ -88,6 +92,61 @@ public class RetailerCodeController {
         final RetailerCode retailerCode = new RetailerCode(code, content, request.getFormat(),
                                                            RetailerCode.Status.UNALLOCATED, retailer);
         return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
+    }
+
+    @CrossOrigin
+    @ApiOperation(value = "Redeem a Retailer Code and its paired Master Code")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully redeemed", response = RetailerCode.class),
+            @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 409, message = "Retailer Code or paired Master Code have an incompatible status. " +
+                    "Both must be PAIRED to redeem.", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/redeem", produces = "application/json")
+    @Transactional
+    public ResponseEntity<RetailerCode> redeemCode(@PathVariable String code) {
+
+        // Get the RetailerCode object
+        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the RetailerCode has a PAIRED status
+        if (retailerCode.getStatus() != RetailerCode.Status.PAIRED) {
+            return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
+                                                           " can't be redeemed.  It must be " +
+                                                           RetailerCode.Status.PAIRED + " to redeem."),
+                                      HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the paired MasterCode object
+        List<Specification<MasterCode>> specs = new ArrayList<>();
+        specs.add(new MasterCodeSpecification(new SqlCriteria("pairing.retailer_code", ":",
+                                                              retailerCode.getCode())));
+        MasterCode masterCode = masterCodeRepository.findOne(specs.get(0));
+
+        // Ensure the MasterCode has a PAIRED status
+        if (masterCode.getStatus() != MasterCode.Status.PAIRED) {
+            return new ResponseEntity(new ApiError("Master Code with a status of " + masterCode.getStatus() +
+                                                           " can't be redeemed.  It must be " +
+                                                           MasterCode.Status.PAIRED + " to redeem."),
+                                      HttpStatus.BAD_REQUEST);
+        }
+
+        // Update RetailerCode status to REDEEMED
+        Date modifiedDate = new Date();
+        retailerCode.setStatus(RetailerCode.Status.REDEEMED);
+        retailerCode.setModifiedOn(modifiedDate);
+        retailerCodeRepository.saveAndFlush(retailerCode);
+
+        // Update MasterCode status to REDEEMED
+        masterCode.setStatus(MasterCode.Status.REDEEMED);
+        masterCode.setModifiedOn(modifiedDate);
+        masterCodeRepository.saveAndFlush(masterCode);
+
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
     }
 
     @CrossOrigin
