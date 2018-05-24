@@ -100,7 +100,7 @@ public class RetailerCodeController {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully redeemed", response = RetailerCode.class),
             @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
-            @ApiResponse(code = 409, message = "Retailer Code or paired Master Code have an incompatible status. " +
+            @ApiResponse(code = 400, message = "Retailer Code or paired Master Code have an incompatible status. " +
                     "Both must be PAIRED to redeem.", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/redeem", produces = "application/json")
