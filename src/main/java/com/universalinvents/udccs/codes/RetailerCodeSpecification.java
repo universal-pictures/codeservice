@@ -1,6 +1,7 @@
 package com.universalinvents.udccs.codes;
 
 import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.studios.Studio;
@@ -33,6 +34,12 @@ public class RetailerCodeSpecification implements Specification<RetailerCode> {
                 Join<RetailerCode, Retailer> retailerJoin = root.join("retailer");
                 Join<Retailer, ReferralPartner> partnerJoin = retailerJoin.join("referralPartners");
                 return cb.equal(partnerJoin.get("id"), criteria.getValue());
+
+            } else if (criteria.getKey().contains(".master_code")) {
+                // Handle joins with master_code by looking for a '.master_code' within the criteria key
+                Join<RetailerCode, Pairing> pairingJoin = root.join("pairing");
+                Join<Pairing, MasterCode> masterCodeJoin = pairingJoin.join("masterCode");
+                return cb.equal(masterCodeJoin.get("code"), criteria.getValue());
 
             } else {
                 return cb.equal(root.get(criteria.getKey()), criteria.getValue());
