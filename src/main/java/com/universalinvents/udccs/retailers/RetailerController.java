@@ -56,6 +56,7 @@ public class RetailerController
         retailer.setRedemptionUrl(request.getRedemptionUrl());
         retailer.setStatus(request.getStatus());
         retailer.setCreatedOn(new Date());
+        retailer.setExternalId(request.getExternalId());
 
         retailerRepository.save(retailer);
 
@@ -109,6 +110,11 @@ public class RetailerController
 
         if (request.getStatus() != null) {
             retailer.setStatus(request.getStatus());
+            isModified = true;
+        }
+
+        if (request.getExternalId() != null) {
+            retailer.setExternalId(request.getExternalId());
             isModified = true;
         }
 
@@ -183,6 +189,9 @@ public class RetailerController
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "Retailers with the given status (ACTIVE or INACTIVE)")
                     String status,
+            @RequestParam(name = "externalId", required = false)
+            @ApiParam(value = "Retailers with this external id.")
+                    String externalId,
             @RequestParam(name = "createdAfter", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             @ApiParam(value = "Retailers created after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
@@ -223,13 +232,16 @@ public class RetailerController
             }
         }
 
-
         if (name != null) {
             params.add(new SqlCriteria("name", ":", name));
         }
 
         if (status != null) {
             params.add(new SqlCriteria("status", ":", status));
+        }
+
+        if (externalId != null) {
+            params.add(new SqlCriteria("externalId", ":", externalId));
         }
 
         if (createdOnAfter != null) {

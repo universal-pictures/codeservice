@@ -28,16 +28,21 @@ public class UpdateRetailerRequest {
                       example = "ACTIVE",
                       required = false)
     private String status;
+    @ApiModelProperty(value = "A field used to store any external identifier related to this retailer",
+            example = "123-53242-3234eff-2234f-231232",
+            required = false)
+    private String externalId;
 
     public UpdateRetailerRequest() {}
 
     public UpdateRetailerRequest(String name, Boolean generateCodes, String logoUrl, String redemptionUrl,
-                                 String status) {
+                                 String status, String externalId) {
         this.name = name;
         this.generateCodes = generateCodes;
         this.logoUrl = logoUrl;
         this.redemptionUrl = redemptionUrl;
         this.status = status;
+        this.externalId = externalId;
     }
 
     public String getName() {
@@ -79,4 +84,8 @@ public class UpdateRetailerRequest {
     public void setRedemptionUrl(String redemptionUrl) {
         this.redemptionUrl = redemptionUrl;
     }
+
+    public String getExternalId() { return externalId; }
+
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 }
