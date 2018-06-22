@@ -29,6 +29,7 @@ public class Studio {
     private Date createdOn;
     private Date modifiedOn;
     private String logoUrl;
+    private String externalId;
 
     @NotNull
     @Column(nullable = false)
@@ -48,7 +49,7 @@ public class Studio {
     public Studio() {}
 
     public Studio(String name, String description, String contactName, String contactEmail, String contactPhone,
-                  String codePrefix, String logoUrl, String status, Long flags) {
+                  String codePrefix, String logoUrl, String status, Long flags, String externalId) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
@@ -59,6 +60,7 @@ public class Studio {
         this.status = status;
         this.flags = flags;
         this.createdOn = new Date();
+        this.externalId = externalId;
     }
 
     public String getName() {
@@ -172,4 +174,8 @@ public class Studio {
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
     }
+
+    public String getExternalId() { return externalId; }
+
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 }

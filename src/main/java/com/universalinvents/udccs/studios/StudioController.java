@@ -50,6 +50,7 @@ public class StudioController {
         studio.setCodePrefix(request.getCodePrefix());
         studio.setLogoUrl(request.getLogoUrl());
         studio.setCreatedOn(new Date());
+        studio.setExternalId(request.getExternalId());
 
         studioRepository.save(studio);
 
@@ -115,6 +116,10 @@ public class StudioController {
         }
         if (request.getLogoUrl() != null) {
             studio.setLogoUrl(request.getLogoUrl());
+            isModified = true;
+        }
+        if (request.getExternalId() != null) {
+            studio.setExternalId(request.getExternalId());
             isModified = true;
         }
 
@@ -192,7 +197,10 @@ public class StudioController {
                     Long flags,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "ACTIVE or INACTIVE")
-                    String status) {
+                    String status,
+            @RequestParam(name = "externalId", required = false)
+            @ApiParam(value = "Studios with this external id.")
+                    String externalId) {
 
         // Build a Studio object with the values passed in
         Studio studio = new Studio();
@@ -226,6 +234,10 @@ public class StudioController {
 
         if (status != null) {
             studio.setStatus(status);
+        }
+
+        if (externalId != null) {
+            studio.setExternalId(externalId);
         }
 
         List<Studio> studios = studioRepository.findAll(Example.of(studio));
