@@ -83,7 +83,6 @@ public class ReportController {
         RetailerCodeDetails retailerDetails = new RetailerCodeDetails();
         retailerDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
-        retailerDetails.setUnallocated(retailerCodeRepository.countByStatus(RetailerCode.Status.UNALLOCATED));
 
 
         CodeSummaryReport report = new CodeSummaryReport();
@@ -227,7 +226,6 @@ public class ReportController {
 
         // ============= TOTALS ==============
         RetailerCodeDetails retailerTotalDetails = new RetailerCodeDetails();
-        retailerTotalDetails.setUnallocated(retailerCodeRepository.countByStatus(RetailerCode.Status.UNALLOCATED));
         retailerTotalDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerTotalDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
         retailerCodeReport.setRetailerCodes(retailerTotalDetails);
@@ -241,8 +239,6 @@ public class ReportController {
             List<Content> contents = contentRepository.findByStudio(studio);
 
             RetailerCodeDetails retailerStudioDetails = new RetailerCodeDetails();
-            retailerStudioDetails.setUnallocated(
-                    retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.UNALLOCATED));
             retailerStudioDetails.setPaired(
                     retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.PAIRED));
             retailerStudioDetails.setRedeemed(
@@ -254,8 +250,6 @@ public class ReportController {
             for (Content content : contents) {
 
                 RetailerCodeDetails retailerContentDetails = new RetailerCodeDetails();
-                retailerContentDetails.setUnallocated(
-                        retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.UNALLOCATED));
                 retailerContentDetails.setPaired(
                         retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.PAIRED));
                 retailerContentDetails.setRedeemed(
@@ -267,9 +261,6 @@ public class ReportController {
                 for (Retailer retailer : retailers) {
 
                     RetailerCodeDetails retailerRetailerDetails = new RetailerCodeDetails();
-                    retailerRetailerDetails.setUnallocated(
-                            retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
-                                                                                      RetailerCode.Status.UNALLOCATED));
                     retailerRetailerDetails.setPaired(
                             retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
                                                                                       RetailerCode.Status.PAIRED));
@@ -296,12 +287,6 @@ public class ReportController {
                                                                                                    RetailerCode
                                                                                                            .Status
                                                                                                            .REDEEMED));
-                        retailerFormatDetails.setUnallocated(
-                                retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
-                                                                                                   format,
-                                                                                                   RetailerCode
-                                                                                                           .Status
-                                                                                                           .UNALLOCATED));
                         formatDetails.add(new FormatDetails(format, retailerFormatDetails));
                     }
                     retailerDetails.add(

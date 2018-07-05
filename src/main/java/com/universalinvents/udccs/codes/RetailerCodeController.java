@@ -53,6 +53,9 @@ public class RetailerCodeController {
     @Autowired
     private PairingRepository pairingRepository;
 
+
+    /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
+    *
     @CrossOrigin
     @ApiOperation(value = "Ingest a Retailer Code",
                   notes = "Use this endpoint to ingest codes from an external source. Retailer Codes " +
@@ -93,6 +96,7 @@ public class RetailerCodeController {
                                                            RetailerCode.Status.UNALLOCATED, retailer);
         return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }
+    */
 
     @CrossOrigin
     @ApiOperation(value = "Redeem a Retailer Code and its paired Master Code")

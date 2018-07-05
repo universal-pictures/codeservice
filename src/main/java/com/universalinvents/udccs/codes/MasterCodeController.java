@@ -177,7 +177,7 @@ public class MasterCodeController {
 
         // See if there's a matching Retailer Code and error if not
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
-        if (code == null) {
+        if (retailerCode == null) {
             return new ResponseEntity(new ApiError("Matching Retailer Code not found.  Unable to ingest " +
                 code + " as a Master Code until it's ingested as a Retailer Code first."), HttpStatus.BAD_REQUEST);
         }
@@ -484,7 +484,7 @@ public class MasterCodeController {
         retailerCode.setContent(content);
         retailerCode.setRetailer(retailer);
         retailerCode.setFormat(format);
-        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
+//        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
 
         // Find all of the matches sorted by their creation date
         List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
