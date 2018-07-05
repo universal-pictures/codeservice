@@ -17,7 +17,7 @@ public class RetailerCode {
 
     // Legal status values
     public enum Status {
-        PAIRED, REDEEMED
+        PAIRED, REDEEMED, EXPIRED
     }
 
     @Id
@@ -25,10 +25,11 @@ public class RetailerCode {
 
     private Date createdOn;
     private Date modifiedOn;
+    private Date expiresOn;
     private String format;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED', 'EXPIRED')")
     private Status status;
 
     @ManyToOne
@@ -84,6 +85,10 @@ public class RetailerCode {
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
     }
+
+    public Date getExpiresOn() { return expires_on; }
+
+    public void setExpiresOn(Date expiresOn) { this.expiresOn = expiresOn; }
 
     public Content getContent() {
         return content;

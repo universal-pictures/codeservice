@@ -8,12 +8,15 @@ public class RetailerCodeDetails {
     private long paired;
     @JsonProperty("REDEEMED")
     private long redeemed;
+    @JsonProperty("EXPIRED")
+    private long expired;
 
     public RetailerCodeDetails() {}
 
-    public RetailerCodeDetails(long paired, long redeemed) {
+    public RetailerCodeDetails(long paired, long redeemed, long expired) {
         this.paired = paired;
         this.redeemed = redeemed;
+        this.expired = expired;
     }
 
     public long getPaired() {
@@ -31,5 +34,9 @@ public class RetailerCodeDetails {
     public void setRedeemed(long redeemed) {
         this.redeemed = redeemed;
     }
+
+    public long getExpired() { return expired; }
+
+    public void setExpired(long expired) { this.expired = expired; }
 
 }

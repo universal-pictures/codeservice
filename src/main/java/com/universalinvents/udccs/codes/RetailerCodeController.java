@@ -154,6 +154,40 @@ public class RetailerCodeController {
     }
 
     @CrossOrigin
+    @ApiOperation(value = "Expire an unredeemed Retailer Code")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully expired", response = RetailerCode.class),
+            @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Retailer Code has an incompatible status", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
+    @Transactional
+    public ResponseEntity<RetailerCode> expireCode(@PathVariable String code) {
+
+        // Get the RetailerCode object
+        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the RetailerCode is not already redeemed
+        if (retailerCode.getStatus() == RetailerCode.Status.REDEEMED) {
+            return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
+                    " can't be redeemed."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Update RetailerCode status to EXPIRED
+        Date modifiedDate = new Date();
+        retailerCode.setStatus(RetailerCode.Status.EXPIRED);
+        retailerCode.setModifiedOn(modifiedDate);
+        retailerCodeRepository.saveAndFlush(retailerCode);
+
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+    }
+
+    @CrossOrigin
     @ApiOperation(value = "Get Retailer Code information for a given code")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
@@ -216,7 +250,15 @@ public class RetailerCodeController {
             @ApiParam(value = "Retailer Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnAfter,
+            @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -281,6 +323,12 @@ public class RetailerCodeController {
         }
         if (modifiedOnBefore != null) {
             params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+        if (expiresOnAfter != null) {
+            params.add(new SqlCriteria("expiresOn", ">", expiresOnAfter));
+        }
+        if (expiresOnBefore != null) {
+            params.add(new SqlCriteria("expiresOn", "<", expiresOnBefore));
         }
 
         List<Specification<RetailerCode>> specs = new ArrayList<>();

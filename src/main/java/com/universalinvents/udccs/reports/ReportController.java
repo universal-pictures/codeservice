@@ -83,7 +83,7 @@ public class ReportController {
         RetailerCodeDetails retailerDetails = new RetailerCodeDetails();
         retailerDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
-
+        retailerDetails.setExpired(retailerCodeRepository.countByStatus(RetailerCode.Status.EXPIRED));
 
         CodeSummaryReport report = new CodeSummaryReport();
         report.setMasterCodes(masterDetails);
@@ -228,6 +228,7 @@ public class ReportController {
         RetailerCodeDetails retailerTotalDetails = new RetailerCodeDetails();
         retailerTotalDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerTotalDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
+        retailerTotalDetails.setExpired(retailerCodeRepository.countByStatus(RetailerCode.Status.EXPIRED));
         retailerCodeReport.setRetailerCodes(retailerTotalDetails);
 
 
@@ -243,6 +244,8 @@ public class ReportController {
                     retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.PAIRED));
             retailerStudioDetails.setRedeemed(
                     retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.REDEEMED));
+            retailerStudioDetails.setExpired(
+                    retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.EXPIRED));
 
 
             // ============= CONTENT =============
@@ -254,6 +257,8 @@ public class ReportController {
                         retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.PAIRED));
                 retailerContentDetails.setRedeemed(
                         retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.REDEEMED));
+                retailerContentDetails.setExpired(
+                        retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.EXPIRED));
 
                 // ============= RETAILERS ============
                 List<RetailerDetails> retailerDetails = new ArrayList<>();
@@ -267,6 +272,9 @@ public class ReportController {
                     retailerRetailerDetails.setRedeemed(
                             retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
                                                                                       RetailerCode.Status.REDEEMED));
+                    retailerRetailerDetails.setExpired(
+                            retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
+                                    RetailerCode.Status.EXPIRED));
 
 
                     // ============= FORMATS ================
@@ -287,6 +295,13 @@ public class ReportController {
                                                                                                    RetailerCode
                                                                                                            .Status
                                                                                                            .REDEEMED));
+                        retailerFormatDetails.setExpired(
+                                retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
+                                        format,
+                                        RetailerCode
+                                                .Status
+                                                .EXPIRED));
+
                         formatDetails.add(new FormatDetails(format, retailerFormatDetails));
                     }
                     retailerDetails.add(
