@@ -413,6 +413,52 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
+    @ApiOperation(value = "Update a Master Code Entry",
+            notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
+                    "specifying any of these values, they will overwrite existing values.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 304, message = "Master Code was not modified", response = MasterCode.class),
+            @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
+    })
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{code}", produces = "application/json")
+    public ResponseEntity<MasterCode> updateMasterCode(
+            @PathVariable
+            @ApiParam(value = "The Master Code to update", required = true)
+                    String code,
+            @RequestBody(required = false)
+            @ApiParam(value = "Provie updated properties for the Master Code")
+                    UpdateMasterCodeRequest request) {
+
+        // Get existing MasterCode record
+        MasterCode masterCode = masterCodeRepository.findOne(code);
+        if (masterCode == null)
+            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
+
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getContentId() != null) {
+            Content content = contentRepository.findOne(request.getContentId());
+            if (content == null) {
+                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+            }
+            else {
+                masterCode.setContent(content);
+                isModified = true;
+            }
+        }
+
+        if (isModified) {
+            masterCode.setModifiedOn(new Date());
+            masterCodeRepository.save(masterCode);
+            return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
+        }
+
+        // Nothing was modified.  Just return the found MasterCode.
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.NOT_MODIFIED);
+    }
+
+    @CrossOrigin
     @ApiOperation(value = "Pair Master Code to a Retailer Code",
                   notes = "Use this endpoint to associate a Master Code with a Retailer Code. This operates " +
                   "differently depending on whether the Master Code was ingested or dynamically generated:\n\n<br/>" +
