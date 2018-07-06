@@ -32,17 +32,22 @@ public class CreateRetailerRequest {
                       example = "123-53242-3234eff-2234f-231232",
                       required = false)
     private String externalId;
+    @ApiModelProperty(value="The base URL for this retailer's Code Management Service API",
+                      example = "https://example.com",
+                      required = false)
+    private String generateUrl;
 
     public CreateRetailerRequest() {}
 
     public CreateRetailerRequest(String name, Boolean generateCodes, String logoUrl, String redemptionUrl,
-                                 String status, String externalId) {
+                                 String status, String externalId, String generateUrl) {
         this.name = name;
         this.generateCodes = generateCodes;
         this.logoUrl = logoUrl;
         this.redemptionUrl = redemptionUrl;
         this.status = status;
         this.externalId = externalId;
+        this.generateUrl = generateUrl;
     }
 
     public String getName() {
@@ -88,4 +93,8 @@ public class CreateRetailerRequest {
     public String getExternalId() { return externalId; }
 
     public void setExternalId(String externalId) { this.externalId = externalId; }
+
+    public String getGenerateUrl() { return generateUrl; }
+
+    public void setGenerateUrl(String generateUrl) { this.generateUrl = generateUrl; }
 }

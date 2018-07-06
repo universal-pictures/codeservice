@@ -93,7 +93,7 @@ public class RetailerCodeController {
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
         final RetailerCode retailerCode = new RetailerCode(code, content, request.getFormat(),
-                                                           RetailerCode.Status.UNALLOCATED, retailer);
+                                                           RetailerCode.Status.UNALLOCATED, retailer, null);
         return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }
     */
