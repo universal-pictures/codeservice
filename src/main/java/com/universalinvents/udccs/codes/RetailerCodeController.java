@@ -3,6 +3,8 @@ package com.universalinvents.udccs.codes;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
+import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -20,8 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -53,6 +57,8 @@ public class RetailerCodeController {
     @Autowired
     private PairingRepository pairingRepository;
 
+    @Autowired
+    private RestTemplate restTemplate;
 
     /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
     *
@@ -176,6 +182,20 @@ public class RetailerCodeController {
             return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
                     " can't be redeemed."),
                     HttpStatus.BAD_REQUEST);
+        }
+
+        // Update the code in the retailer service
+        Retailer retailer = retailerCode.getRetailer();
+        if (retailer.getGenerateUrl() != null) {
+            try {
+                String url = retailer.getGenerateUrl()+"/retailerCodes/"+retailerCode.getCode()+"/expire";
+                ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(null, retailerCode.getCode());
+                restTemplate.put(url, request);
+            } catch (HttpClientErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (HttpServerErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
 
         // Update RetailerCode status to EXPIRED

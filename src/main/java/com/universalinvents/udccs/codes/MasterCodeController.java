@@ -607,7 +607,7 @@ public class MasterCodeController {
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
         String url = retailer.getGenerateUrl()+"/retailerCodes";
-        ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr());
+        ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
 
         ExternalRetailerCodeResponse externalRc;
         try {
