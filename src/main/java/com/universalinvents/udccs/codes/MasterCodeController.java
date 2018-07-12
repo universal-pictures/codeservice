@@ -413,9 +413,7 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "Update a Master Code Entry",
-            notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
-                    "specifying any of these values, they will overwrite existing values.")
+    @ApiOperation(value = "Update the Content ID that this Master Code be related to")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Master Code was not modified", response = MasterCode.class),
@@ -427,7 +425,7 @@ public class MasterCodeController {
             @ApiParam(value = "The Master Code to update", required = true)
                     String code,
             @RequestBody(required = false)
-            @ApiParam(value = "Provie updated properties for the Master Code")
+            @ApiParam(value = "Provide updated properties for the Master Code")
                     UpdateMasterCodeRequest request) {
 
         // Get existing MasterCode record
