@@ -413,7 +413,7 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "Update the Content ID that this Master Code be related to")
+    @ApiOperation(value = "Update the Content ID related to this Master Code")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Master Code was not modified", response = MasterCode.class),
