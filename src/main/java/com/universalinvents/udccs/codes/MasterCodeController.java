@@ -515,10 +515,12 @@ public class MasterCodeController {
         // If the MasterCode isn't already PAIRED or REDEEMED, then fetch a retailer code from the Retailer Service
         Date modifiedDate = new Date();
         if (masterCode.getStatus() == MasterCode.Status.ISSUED) {
-            try {
-                retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.CONFLICT);
+            if (retailerCode == null) {
+                try {
+                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                } catch (ApiError apiError) {
+                    return new ResponseEntity(apiError, HttpStatus.CONFLICT);
+                }
             }
 
             Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
