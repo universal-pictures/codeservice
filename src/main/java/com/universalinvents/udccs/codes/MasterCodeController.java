@@ -492,7 +492,6 @@ public class MasterCodeController {
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
-        // @kyleki Do we still need this check now that inventory is being tracked elsewhere?
         if (!masterCode.getContent().getRetailers().contains(retailer))
             return new ResponseEntity(new ApiError("Retailer does not have requested Content."), HttpStatus.BAD_REQUEST);
 
