@@ -503,17 +503,8 @@ public class MasterCodeController {
         // First:
         // Try to get a retailerCode with the same value as the masterCode
         RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
-        if (retailerCode == null) {
-            // Second:
-            // If one wasn't found, get a random retailerCode for the related Content
-            try {
-                retailerCode = getRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.CONFLICT);
-            }
-        }
 
-        // Third:
+        // Second:
         // Fetch a new retailer code from the corresponding Retailer Service and insert new Pairing record
 
         // Check that we can retrieve a retailer code from this Retailer
@@ -623,27 +614,27 @@ public class MasterCodeController {
         return retailerCodeRepository.save(retailerCode);
     }
 
-    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
-        // Build a RetailerCode object with the values passed in
-        RetailerCode retailerCode = new RetailerCode();
-
-        // Unpaired RetailerCodes for the given Content & Retailer
-        retailerCode.setContent(content);
-        retailerCode.setRetailer(retailer);
-        retailerCode.setFormat(format);
-//        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
-
-        // Find all of the matches sorted by their creation date
-        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
-                                                                          new Sort("createdOn"));
-
-        if (retailerCodes == null || retailerCodes.isEmpty()) {
-            throw new ApiError("Retailer Code not available for selected Content");
-        }
-
-        // Return just the first record found
-        return retailerCodes.get(0);
-    }
+//    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
+//        // Build a RetailerCode object with the values passed in
+//        RetailerCode retailerCode = new RetailerCode();
+//
+//        // Unpaired RetailerCodes for the given Content & Retailer
+//        retailerCode.setContent(content);
+//        retailerCode.setRetailer(retailer);
+//        retailerCode.setFormat(format);
+////        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
+//
+//        // Find all of the matches sorted by their creation date
+//        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
+//                                                                          new Sort("createdOn"));
+//
+//        if (retailerCodes == null || retailerCodes.isEmpty()) {
+//            throw new ApiError("Retailer Code not available for selected Content");
+//        }
+//
+//        // Return just the first record found
+//        return retailerCodes.get(0);
+//    }
 
     private MasterCode getMasterCode(Long contentId, String format, MasterCode.Status status) throws ApiError {
         // Build a MasterCode object with the values passed in
