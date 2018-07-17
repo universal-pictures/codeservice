@@ -3,6 +3,9 @@ package com.universalinvents.udccs.codes;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
+import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
+import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -20,12 +23,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Api(tags = {"Retailer Code Controller"},
      description = "Operations pertaining to retailer codes")
@@ -53,6 +60,11 @@ public class RetailerCodeController {
     @Autowired
     private PairingRepository pairingRepository;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
+    *
     @CrossOrigin
     @ApiOperation(value = "Ingest a Retailer Code",
                   notes = "Use this endpoint to ingest codes from an external source. Retailer Codes " +
@@ -90,9 +102,10 @@ public class RetailerCodeController {
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
         final RetailerCode retailerCode = new RetailerCode(code, content, request.getFormat(),
-                                                           RetailerCode.Status.UNALLOCATED, retailer);
+                                                           RetailerCode.Status.UNALLOCATED, retailer, null);
         return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
     }
+    */
 
     @CrossOrigin
     @ApiOperation(value = "Redeem a Retailer Code and its paired Master Code")
@@ -147,6 +160,65 @@ public class RetailerCodeController {
         masterCodeRepository.saveAndFlush(masterCode);
 
         return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+    }
+
+    @CrossOrigin
+    @ApiOperation(value = "Try to expire an unredeemed Retailer Code",
+            notes = "If the Retailer Code hasn't reached its expiration date, then this method will return a " +
+                    "304 Not Modified.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully expired", response = RetailerCode.class),
+            @ApiResponse(code = 304, message = "This Retailer Code has not reached its expiration date", response = ApiError.class),
+            @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Retailer Code has an incompatible status", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
+    @Transactional
+    public ResponseEntity<RetailerCode> expireCode(@PathVariable String code) {
+
+        // Get the RetailerCode object
+        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the RetailerCode is not already redeemed
+        if (retailerCode.getStatus() == RetailerCode.Status.REDEEMED) {
+            return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
+                    " can't be expired."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the latest status of this retailer code from the Retailer Code Service
+        // If the returned status is EXPIRED, then update the status of the Retailer Code
+        Retailer retailer = retailerCode.getRetailer();
+        if (retailer.getBaseUrl() != null) {
+            String url = retailer.getBaseUrl()+"/retailerCodes/{code}/refresh";
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("code", code);
+
+            ExternalRetailerCodeStatusResponse status;
+            try {
+                status = restTemplate.getForObject(url, ExternalRetailerCodeStatusResponse.class, vars);
+            } catch (HttpClientErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (HttpServerErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            if (status.getStatus().equals("EXPIRED")) {
+                // Update RetailerCode status to EXPIRED
+                Date modifiedDate = new Date();
+                retailerCode.setStatus(RetailerCode.Status.EXPIRED);
+                retailerCode.setModifiedOn(modifiedDate);
+                retailerCodeRepository.saveAndFlush(retailerCode);
+
+                return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+            }
+        }
+
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin

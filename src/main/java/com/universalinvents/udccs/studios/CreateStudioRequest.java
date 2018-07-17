@@ -47,12 +47,16 @@ public class CreateStudioRequest {
                       example = "http://example.com/mylogoimage.png",
                       required = false)
     private String logoUrl;
+    @ApiModelProperty(value = "A field used to store any external identifier related to this studio",
+            example = "123-53242-3234eff-2234f-231232",
+            required = false)
+    private String externalId;
 
     public CreateStudioRequest() {
     }
 
     public CreateStudioRequest(String name, String description, String contactName, String contactEmail, String contactPhone,
-                               String status, Long flags, String codePrefix, String logoUrl) {
+                               String status, Long flags, String codePrefix, String logoUrl, String externalId) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
@@ -62,6 +66,7 @@ public class CreateStudioRequest {
         this.flags = flags;
         this.codePrefix = codePrefix;
         this.logoUrl = logoUrl;
+        this.externalId = externalId;
     }
 
     public String getName() {
@@ -135,4 +140,8 @@ public class CreateStudioRequest {
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
     }
+
+    public String getExternalId() { return externalId; }
+
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 }

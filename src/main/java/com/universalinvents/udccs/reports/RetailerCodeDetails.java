@@ -4,27 +4,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RetailerCodeDetails {
 
-    @JsonProperty("UNALLOCATED")
-    private long unallocated;
     @JsonProperty("PAIRED")
     private long paired;
     @JsonProperty("REDEEMED")
     private long redeemed;
+    @JsonProperty("EXPIRED")
+    private long expired;
 
     public RetailerCodeDetails() {}
 
-    public RetailerCodeDetails(long unallocated, long paired, long redeemed) {
-        this.unallocated = unallocated;
+    public RetailerCodeDetails(long paired, long redeemed, long expired) {
         this.paired = paired;
         this.redeemed = redeemed;
-    }
-
-    public long getUnallocated() {
-        return unallocated;
-    }
-
-    public void setUnallocated(long unallocated) {
-        this.unallocated = unallocated;
+        this.expired = expired;
     }
 
     public long getPaired() {
@@ -42,5 +34,9 @@ public class RetailerCodeDetails {
     public void setRedeemed(long redeemed) {
         this.redeemed = redeemed;
     }
+
+    public long getExpired() { return expired; }
+
+    public void setExpired(long expired) { this.expired = expired; }
 
 }

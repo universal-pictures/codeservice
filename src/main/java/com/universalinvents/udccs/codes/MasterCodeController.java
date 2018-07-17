@@ -5,6 +5,9 @@ import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
+import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
+import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairMasterCodeRequest;
 import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.pairings.PairingRepository;
@@ -27,11 +30,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Api(tags = {"Master Code Controller"},
      description = "Operations pertaining to master codes")
@@ -61,6 +69,9 @@ public class MasterCodeController {
 
     @Autowired
     private StudioRepository studioRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @CrossOrigin
     @ApiOperation(value = "Obtain a Master Code",
@@ -145,67 +156,67 @@ public class MasterCodeController {
         }
     }
 
-    @CrossOrigin
-    @ApiOperation(value = "Ingest a Master Code",
-                  notes = "Use this endpoint if you need to ingest codes from an external source. Master Codes " +
-                  "may only be ingested if a matching Retailer Code has already been ingested. Master Codes " +
-                  "will be given an UNALLOCATED status and will be utilized by future *POST /api/codes/master* " +
-                  "calls where *create* is 'false'.")
-    @ResponseStatus(value = HttpStatus.CREATED)
-    @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
-            @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
-                         response = ApiError.class),
-            @ApiResponse(code = 409, message = "Master Code already exists", response = ApiError.class)
-    })
-    @RequestMapping(method = RequestMethod.POST,
-                    value = "/{code}",
-                    produces = "application/json")
-    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
-                                                           @ApiParam(value = "The Master Code to ingest",
-                                                                     required = true)
-                                                                   String code,
-                                                       @RequestBody
-                                                       @ApiParam(value = "Provide properties for the Master Code.",
-                                                                 required = true)
-                                                               IngestMasterCodeRequest request) {
-        // See if the code already exists and error if it does
-        MasterCode mc = masterCodeRepository.findOne(code);
-        if (mc != null) {
-            return new ResponseEntity(new ApiError("Master Code already exists"), HttpStatus.CONFLICT);
-        }
-
-        // See if there's a matching Retailer Code and error if not
-        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
-        if (code == null) {
-            return new ResponseEntity(new ApiError("Matching Retailer Code not found.  Unable to ingest " +
-                code + " as a Master Code until it's ingested as a Retailer Code first."), HttpStatus.BAD_REQUEST);
-        }
-
-        Content content = contentRepository.findOne(request.getContentId());
-        if (content == null)
-            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
-
-        ReferralPartner referralPartner = null;
-        if (request.getPartnerId() != null) {
-            referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-            if (referralPartner == null)
-                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
-                                          HttpStatus.BAD_REQUEST);
-        }
-
-        App app = null;
-        if (request.getAppId() != null) {
-            app = appRepository.findOne(request.getAppId());
-            if (app == null)
-                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.BAD_REQUEST);
-        }
-
-        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED, null);
-        masterCodeRepository.save(masterCode);
-        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
-    }
+//    @CrossOrigin
+//    @ApiOperation(value = "Ingest a Master Code",
+//                  notes = "Use this endpoint if you need to ingest codes from an external source. Master Codes " +
+//                  "may only be ingested if a matching Retailer Code has already been ingested. Master Codes " +
+//                  "will be given an UNALLOCATED status and will be utilized by future *POST /api/codes/master* " +
+//                  "calls where *create* is 'false'.")
+//    @ResponseStatus(value = HttpStatus.CREATED)
+//    @ApiResponses(value = {
+//            @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
+//            @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
+//                         response = ApiError.class),
+//            @ApiResponse(code = 409, message = "Master Code already exists", response = ApiError.class)
+//    })
+//    @RequestMapping(method = RequestMethod.POST,
+//                    value = "/{code}",
+//                    produces = "application/json")
+//    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
+//                                                           @ApiParam(value = "The Master Code to ingest",
+//                                                                     required = true)
+//                                                                   String code,
+//                                                       @RequestBody
+//                                                       @ApiParam(value = "Provide properties for the Master Code.",
+//                                                                 required = true)
+//                                                               IngestMasterCodeRequest request) {
+//        // See if the code already exists and error if it does
+//        MasterCode mc = masterCodeRepository.findOne(code);
+//        if (mc != null) {
+//            return new ResponseEntity(new ApiError("Master Code already exists"), HttpStatus.CONFLICT);
+//        }
+//
+//        // See if there's a matching Retailer Code and error if not
+//        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+//        if (retailerCode == null) {
+//            return new ResponseEntity(new ApiError("Matching Retailer Code not found.  Unable to ingest " +
+//                code + " as a Master Code until it's ingested as a Retailer Code first."), HttpStatus.BAD_REQUEST);
+//        }
+//
+//        Content content = contentRepository.findOne(request.getContentId());
+//        if (content == null)
+//            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
+//
+//        ReferralPartner referralPartner = null;
+//        if (request.getPartnerId() != null) {
+//            referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+//            if (referralPartner == null)
+//                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+//                                          HttpStatus.BAD_REQUEST);
+//        }
+//
+//        App app = null;
+//        if (request.getAppId() != null) {
+//            app = appRepository.findOne(request.getAppId());
+//            if (app == null)
+//                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.BAD_REQUEST);
+//        }
+//
+//        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
+//                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED, null);
+//        masterCodeRepository.save(masterCode);
+//        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+//    }
 
 //    @CrossOrigin
 //    @ApiOperation(value = "Update the status of a Master Code",
@@ -402,13 +413,53 @@ public class MasterCodeController {
     }
 
     @CrossOrigin
+    @ApiOperation(value = "Update the Content ID related to this Master Code")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 304, message = "Master Code was not modified", response = MasterCode.class),
+            @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
+    })
+    @RequestMapping(method = RequestMethod.PATCH, value = "/{code}", produces = "application/json")
+    public ResponseEntity<MasterCode> updateMasterCode(
+            @PathVariable
+            @ApiParam(value = "The Master Code to update", required = true)
+                    String code,
+            @RequestBody(required = false)
+            @ApiParam(value = "Provide updated properties for the Master Code")
+                    UpdateMasterCodeRequest request) {
+
+        // Get existing MasterCode record
+        MasterCode masterCode = masterCodeRepository.findOne(code);
+        if (masterCode == null)
+            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
+
+        // Update values from request - if set
+        boolean isModified = false;
+        if (request.getContentId() != null) {
+            Content content = contentRepository.findOne(request.getContentId());
+            if (content == null) {
+                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
+            }
+            else {
+                masterCode.setContent(content);
+                isModified = true;
+            }
+        }
+
+        if (isModified) {
+            masterCode.setModifiedOn(new Date());
+            masterCodeRepository.save(masterCode);
+            return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
+        }
+
+        // Nothing was modified.  Just return the found MasterCode.
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.NOT_MODIFIED);
+    }
+
+    @CrossOrigin
     @ApiOperation(value = "Pair Master Code to a Retailer Code",
-                  notes = "Use this endpoint to associate a Master Code with a Retailer Code. This operates " +
-                  "differently depending on whether the Master Code was ingested or dynamically generated:\n\n<br/>" +
-                  "**If Ingested:**\n\n" +
-                  "* Pair with the matching Retailer Code\n\n" +
-                  "**If Generated:**\n\n" +
-                  "* Pair with a random Retailer Code for the same Content and format as the Master Code")
+                  notes = "Use this endpoint to associate a Master Code with a Retailer Code.  This endpoint calls " +
+                  "the appropriate Retailer Code Service to fetch a valid retailer code for this content.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
@@ -433,9 +484,6 @@ public class MasterCodeController {
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
 
-        if (masterCode.isPaired())
-            return new ResponseEntity(new ApiError("Master Code expressed is already paired."), HttpStatus.CONFLICT);
-
         Retailer retailer = retailerRepository.findOne(request.getRetailerId());
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
@@ -447,56 +495,139 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("Referral Partner does not have access to selected Retailer."),
                                       HttpStatus.BAD_REQUEST);
 
-        // First:
-        // Try to get a retailerCode with the same value as the masterCode
-        RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
-        if (retailerCode == null) {
-            // Second:
-            // If one wasn't found, get a random retailerCode for the related Content
+        // Fetch a new retailer code from the corresponding Retailer Service and insert new Pairing record
+        RetailerCode retailerCode = null;
+
+        // Check that we can retrieve a retailer code from this Retailer
+        if (retailer.getBaseUrl() == null)
+            return new ResponseEntity(new ApiError("The selected retailer does not have baseUrl defined"),
+                                      HttpStatus.BAD_REQUEST);
+
+        // If the MasterCode isn't already PAIRED or REDEEMED, then fetch a retailer code from the Retailer Service
+        Date modifiedDate = new Date();
+        if (masterCode.getStatus() == MasterCode.Status.ISSUED) {
+            if (retailerCode == null) {
+                try {
+                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                } catch (ApiError apiError) {
+                    return new ResponseEntity(apiError, HttpStatus.CONFLICT);
+                }
+            }
+
+            Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
+            pairingRepository.saveAndFlush(pairing);
+
+            // Update the status of the MasterCode
+            masterCode.setStatus(MasterCode.Status.PAIRED);
+            masterCode.setModifiedOn(modifiedDate);
+            masterCodeRepository.saveAndFlush(masterCode);
+        }
+
+        // If the paired RetailerCode is truly expired,
+        // then update the Pairing object with a new RetailerCode for the same content with the same Retailer
+        else if (masterCode.isPaired()) {
+            Pairing pairing = masterCode.getPairing();
+            RetailerCode rc = pairing.getRetailerCode();
+
+            boolean isExpiredCode;
             try {
-                retailerCode = getRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                isExpiredCode = isExpired(rc.getCode(), retailer.getBaseUrl());
             } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
+
+            if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredCode) {
+                // This RetailerCode is truly expired, so pair with a new RetailerCode
+                try {
+                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                } catch (ApiError apiError) {
+                    return new ResponseEntity(apiError, HttpStatus.CONFLICT);
+                }
+
+                // Update the pairing record
+                pairing.setRetailerCode(retailerCode);
+                pairing.setPairedBy(request.getPairedBy());
+                pairing.setPairedOn(modifiedDate);
+                pairingRepository.saveAndFlush(pairing);
+            }
+            else if (rc.getStatus() == RetailerCode.Status.EXPIRED) {
+                // This RetailerCode isn't truly expired, so update its status back to PAIRED
+                rc.setStatus(RetailerCode.Status.PAIRED);
+                rc.setModifiedOn(modifiedDate);
+                retailerCodeRepository.saveAndFlush(rc);
+            }
+            else
+                return new ResponseEntity(new ApiError("Master Code expressed is already paired."), HttpStatus.CONFLICT);
         }
 
-        // Insert new pairings record
-        Date modifiedDate = new Date();
-        Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
-        pairingRepository.saveAndFlush(pairing);
+        // Incompatible status
+        else
+            return new ResponseEntity(new ApiError("Incompatible status for pairing."), HttpStatus.CONFLICT);
 
-        // Update the status of both MasterCode and RetailerCode
-        masterCode.setStatus(MasterCode.Status.PAIRED);
-        masterCode.setModifiedOn(modifiedDate);
-        masterCodeRepository.saveAndFlush(masterCode);
-        retailerCode.setStatus(RetailerCode.Status.PAIRED);
-        retailerCode.setModifiedOn(modifiedDate);
-        retailerCodeRepository.saveAndFlush(retailerCode);
-
+        // Success
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
     }
 
-    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
-        // Build a RetailerCode object with the values passed in
-        RetailerCode retailerCode = new RetailerCode();
+    private boolean isExpired(String code, String baseUrl) throws ApiError {
+        String url = baseUrl+"/retailerCodes/{code}/refresh";
+        Map<String, String> vars = new HashMap<String, String>();
+        vars.put("code", code);
 
-        // Unpaired RetailerCodes for the given Content & Retailer
-        retailerCode.setContent(content);
-        retailerCode.setRetailer(retailer);
-        retailerCode.setFormat(format);
-        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
-
-        // Find all of the matches sorted by their creation date
-        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
-                                                                          new Sort("createdOn"));
-
-        if (retailerCodes == null || retailerCodes.isEmpty()) {
-            throw new ApiError("Retailer Code not available for selected Content");
+        ExternalRetailerCodeStatusResponse status;
+        try {
+            status = restTemplate.getForObject(
+                    url, ExternalRetailerCodeStatusResponse.class, vars);
+        } catch (HttpClientErrorException e) {
+            throw new ApiError(e.getMessage());
+        } catch(HttpServerErrorException e) {
+            throw new ApiError(e.getMessage());
         }
 
-        // Return just the first record found
-        return retailerCodes.get(0);
+        return status.getStatus().equals("EXPIRED");
     }
+
+    private RetailerCode fetchAndSaveRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
+        String url = retailer.getBaseUrl()+"/retailerCodes";
+        ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
+
+        ExternalRetailerCodeResponse externalRc;
+        try {
+            externalRc = restTemplate.postForObject(
+                    url, request, ExternalRetailerCodeResponse.class
+            );
+        } catch (HttpClientErrorException e) {
+            throw new ApiError(e.getMessage());
+        } catch (HttpServerErrorException e) {
+            throw new ApiError(e.getMessage());
+        }
+
+        RetailerCode retailerCode = new RetailerCode(
+                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer);
+
+        return retailerCodeRepository.save(retailerCode);
+    }
+
+//    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
+//        // Build a RetailerCode object with the values passed in
+//        RetailerCode retailerCode = new RetailerCode();
+//
+//        // Unpaired RetailerCodes for the given Content & Retailer
+//        retailerCode.setContent(content);
+//        retailerCode.setRetailer(retailer);
+//        retailerCode.setFormat(format);
+////        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
+//
+//        // Find all of the matches sorted by their creation date
+//        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
+//                                                                          new Sort("createdOn"));
+//
+//        if (retailerCodes == null || retailerCodes.isEmpty()) {
+//            throw new ApiError("Retailer Code not available for selected Content");
+//        }
+//
+//        // Return just the first record found
+//        return retailerCodes.get(0);
+//    }
 
     private MasterCode getMasterCode(Long contentId, String format, MasterCode.Status status) throws ApiError {
         // Build a MasterCode object with the values passed in

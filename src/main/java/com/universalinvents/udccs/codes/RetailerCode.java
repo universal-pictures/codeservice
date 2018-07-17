@@ -17,7 +17,7 @@ public class RetailerCode {
 
     // Legal status values
     public enum Status {
-        UNALLOCATED, PAIRED, REDEEMED
+        PAIRED, REDEEMED, EXPIRED
     }
 
     @Id
@@ -28,7 +28,7 @@ public class RetailerCode {
     private String format;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED', 'EXPIRED')")
     private Status status;
 
     @ManyToOne
