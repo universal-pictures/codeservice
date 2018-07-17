@@ -57,7 +57,7 @@ public class RetailerController
         retailer.setStatus(request.getStatus());
         retailer.setCreatedOn(new Date());
         retailer.setExternalId(request.getExternalId());
-        retailer.setGenerateUrl(request.getGenerateUrl());
+        retailer.setBaseUrl(request.getBaseUrl());
 
         retailerRepository.save(retailer);
 
@@ -119,8 +119,8 @@ public class RetailerController
             isModified = true;
         }
 
-        if (request.getGenerateUrl() != null) {
-            retailer.setGenerateUrl(request.getGenerateUrl());
+        if (request.getBaseUrl() != null) {
+            retailer.setBaseUrl(request.getBaseUrl());
             isModified = true;
         }
 

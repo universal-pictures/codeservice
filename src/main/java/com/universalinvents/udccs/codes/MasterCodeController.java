@@ -156,67 +156,67 @@ public class MasterCodeController {
         }
     }
 
-    @CrossOrigin
-    @ApiOperation(value = "Ingest a Master Code",
-                  notes = "Use this endpoint if you need to ingest codes from an external source. Master Codes " +
-                  "may only be ingested if a matching Retailer Code has already been ingested. Master Codes " +
-                  "will be given an UNALLOCATED status and will be utilized by future *POST /api/codes/master* " +
-                  "calls where *create* is 'false'.")
-    @ResponseStatus(value = HttpStatus.CREATED)
-    @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
-            @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
-                         response = ApiError.class),
-            @ApiResponse(code = 409, message = "Master Code already exists", response = ApiError.class)
-    })
-    @RequestMapping(method = RequestMethod.POST,
-                    value = "/{code}",
-                    produces = "application/json")
-    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
-                                                           @ApiParam(value = "The Master Code to ingest",
-                                                                     required = true)
-                                                                   String code,
-                                                       @RequestBody
-                                                       @ApiParam(value = "Provide properties for the Master Code.",
-                                                                 required = true)
-                                                               IngestMasterCodeRequest request) {
-        // See if the code already exists and error if it does
-        MasterCode mc = masterCodeRepository.findOne(code);
-        if (mc != null) {
-            return new ResponseEntity(new ApiError("Master Code already exists"), HttpStatus.CONFLICT);
-        }
-
-        // See if there's a matching Retailer Code and error if not
-        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
-        if (retailerCode == null) {
-            return new ResponseEntity(new ApiError("Matching Retailer Code not found.  Unable to ingest " +
-                code + " as a Master Code until it's ingested as a Retailer Code first."), HttpStatus.BAD_REQUEST);
-        }
-
-        Content content = contentRepository.findOne(request.getContentId());
-        if (content == null)
-            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
-
-        ReferralPartner referralPartner = null;
-        if (request.getPartnerId() != null) {
-            referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-            if (referralPartner == null)
-                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
-                                          HttpStatus.BAD_REQUEST);
-        }
-
-        App app = null;
-        if (request.getAppId() != null) {
-            app = appRepository.findOne(request.getAppId());
-            if (app == null)
-                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.BAD_REQUEST);
-        }
-
-        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED, null);
-        masterCodeRepository.save(masterCode);
-        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
-    }
+//    @CrossOrigin
+//    @ApiOperation(value = "Ingest a Master Code",
+//                  notes = "Use this endpoint if you need to ingest codes from an external source. Master Codes " +
+//                  "may only be ingested if a matching Retailer Code has already been ingested. Master Codes " +
+//                  "will be given an UNALLOCATED status and will be utilized by future *POST /api/codes/master* " +
+//                  "calls where *create* is 'false'.")
+//    @ResponseStatus(value = HttpStatus.CREATED)
+//    @ApiResponses(value = {
+//            @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
+//            @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
+//                         response = ApiError.class),
+//            @ApiResponse(code = 409, message = "Master Code already exists", response = ApiError.class)
+//    })
+//    @RequestMapping(method = RequestMethod.POST,
+//                    value = "/{code}",
+//                    produces = "application/json")
+//    public ResponseEntity<MasterCode> ingestMasterCode(@PathVariable
+//                                                           @ApiParam(value = "The Master Code to ingest",
+//                                                                     required = true)
+//                                                                   String code,
+//                                                       @RequestBody
+//                                                       @ApiParam(value = "Provide properties for the Master Code.",
+//                                                                 required = true)
+//                                                               IngestMasterCodeRequest request) {
+//        // See if the code already exists and error if it does
+//        MasterCode mc = masterCodeRepository.findOne(code);
+//        if (mc != null) {
+//            return new ResponseEntity(new ApiError("Master Code already exists"), HttpStatus.CONFLICT);
+//        }
+//
+//        // See if there's a matching Retailer Code and error if not
+//        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+//        if (retailerCode == null) {
+//            return new ResponseEntity(new ApiError("Matching Retailer Code not found.  Unable to ingest " +
+//                code + " as a Master Code until it's ingested as a Retailer Code first."), HttpStatus.BAD_REQUEST);
+//        }
+//
+//        Content content = contentRepository.findOne(request.getContentId());
+//        if (content == null)
+//            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
+//
+//        ReferralPartner referralPartner = null;
+//        if (request.getPartnerId() != null) {
+//            referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+//            if (referralPartner == null)
+//                return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+//                                          HttpStatus.BAD_REQUEST);
+//        }
+//
+//        App app = null;
+//        if (request.getAppId() != null) {
+//            app = appRepository.findOne(request.getAppId());
+//            if (app == null)
+//                return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.BAD_REQUEST);
+//        }
+//
+//        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
+//                                               referralPartner, app, content, MasterCode.Status.UNALLOCATED, null);
+//        masterCodeRepository.save(masterCode);
+//        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
+//    }
 
 //    @CrossOrigin
 //    @ApiOperation(value = "Update the status of a Master Code",
@@ -458,12 +458,8 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation(value = "Pair Master Code to a Retailer Code",
-                  notes = "Use this endpoint to associate a Master Code with a Retailer Code. This operates " +
-                  "differently depending on whether the Master Code was ingested or dynamically generated:\n\n<br/>" +
-                  "**If Ingested:**\n\n" +
-                  "* Pair with the matching Retailer Code\n\n" +
-                  "**If Generated:**\n\n" +
-                  "* Pair with a random Retailer Code for the same Content and format as the Master Code")
+                  notes = "Use this endpoint to associate a Master Code with a Retailer Code.  This endpoint calls " +
+                  "the appropriate Retailer Code Service to fetch a valid retailer code for this content.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
@@ -499,17 +495,12 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("Referral Partner does not have access to selected Retailer."),
                                       HttpStatus.BAD_REQUEST);
 
-        // @kyleki Do we still need this block?
-        // First:
-        // Try to get a retailerCode with the same value as the masterCode
-        RetailerCode retailerCode = retailerCodeRepository.findOne(masterCode.getCode());
-
-        // Second:
         // Fetch a new retailer code from the corresponding Retailer Service and insert new Pairing record
+        RetailerCode retailerCode = null;
 
         // Check that we can retrieve a retailer code from this Retailer
-        if (retailer.getGenerateUrl() == null)
-            return new ResponseEntity(new ApiError("The selected retailer does not have generateUrl defined"),
+        if (retailer.getBaseUrl() == null)
+            return new ResponseEntity(new ApiError("The selected retailer does not have baseUrl defined"),
                                       HttpStatus.BAD_REQUEST);
 
         // If the MasterCode isn't already PAIRED or REDEEMED, then fetch a retailer code from the Retailer Service
@@ -540,7 +531,7 @@ public class MasterCodeController {
 
             boolean isExpiredCode;
             try {
-                isExpiredCode = isExpired(rc.getCode(), retailer.getGenerateUrl());
+                isExpiredCode = isExpired(rc.getCode(), retailer.getBaseUrl());
             } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
@@ -577,8 +568,8 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
     }
 
-    private boolean isExpired(String code, String generateUrl) throws ApiError {
-        String url = generateUrl+"/retailerCodes/{code}/refresh";
+    private boolean isExpired(String code, String baseUrl) throws ApiError {
+        String url = baseUrl+"/retailerCodes/{code}/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);
 
@@ -596,7 +587,7 @@ public class MasterCodeController {
     }
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
-        String url = retailer.getGenerateUrl()+"/retailerCodes";
+        String url = retailer.getBaseUrl()+"/retailerCodes";
         ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
 
         ExternalRetailerCodeResponse externalRc;
@@ -611,7 +602,7 @@ public class MasterCodeController {
         }
 
         RetailerCode retailerCode = new RetailerCode(
-                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer, externalRc.getExpiresOn());
+                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer);
 
         return retailerCodeRepository.save(retailerCode);
     }

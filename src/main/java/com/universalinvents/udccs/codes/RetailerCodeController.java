@@ -5,6 +5,7 @@ import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
+import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Api(tags = {"Retailer Code Controller"},
      description = "Operations pertaining to retailer codes")
@@ -160,10 +163,13 @@ public class RetailerCodeController {
     }
 
     @CrossOrigin
-    @ApiOperation(value = "Expire an unredeemed Retailer Code")
+    @ApiOperation(value = "Try to expire an unredeemed Retailer Code",
+            notes = "If the Retailer Code hasn't reached its expiration date, then this method will return a " +
+                    "304 Not Modified.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully expired", response = RetailerCode.class),
+            @ApiResponse(code = 304, message = "This Retailer Code has not reached its expiration date", response = ApiError.class),
             @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
             @ApiResponse(code = 400, message = "Retailer Code has an incompatible status", response = ApiError.class)
     })
@@ -180,31 +186,39 @@ public class RetailerCodeController {
         // Ensure the RetailerCode is not already redeemed
         if (retailerCode.getStatus() == RetailerCode.Status.REDEEMED) {
             return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
-                    " can't be redeemed."),
+                    " can't be expired."),
                     HttpStatus.BAD_REQUEST);
         }
 
-        // Update the code in the retailer service
+        // Get the latest status of this retailer code from the Retailer Code Service
+        // If the returned status is EXPIRED, then update the status of the Retailer Code
         Retailer retailer = retailerCode.getRetailer();
-        if (retailer.getGenerateUrl() != null) {
+        if (retailer.getBaseUrl() != null) {
+            String url = retailer.getBaseUrl()+"/retailerCodes/{code}/refresh";
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("code", code);
+
+            ExternalRetailerCodeStatusResponse status;
             try {
-                String url = retailer.getGenerateUrl()+"/retailerCodes/"+retailerCode.getCode()+"/expire";
-                ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(null, retailerCode.getCode());
-                restTemplate.put(url, request);
+                status = restTemplate.getForObject(url, ExternalRetailerCodeStatusResponse.class, vars);
             } catch (HttpClientErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (HttpServerErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
+
+            if (status.getStatus().equals("EXPIRED")) {
+                // Update RetailerCode status to EXPIRED
+                Date modifiedDate = new Date();
+                retailerCode.setStatus(RetailerCode.Status.EXPIRED);
+                retailerCode.setModifiedOn(modifiedDate);
+                retailerCodeRepository.saveAndFlush(retailerCode);
+
+                return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+            }
         }
 
-        // Update RetailerCode status to EXPIRED
-        Date modifiedDate = new Date();
-        retailerCode.setStatus(RetailerCode.Status.EXPIRED);
-        retailerCode.setModifiedOn(modifiedDate);
-        retailerCodeRepository.saveAndFlush(retailerCode);
-
-        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
@@ -270,15 +284,7 @@ public class RetailerCodeController {
             @ApiParam(value = "Retailer Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore,
-            @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
-            @RequestParam(name = "expiresAfter", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date expiresOnAfter,
-            @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
-            @RequestParam(name = "expiresBefore", required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date expiresOnBefore) {
+                    Date modifiedOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -343,12 +349,6 @@ public class RetailerCodeController {
         }
         if (modifiedOnBefore != null) {
             params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
-        }
-        if (expiresOnAfter != null) {
-            params.add(new SqlCriteria("expiresOn", ">", expiresOnAfter));
-        }
-        if (expiresOnBefore != null) {
-            params.add(new SqlCriteria("expiresOn", "<", expiresOnBefore));
         }
 
         List<Specification<RetailerCode>> specs = new ArrayList<>();

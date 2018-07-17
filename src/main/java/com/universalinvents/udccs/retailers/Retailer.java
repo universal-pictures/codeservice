@@ -32,7 +32,7 @@ public class Retailer {
     private String redemptionUrl;
     private String status;
     private String externalId;
-    private String generateUrl;
+    private String baseUrl;
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
@@ -46,7 +46,7 @@ public class Retailer {
     }
 
     public Retailer(String name, String regionCode, String status, Boolean generateCodes, String logoUrl,
-                    String redemptionUrl, String externalId, String generateUrl) {
+                    String redemptionUrl, String externalId, String baseUrl) {
         this.name = name;
         this.regionCode = regionCode;
         this.createdOn = new Date();
@@ -55,7 +55,7 @@ public class Retailer {
         this.logoUrl = logoUrl;
         this.redemptionUrl = redemptionUrl;
         this.externalId = externalId;
-        this.generateUrl = generateUrl;
+        this.baseUrl = baseUrl;
     }
 
     public Long getId() {
@@ -150,9 +150,9 @@ public class Retailer {
 
     public void setExternalId(String externalId) { this.externalId = externalId; }
 
-    public String getGenerateUrl() { return generateUrl; }
+    public String getBaseUrl() { return baseUrl; }
 
-    public void setGenerateUrl(String generateUrl) { this.generateUrl = generateUrl; }
+    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
 
     @Override
     public boolean equals(Object o) {
