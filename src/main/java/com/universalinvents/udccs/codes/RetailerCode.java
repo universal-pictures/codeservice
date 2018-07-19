@@ -7,10 +7,6 @@ import com.universalinvents.udccs.retailers.Retailer;
 import javax.persistence.*;
 import java.util.Date;
 
-/**
- * Created by mmonti on 3/20/17.
- * Updated by kkirkland on 10/25/2017.
- */
 @Entity
 @Table(name = "retailer_code")
 public class RetailerCode {
@@ -28,7 +24,7 @@ public class RetailerCode {
     private String format;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED', 'EXPIRED')")
+    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED', 'EXPIRED', 'ZOMBIED')")
     private Status status;
 
     @ManyToOne
