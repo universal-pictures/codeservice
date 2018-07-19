@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 @Api(tags = {"Master Code Controller"},
-     description = "Operations pertaining to master codes")
+        description = "Operations pertaining to master codes")
 @RestController
 @RequestMapping("/api/codes/master")
 public class MasterCodeController {
@@ -75,31 +75,31 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation(value = "Obtain a Master Code",
-                  notes = "A Master Code is given to a customer for future redemption of its related content. " +
-                  "You may either generate a code on the fly or retrieve one that was previously ingested. " +
-                  "Here's how that works:\n\n<br/>" +
-                  "If *request.create* is *true*:\n" +
-                  "1. Generate a new ISSUED code and return it to the user\n\n" +
-                  "If *request.create* is *false* (or undefined):\n" +
-                  "1. Find an UNALLOCATED code for the given content\n" +
-                  "2. Update that code's status to ISSUED\n" +
-                  "3. Return the updated code to the user\n\n" +
-                  "Additionally, if *request.create* is *true* then the following parameters are required:\n" +
-                  "* *request.appId*\n" +
-                  "* *request.partnerId*")
+            notes = "A Master Code is given to a customer for future redemption of its related content. " +
+                    "You may either generate a code on the fly or retrieve one that was previously ingested. " +
+                    "Here's how that works:\n\n<br/>" +
+                    "If *request.create* is *true*:\n" +
+                    "1. Generate a new ISSUED code and return it to the user\n\n" +
+                    "If *request.create* is *false* (or undefined):\n" +
+                    "1. Find an UNALLOCATED code for the given content\n" +
+                    "2. Update that code's status to ISSUED\n" +
+                    "3. Return the updated code to the user\n\n" +
+                    "Additionally, if *request.create* is *true* then the following parameters are required:\n" +
+                    "* *request.appId*\n" +
+                    "* *request.partnerId*")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
             @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
-                         response = ApiError.class)
+                    response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.POST,
-                    produces = "application/json")
+            produces = "application/json")
     @Transactional
     public ResponseEntity<MasterCode> createMasterCode(@RequestBody
                                                        @ApiParam(value = "Provide properties for the Master Code.",
-                                                                 required = true)
-                                                                   CreateMasterCodeRequest request) {
+                                                               required = true)
+                                                               CreateMasterCodeRequest request) {
 
         //
         // If request.create is true:
@@ -120,10 +120,10 @@ public class MasterCodeController {
                 referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
                 if (referralPartner == null)
                     return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
-                                              HttpStatus.BAD_REQUEST);
+                            HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity(new ApiError("partnerId parameter is required when create is true."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             }
 
             App app = null;
@@ -133,19 +133,19 @@ public class MasterCodeController {
                     return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
             } else {
                 return new ResponseEntity(new ApiError("appId parameter is required when create is true."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             }
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
             MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                                                   referralPartner, app, content, MasterCode.Status.ISSUED,
-                                                   request.getExternalId());
+                    referralPartner, app, content, MasterCode.Status.ISSUED,
+                    request.getExternalId());
             masterCodeRepository.save(masterCode);
             return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
         } else {
             try {
                 MasterCode masterCode = getMasterCode(request.getContentId(), request.getFormat(),
-                                                      MasterCode.Status.UNALLOCATED);
+                        MasterCode.Status.UNALLOCATED);
                 masterCode.setStatus(MasterCode.Status.ISSUED);
                 masterCode.setExternalId(request.getExternalId());
                 masterCodeRepository.save(masterCode);
@@ -267,11 +267,11 @@ public class MasterCodeController {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET,
-                    value = "/{code}",
-                    produces = "application/json")
+            value = "/{code}",
+            produces = "application/json")
     public ResponseEntity<MasterCode> getMasterCode(@PathVariable
-                                                        @ApiParam(value = "The Master Code to retrieve")
-                                                                String code) {
+                                                    @ApiParam(value = "The Master Code to retrieve")
+                                                            String code) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -281,15 +281,15 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Master Codes",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Content, Referral Partner, or App Not Found",
-                         response = ApiError.class)
+                    response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET,
-                    produces = "application/json")
+            produces = "application/json")
     public ResponseEntity<List<MasterCode>> getMasterCodes(
             @ApiParam(value = "Referral Partner related to Master Codes.")
             @RequestParam(name = "partnerId", required = false)
@@ -332,7 +332,7 @@ public class MasterCodeController {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("referralPartner", ":", partnerId));
             }
@@ -371,7 +371,7 @@ public class MasterCodeController {
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(MasterCode.Status.values())),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -439,8 +439,7 @@ public class MasterCodeController {
             Content content = contentRepository.findOne(request.getContentId());
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
-            }
-            else {
+            } else {
                 masterCode.setContent(content);
                 isModified = true;
             }
@@ -458,20 +457,20 @@ public class MasterCodeController {
 
     @CrossOrigin
     @ApiOperation(value = "Pair Master Code to a Retailer Code",
-                  notes = "Use this endpoint to associate a Master Code with a Retailer Code.  This endpoint calls " +
-                  "the appropriate Retailer Code Service to fetch a valid retailer code for this content.")
+            notes = "Use this endpoint to associate a Master Code with a Retailer Code.  This endpoint calls " +
+                    "the appropriate Retailer Code Service to fetch a valid retailer code for this content.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
             @ApiResponse(code = 400, message = "Specified Retailer Not Found,\n" +
-                         "Retailer does not have requested Content,\n" +
-                         "Referral Partner does not have access to Retailer", response = ApiError.class),
+                    "Retailer does not have requested Content,\n" +
+                    "Referral Partner does not have access to Retailer", response = ApiError.class),
             @ApiResponse(code = 409, message = "Master Code is already paired OR\n" +
                     "Retailer Code unavailable for Content", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.PUT,
-                    value = "/{code}/pair",
-                    produces = "application/json")
+            value = "/{code}/pair",
+            produces = "application/json")
     @Transactional
     public ResponseEntity<MasterCode> pairMasterCode(
             @PathVariable
@@ -493,7 +492,7 @@ public class MasterCodeController {
 
         if (!masterCode.getReferralPartner().getRetailers().contains(retailer))
             return new ResponseEntity(new ApiError("Referral Partner does not have access to selected Retailer."),
-                                      HttpStatus.BAD_REQUEST);
+                    HttpStatus.BAD_REQUEST);
 
         // Fetch a new retailer code from the corresponding Retailer Service and insert new Pairing record
         RetailerCode retailerCode = null;
@@ -501,7 +500,7 @@ public class MasterCodeController {
         // Check that we can retrieve a retailer code from this Retailer
         if (retailer.getBaseUrl() == null)
             return new ResponseEntity(new ApiError("The selected retailer does not have baseUrl defined"),
-                                      HttpStatus.BAD_REQUEST);
+                    HttpStatus.BAD_REQUEST);
 
         // If the MasterCode isn't already PAIRED or REDEEMED, then fetch a retailer code from the Retailer Service
         Date modifiedDate = new Date();
@@ -549,14 +548,12 @@ public class MasterCodeController {
                 pairing.setPairedBy(request.getPairedBy());
                 pairing.setPairedOn(modifiedDate);
                 pairingRepository.saveAndFlush(pairing);
-            }
-            else if (rc.getStatus() == RetailerCode.Status.EXPIRED) {
+            } else if (rc.getStatus() == RetailerCode.Status.EXPIRED) {
                 // This RetailerCode isn't truly expired, so update its status back to PAIRED
                 rc.setStatus(RetailerCode.Status.PAIRED);
                 rc.setModifiedOn(modifiedDate);
                 retailerCodeRepository.saveAndFlush(rc);
-            }
-            else
+            } else
                 return new ResponseEntity(new ApiError("Master Code expressed is already paired."), HttpStatus.CONFLICT);
         }
 
@@ -568,8 +565,59 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
     }
 
+    @CrossOrigin
+    @ApiOperation(value = "Unpair Master Code from its paired Retailer Code",
+            notes = "Use this endpoint to unassociate a Master Code from a Retailer Code.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "The current Master Code or Retailer Code status does not support unpairing",
+                    response = ApiError.class),
+            @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT,
+            value = "/{code}/unpair",
+            produces = "application/json")
+    @Transactional
+    public ResponseEntity<MasterCode> unpairMasterCode(
+            @PathVariable
+            @ApiParam(value = "The Master Code to unpair")
+                    String code) {
+
+        MasterCode masterCode = masterCodeRepository.findOne(code);
+        if (masterCode == null)
+            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
+
+        // Ensure the status of both the Master & Retailer Codes are PAIRED or
+        // that the Master Code is PAIRED while the Retailer Code is EXPIRED.
+        if (masterCode.getStatus() != MasterCode.Status.PAIRED) {
+            return new ResponseEntity(new ApiError("Unable to unpair a Master Code with a status of " + masterCode.getStatus()), HttpStatus.BAD_REQUEST);
+        }
+        RetailerCode retailerCode = masterCode.getPairing().getRetailerCode();
+        if (retailerCode.getStatus() != RetailerCode.Status.PAIRED &&
+                retailerCode.getStatus() != RetailerCode.Status.EXPIRED) {
+            return new ResponseEntity(new ApiError("Unable to unpair a Retailer Code with a status of " + retailerCode.getStatus()), HttpStatus.BAD_REQUEST);
+        }
+
+        // Update Retailer Code status to ZOMBIED
+        Date modifiedOn = new Date();
+        retailerCode.setStatus(RetailerCode.Status.ZOMBIED);
+        retailerCode.setModifiedOn(modifiedOn);
+        retailerCodeRepository.save(retailerCode);
+
+        // Unpair codes
+        pairingRepository.delete(masterCode.getPairing());
+
+        // Update Master Code status to ISSUED
+        masterCode.setStatus(MasterCode.Status.ISSUED);
+        masterCode.setModifiedOn(modifiedOn);
+        masterCodeRepository.saveAndFlush(masterCode);
+
+        // Success
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
+    }
+
     private boolean isExpired(String code, String baseUrl) throws ApiError {
-        String url = baseUrl+"/retailerCodes/{code}/refresh";
+        String url = baseUrl + "/retailerCodes/{code}/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);
 
@@ -579,7 +627,7 @@ public class MasterCodeController {
                     url, ExternalRetailerCodeStatusResponse.class, vars);
         } catch (HttpClientErrorException e) {
             throw new ApiError(e.getMessage());
-        } catch(HttpServerErrorException e) {
+        } catch (HttpServerErrorException e) {
             throw new ApiError(e.getMessage());
         }
 
@@ -587,7 +635,7 @@ public class MasterCodeController {
     }
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
-        String url = retailer.getBaseUrl()+"/retailerCodes";
+        String url = retailer.getBaseUrl() + "/retailerCodes";
         ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
 
         ExternalRetailerCodeResponse externalRc;
