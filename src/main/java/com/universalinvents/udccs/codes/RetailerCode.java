@@ -13,7 +13,7 @@ public class RetailerCode {
 
     // Legal status values
     public enum Status {
-        PAIRED, REDEEMED, EXPIRED
+        PAIRED, REDEEMED, EXPIRED, ZOMBIED
     }
 
     @Id
