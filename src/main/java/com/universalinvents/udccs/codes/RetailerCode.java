@@ -21,6 +21,7 @@ public class RetailerCode {
 
     private Date createdOn;
     private Date modifiedOn;
+    private Date expiresOn;
     private String format;
 
     @Enumerated(EnumType.STRING)
@@ -47,7 +48,7 @@ public class RetailerCode {
      * @param code
      */
     public RetailerCode(final String code, final Content content, final String format, final Status status,
-                        final Retailer retailer) {
+                        final Retailer retailer, final Date expiresOn) {
         this.code = code;
         this.content = content;
         this.format = format;
@@ -55,6 +56,7 @@ public class RetailerCode {
         this.status = status;
         this.createdOn = new Date();
         this.modifiedOn = createdOn; // Use the same date for new objects
+        this.expiresOn = expiresOn;
     }
 
     public String getCode() {
@@ -80,6 +82,10 @@ public class RetailerCode {
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
     }
+
+    public Date getExpiresOn() { return expiresOn; }
+
+    public void setExpiresOn(Date expiresOn) { this.expiresOn = expiresOn; }
 
     public Content getContent() {
         return content;
