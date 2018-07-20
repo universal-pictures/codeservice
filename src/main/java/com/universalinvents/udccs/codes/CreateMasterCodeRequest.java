@@ -3,6 +3,8 @@ package com.universalinvents.udccs.codes;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.Date;
+
 /**
  * Created by dsherman on 2/27/17.
  * Updated by kkirkland on 11/7/17.
@@ -42,12 +44,18 @@ public class CreateMasterCodeRequest {
                       example = "123-53242-3234eff-2234f-231232",
                       required = false)
     private String externalId;
+    @ApiModelProperty(value = "When does this code expire? This parameter is immutable so once you determine its " +
+            "value here it can not be updated later. Use the following format: yyyy-MM-dd'T'HH:mm:ss.SSSZ. " +
+            "If unspecified, this code will not expire.",
+            example = "2020-01-01'T'00:00:01.000Z",
+            required = false)
+    private Date expiresOn;
 
     public CreateMasterCodeRequest() {
     }
 
     public CreateMasterCodeRequest(Long contentId, String format, String createdBy, Long partnerId, Long appId,
-                                   Boolean create, String externalId) {
+                                   Boolean create, String externalId, Date expiresOn) {
         this.contentId = contentId;
         this.format = format;
         this.createdBy = createdBy;
@@ -55,6 +63,7 @@ public class CreateMasterCodeRequest {
         this.appId = appId;
         this.create = create;
         this.externalId = externalId;
+        this.expiresOn = expiresOn;
     }
 
     public Long getContentId() {
@@ -111,5 +120,13 @@ public class CreateMasterCodeRequest {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
+    }
+
+    public Date getExpiresOn() {
+        return expiresOn;
+    }
+
+    public void setExpiresOn(Date expiresOn) {
+        this.expiresOn = expiresOn;
     }
 }
