@@ -664,7 +664,7 @@ public class MasterCodeController {
         }
 
         RetailerCode retailerCode = new RetailerCode(
-                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer);
+                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer, externalRc.getExpiresOn());
 
         return retailerCodeRepository.save(retailerCode);
     }

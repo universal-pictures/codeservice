@@ -284,7 +284,15 @@ public class RetailerCodeController {
             @ApiParam(value = "Retailer Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+             @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+             @RequestParam(name = "expiresAfter", required = false)
+             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnAfter,
+             @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+             @RequestParam(name = "expiresBefore", required = false)
+             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -349,6 +357,12 @@ public class RetailerCodeController {
         }
         if (modifiedOnBefore != null) {
             params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+        if (expiresOnAfter != null) {
+            params.add(new SqlCriteria("expiresOn", ">", expiresOnAfter));
+        }
+        if (expiresOnBefore != null) {
+            params.add(new SqlCriteria("expiresOn", "<", expiresOnBefore));
         }
 
         List<Specification<RetailerCode>> specs = new ArrayList<>();
