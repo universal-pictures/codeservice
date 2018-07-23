@@ -23,5 +23,5 @@ public class ExternalRetailerCodeResponse {
 
     public String getStatus() { return status; }
 
-    public void setStatus() { this.status = status; }
+    public void setStatus(String status) { this.status = status; }
 }
