@@ -138,7 +138,7 @@ public class MasterCodeController {
 
             String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
             MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                    referralPartner, app, content, MasterCode.Status.ISSUED,
+                    request.getExpiresOn(), referralPartner, app, content, MasterCode.Status.ISSUED,
                     request.getExternalId());
             masterCodeRepository.save(masterCode);
             return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
@@ -324,7 +324,15 @@ public class MasterCodeController {
             @ApiParam(value = "Master Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @ApiParam(value = "Master Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expireAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiredOnAfter,
+            @ApiParam(value = "Master Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expireBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiredOnBefore) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -390,6 +398,12 @@ public class MasterCodeController {
         }
         if (modifiedOnBefore != null) {
             params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+        if (expiredOnAfter != null) {
+            params.add(new SqlCriteria("expiredOn", ">", expiredOnAfter));
+        }
+        if (expiredOnBefore != null) {
+            params.add(new SqlCriteria("expiredOn", "<", expiredOnBefore));
         }
 
         List<Specification<MasterCode>> specs = new ArrayList<>();
@@ -528,14 +542,14 @@ public class MasterCodeController {
             Pairing pairing = masterCode.getPairing();
             RetailerCode rc = pairing.getRetailerCode();
 
-            boolean isExpiredCode;
+            boolean isExpiredRetailerCode;
             try {
-                isExpiredCode = isExpired(rc.getCode(), retailer.getBaseUrl());
+                isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl());
             } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
 
-            if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredCode) {
+            if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredRetailerCode) {
                 // This RetailerCode is truly expired, so pair with a new RetailerCode
                 try {
                     retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
@@ -616,7 +630,7 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
     }
 
-    private boolean isExpired(String code, String baseUrl) throws ApiError {
+    private boolean isRetailerCodeExpired(String code, String baseUrl) throws ApiError {
         String url = baseUrl + "/retailerCodes/{code}/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);

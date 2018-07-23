@@ -28,6 +28,7 @@ public class MasterCode {
     private String createdBy;
     private Date createdOn;
     private Date modifiedOn;
+    private Date expiresOn;
     private String format;
     private String externalId;
 
@@ -55,12 +56,13 @@ public class MasterCode {
     public MasterCode() {
     }
 
-    public MasterCode(String code, String format, String createdBy, Date createdOn, ReferralPartner referralPartner,
-                      App app, Content content, Status status, String externalId) {
+    public MasterCode(String code, String format, String createdBy, Date createdOn, Date expiresOn,
+                      ReferralPartner referralPartner, App app, Content content, Status status, String externalId) {
         this.code = code;
         this.format = format;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
+        this.expiresOn = expiresOn;
         this.referralPartner = referralPartner;
         this.app = app;
         this.content = content;
@@ -107,6 +109,14 @@ public class MasterCode {
 
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
+    }
+
+    public Date getExpiresOn() {
+        return expiresOn;
+    }
+
+    public void setExpiresOn(Date expiresOn) {
+        this.expiresOn = expiresOn;
     }
 
     public ReferralPartner getReferralPartner() {
