@@ -175,7 +175,8 @@ public class RetailerCodeController {
     })
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
     @Transactional
-    public ResponseEntity<RetailerCode> expireCode(@PathVariable String code) {
+    public ResponseEntity<RetailerCode> expireCode(@PathVariable String code,
+                                                   @RequestHeader("Request-Context") String requestContext) {
 
         // Get the RetailerCode object
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
@@ -194,16 +195,18 @@ public class RetailerCodeController {
         // If the returned status is EXPIRED, then update the status of the Retailer Code
         Retailer retailer = retailerCode.getRetailer();
         if (retailer.getBaseUrl() != null) {
-            String url = retailer.getBaseUrl()+"/retailerCodes/{code}/refresh";
+            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/refresh";
             Map<String, String> vars = new HashMap<String, String>();
             vars.put("code", code);
 
             ExternalRetailerCodeStatusResponse status;
             try {
                 status = restTemplate.getForObject(url, ExternalRetailerCodeStatusResponse.class, vars);
-            } catch (HttpClientErrorException e) {
+            }
+            catch (HttpClientErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
-            } catch (HttpServerErrorException e) {
+            }
+            catch (HttpServerErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
