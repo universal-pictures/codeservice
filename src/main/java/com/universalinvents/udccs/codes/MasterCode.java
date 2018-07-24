@@ -19,7 +19,7 @@ public class MasterCode {
 
     // Legal status values
     public enum Status {
-        UNALLOCATED, ISSUED, PAIRED, REDEEMED
+        UNALLOCATED, ISSUED, PAIRED, REDEEMED, EXPIRED
     }
 
     @Id
@@ -33,7 +33,7 @@ public class MasterCode {
     private String externalId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED', 'EXPIRED')")
     private Status status;
 
     @ManyToOne

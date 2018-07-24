@@ -96,7 +96,7 @@ public class MasterCodeController {
                                                        @ApiParam(value = "Provide properties for the Master Code.",
                                                                required = true)
                                                                CreateMasterCodeRequest request,
-                                                       @RequestHeader(value="Request-Context", required=false)
+                                                       @RequestHeader(value = "Request-Context", required = false)
                                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                                String requestContext) {
 
@@ -271,14 +271,56 @@ public class MasterCodeController {
     public ResponseEntity<MasterCode> getMasterCode(@PathVariable
                                                     @ApiParam(value = "The Master Code to retrieve")
                                                             String code,
-                                                    @RequestHeader(value="Request-Context", required=false)
-                                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                                String requestContext) {
+                                                    @RequestHeader(value = "Request-Context", required = false)
+                                                    @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                            String requestContext) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
+    }
+
+    @CrossOrigin
+    @ApiOperation(value = "Try to expire an unredeemed Master Code",
+            notes = "If the Master Code hasn't reached its expiration date, then this method will return a " +
+                    "304 Not Modified.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully expired", response = MasterCode.class),
+            @ApiResponse(code = 304, message = "This Master Code has not reached its expiration date", response = ApiError.class),
+            @ApiResponse(code = 404, message = "Specified Master Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Master Code has an incompatible status", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
+    @Transactional
+    public ResponseEntity<MasterCode> expireCode(@PathVariable String code,
+                                                 @RequestHeader(value = "Request-Context", required = false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
+
+        // Get the MasterCode object
+        MasterCode masterCode = masterCodeRepository.findOne(code);
+        if (masterCode == null) {
+            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the MasterCode is not already redeemed
+        if (masterCode.getStatus() == MasterCode.Status.REDEEMED) {
+            return new ResponseEntity(new ApiError("Master Code with a status of " + masterCode.getStatus() +
+                    " can't be expired."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Check if we're past our expiration date.  If so, set our status appropriately.
+        if (masterCode.getExpiresOn().compareTo(new Date()) < 0) {
+            masterCode.setStatus(MasterCode.Status.EXPIRED);
+            masterCode.setModifiedOn(new Date());
+            masterCodeRepository.saveAndFlush(masterCode);
+            return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
@@ -335,7 +377,7 @@ public class MasterCodeController {
             @RequestParam(name = "expireBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date expiredOnBefore,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -446,7 +488,7 @@ public class MasterCodeController {
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Master Code")
                     UpdateMasterCodeRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -501,7 +543,7 @@ public class MasterCodeController {
             @RequestBody
             @ApiParam(value = "Additional request properties")
                     PairMasterCodeRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
@@ -609,7 +651,7 @@ public class MasterCodeController {
             @PathVariable
             @ApiParam(value = "The Master Code to unpair")
                     String code,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -681,15 +723,12 @@ public class MasterCodeController {
         ExternalRetailerCodeResponse externalRc;
         try {
             externalRc = restTemplate.exchange(url, HttpMethod.POST, entity, ExternalRetailerCodeResponse.class)
-                .getBody();
-        }
-        catch (HttpClientErrorException e) {
+                    .getBody();
+        } catch (HttpClientErrorException e) {
             throw new ApiError(e.getMessage());
-        }
-        catch (HttpServerErrorException e) {
+        } catch (HttpServerErrorException e) {
             throw new ApiError(e.getMessage());
-        }
-        catch (RestClientException e) {
+        } catch (RestClientException e) {
             throw new ApiError(e.getMessage());
         }
 
