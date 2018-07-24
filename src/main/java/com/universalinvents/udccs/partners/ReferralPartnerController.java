@@ -5,6 +5,7 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,10 @@ public class ReferralPartnerController {
     public ResponseEntity<ReferralPartner> createPartner(
             @RequestBody
             @ApiParam(value = "Provide properties for the Referral Partner.", required = true)
-                    CreateReferralPartnerRequest request) {
+                    CreateReferralPartnerRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         HashSet<Retailer> retailers = null;
         try {
@@ -100,7 +104,10 @@ public class ReferralPartnerController {
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Referral Partner")
-                    UpdateReferralPartnerRequest request) {
+                    UpdateReferralPartnerRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing Partner record
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
@@ -199,7 +206,10 @@ public class ReferralPartnerController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deletePartner(@PathVariable
                                             @ApiParam(value = "The id of the Referral Partner to delete")
-                                                    Long id) {
+                                                    Long id,
+                                        @RequestHeader(value="Request-Context", required=false)
+                                            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                    String requestContext) {
         try {
             referralPartnerRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -218,7 +228,10 @@ public class ReferralPartnerController {
     public ResponseEntity<ReferralPartner> getPartnerById(
             @PathVariable
             @ApiParam(value = "The id of the Referral Partner to retrieve")
-                    Long id) {
+                    Long id,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(id);
         if (referralPartner == null)
@@ -270,7 +283,10 @@ public class ReferralPartnerController {
             @ApiParam(value = "Referral Partners modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 

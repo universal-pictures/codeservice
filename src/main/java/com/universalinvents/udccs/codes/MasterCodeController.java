@@ -17,6 +17,7 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.CCFUtility;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
@@ -26,20 +27,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 @Api(tags = {"Master Code Controller"},
         description = "Operations pertaining to master codes")
@@ -99,7 +95,10 @@ public class MasterCodeController {
     public ResponseEntity<MasterCode> createMasterCode(@RequestBody
                                                        @ApiParam(value = "Provide properties for the Master Code.",
                                                                required = true)
-                                                               CreateMasterCodeRequest request) {
+                                                               CreateMasterCodeRequest request,
+                                                       @RequestHeader(value="Request-Context", required=false)
+                                                       @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                               String requestContext) {
 
         //
         // If request.create is true:
@@ -271,7 +270,10 @@ public class MasterCodeController {
             produces = "application/json")
     public ResponseEntity<MasterCode> getMasterCode(@PathVariable
                                                     @ApiParam(value = "The Master Code to retrieve")
-                                                            String code) {
+                                                            String code,
+                                                    @RequestHeader(value="Request-Context", required=false)
+                                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                                String requestContext) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -332,7 +334,10 @@ public class MasterCodeController {
             @ApiParam(value = "Master Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "expireBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date expiredOnBefore) {
+                    Date expiredOnBefore,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -440,7 +445,10 @@ public class MasterCodeController {
                     String code,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Master Code")
-                    UpdateMasterCodeRequest request) {
+                    UpdateMasterCodeRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing MasterCode record
         MasterCode masterCode = masterCodeRepository.findOne(code);
@@ -492,7 +500,10 @@ public class MasterCodeController {
                     String code,
             @RequestBody
             @ApiParam(value = "Additional request properties")
-                    PairMasterCodeRequest request) {
+                    PairMasterCodeRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -521,7 +532,8 @@ public class MasterCodeController {
         if (masterCode.getStatus() == MasterCode.Status.ISSUED) {
             if (retailerCode == null) {
                 try {
-                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
+                            requestContext);
                 } catch (ApiError apiError) {
                     return new ResponseEntity(apiError, HttpStatus.CONFLICT);
                 }
@@ -544,7 +556,7 @@ public class MasterCodeController {
 
             boolean isExpiredRetailerCode;
             try {
-                isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl());
+                isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl(), requestContext);
             } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
@@ -552,7 +564,8 @@ public class MasterCodeController {
             if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredRetailerCode) {
                 // This RetailerCode is truly expired, so pair with a new RetailerCode
                 try {
-                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer);
+                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
+                            requestContext);
                 } catch (ApiError apiError) {
                     return new ResponseEntity(apiError, HttpStatus.CONFLICT);
                 }
@@ -595,7 +608,10 @@ public class MasterCodeController {
     public ResponseEntity<MasterCode> unpairMasterCode(
             @PathVariable
             @ApiParam(value = "The Master Code to unpair")
-                    String code) {
+                    String code,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
@@ -630,15 +646,19 @@ public class MasterCodeController {
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
     }
 
-    private boolean isRetailerCodeExpired(String code, String baseUrl) throws ApiError {
+    private boolean isRetailerCodeExpired(String code, String baseUrl, String requestContext) throws ApiError {
         String url = baseUrl + "/retailerCodes/{code}/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Request-Context", requestContext);
+        HttpEntity entity = new HttpEntity(headers);
 
         ExternalRetailerCodeStatusResponse status;
         try {
-            status = restTemplate.getForObject(
-                    url, ExternalRetailerCodeStatusResponse.class, vars);
+            status = restTemplate.exchange(url, HttpMethod.GET, entity, ExternalRetailerCodeStatusResponse.class, vars)
+                    .getBody();
         } catch (HttpClientErrorException e) {
             throw new ApiError(e.getMessage());
         } catch (HttpServerErrorException e) {
@@ -648,18 +668,28 @@ public class MasterCodeController {
         return status.getStatus().equals("EXPIRED");
     }
 
-    private RetailerCode fetchAndSaveRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
+    private RetailerCode fetchAndSaveRetailerCode(Content content, String format,
+                                                  Retailer retailer, String requestContext) throws ApiError {
         String url = retailer.getBaseUrl() + "/retailerCodes";
         ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Request-Context", requestContext);
+        HttpEntity<ExternalRetailerCodeRequest> entity = new HttpEntity<ExternalRetailerCodeRequest>(request, headers);
 
         ExternalRetailerCodeResponse externalRc;
         try {
-            externalRc = restTemplate.postForObject(
-                    url, request, ExternalRetailerCodeResponse.class
-            );
-        } catch (HttpClientErrorException e) {
+            externalRc = restTemplate.exchange(url, HttpMethod.POST, entity, ExternalRetailerCodeResponse.class)
+                .getBody();
+        }
+        catch (HttpClientErrorException e) {
             throw new ApiError(e.getMessage());
-        } catch (HttpServerErrorException e) {
+        }
+        catch (HttpServerErrorException e) {
+            throw new ApiError(e.getMessage());
+        }
+        catch (RestClientException e) {
             throw new ApiError(e.getMessage());
         }
 

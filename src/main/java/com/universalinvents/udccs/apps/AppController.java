@@ -6,6 +6,7 @@ import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
@@ -43,7 +44,10 @@ public class AppController {
                     produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody
                                          @ApiParam(value = "Provide properties for a new App.", required = true)
-                                                 AppRequest request) {
+                                                 AppRequest request,
+                                         @RequestHeader(value="Request-Context", required=false)
+                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                 String requestContext) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
         if (referralPartner == null)
@@ -81,7 +85,10 @@ public class AppController {
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the App")
-                    AppRequest request) {
+                    AppRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing App record
         App app = appRepository.findOne(id);
@@ -137,7 +144,10 @@ public class AppController {
     @RequestMapping(method = RequestMethod.DELETE,
                     value = "/{id}",
                     produces = "application/json")
-    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App to delete") Long id) {
+    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App to delete") Long id,
+                                    @RequestHeader(value="Request-Context", required=false)
+                                    @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                            String requestContext) {
         try {
             // First get the existing app record
             App app = appRepository.findOne(id);
@@ -174,7 +184,10 @@ public class AppController {
                     value = "/{id}",
                     produces = "application/json")
     public ResponseEntity<App> getAppById(
-            @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id) {
+            @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         App app = appRepository.findOne(id);
         if (app == null)
@@ -204,7 +217,10 @@ public class AppController {
                                                            required = false) String accessToken,
                                              @ApiParam(value = "Apps with the given status (ACTIVE or INACTIVE)")
                                              @RequestParam(name = "status",
-                                                           required = false) String status) {
+                                                           required = false) String status,
+                                             @RequestHeader(value="Request-Context", required=false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
 
         // Build an App object with the values passed in
         App app = new App();

@@ -5,6 +5,7 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,10 @@ public class ContentController {
     public ResponseEntity<Content> createContent(@RequestBody
                                                      @ApiParam(value = "Provide properties for the Content.",
                                                                required = true)
-                                                         CreateContentRequest request) {
+                                                         CreateContentRequest request,
+                                                 @RequestHeader(value="Request-Context", required=false)
+                                                     @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                             String requestContext) {
 
         HashSet<Retailer> retailers = null;
         try {
@@ -96,7 +100,10 @@ public class ContentController {
                                                              Long id,
                                                  @RequestBody(required = false)
                                                  @ApiParam(value = "Provide updated properties for the Content")
-                                                         UpdateContentRequest request) {
+                                                         UpdateContentRequest request,
+                                                 @RequestHeader(value="Request-Context", required=false)
+                                                     @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                             String requestContext) {
 
         // Get existing Content record
         Content content = contentRepository.findOne(id);
@@ -177,7 +184,10 @@ public class ContentController {
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteContent(@PathVariable
                                             @ApiParam(value = "The id of the Content to delete")
-                                                    Long id) {
+                                                    Long id,
+                                        @RequestHeader(value="Request-Context", required=false)
+                                            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                    String requestContext) {
         try {
             contentRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -195,7 +205,10 @@ public class ContentController {
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> getContentById(@PathVariable
                                                       @ApiParam(value = "The id of the Content to retrieve")
-                                                              Long id) {
+                                                              Long id,
+                                                  @RequestHeader(value="Request-Context", required=false)
+                                                      @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                              String requestContext) {
         Content content = contentRepository.findOne(id);
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -249,7 +262,10 @@ public class ContentController {
             @RequestParam(name = "modifiedBefore", required = false)
             @ApiParam(value = "Content modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
