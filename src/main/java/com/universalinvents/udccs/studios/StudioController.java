@@ -3,6 +3,7 @@ package com.universalinvents.udccs.studios;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
@@ -37,7 +38,10 @@ public class StudioController {
     public ResponseEntity<Studio> createStudio(
             @RequestBody
             @ApiParam(value = "Provide properties for the Studio.", required = true)
-                    CreateStudioRequest request) {
+                    CreateStudioRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         Studio studio = new Studio();
         studio.setName(request.getName());
@@ -73,7 +77,10 @@ public class StudioController {
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Studio")
-                    UpdateStudioRequest request) {
+                    UpdateStudioRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing Studio record
         Studio studio = studioRepository.findOne(id);
@@ -141,7 +148,10 @@ public class StudioController {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
-    public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id) {
+    public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id,
+                                       @RequestHeader(value="Request-Context", required=false)
+                                       @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                               String requestContext) {
         try {
             studioRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -158,7 +168,10 @@ public class StudioController {
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Studio> getStudioById(
-            @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id) {
+            @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
@@ -200,7 +213,10 @@ public class StudioController {
                     String status,
             @RequestParam(name = "externalId", required = false)
             @ApiParam(value = "Studios with this external id.")
-                    String externalId) {
+                    String externalId,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Build a Studio object with the values passed in
         Studio studio = new Studio();

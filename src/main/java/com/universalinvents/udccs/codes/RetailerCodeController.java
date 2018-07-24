@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.mysql.fabric.Response;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
@@ -13,18 +14,19 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -118,7 +120,10 @@ public class RetailerCodeController {
     })
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/redeem", produces = "application/json")
     @Transactional
-    public ResponseEntity<RetailerCode> redeemCode(@PathVariable String code) {
+    public ResponseEntity<RetailerCode> redeemCode(@PathVariable String code,
+                                                   @RequestHeader(value="Request-Context", required=false)
+                                                   @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                           String requestContext) {
 
         // Get the RetailerCode object
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
@@ -176,7 +181,9 @@ public class RetailerCodeController {
     @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
     @Transactional
     public ResponseEntity<RetailerCode> expireCode(@PathVariable String code,
-                                                   @RequestHeader("Request-Context") String requestContext) {
+                                                   @RequestHeader(value="Request-Context", required=false)
+                                                   @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                           String requestContext) {
 
         // Get the RetailerCode object
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
@@ -198,15 +205,23 @@ public class RetailerCodeController {
             String url = retailer.getBaseUrl() + "/retailerCodes/{code}/refresh";
             Map<String, String> vars = new HashMap<String, String>();
             vars.put("code", code);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            headers.set("Request-Context", requestContext);
+            HttpEntity entity = new HttpEntity(headers);
 
             ExternalRetailerCodeStatusResponse status;
             try {
-                status = restTemplate.getForObject(url, ExternalRetailerCodeStatusResponse.class, vars);
+                status = restTemplate.exchange(url, HttpMethod.GET, entity, ExternalRetailerCodeStatusResponse.class, vars)
+                        .getBody();
             }
             catch (HttpClientErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
             }
             catch (HttpServerErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            catch (RestClientException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
@@ -233,7 +248,10 @@ public class RetailerCodeController {
     @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
     public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable
                                                             @ApiParam(value = "The Retailer Code to retrieve")
-                                                                    String code) {
+                                                                    String code,
+                                                        @RequestHeader(value="Request-Context", required=false)
+                                                            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                                    String requestContext) {
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
         if (retailerCode == null)
             return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -288,14 +306,17 @@ public class RetailerCodeController {
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date modifiedOnBefore,
-             @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
-             @RequestParam(name = "expiresAfter", required = false)
-             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date expiresOnAfter,
-             @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
-             @RequestParam(name = "expiresBefore", required = false)
-             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date expiresOnBefore) {
+            @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnBefore,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 

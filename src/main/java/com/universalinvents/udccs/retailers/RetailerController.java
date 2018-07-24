@@ -5,6 +5,7 @@ import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,10 @@ public class RetailerController
     public ResponseEntity<Retailer> createRetailer(
             @RequestBody
             @ApiParam(value = "Provide properties for the Retailer.", required = true)
-                    CreateRetailerRequest request)
+                    CreateRetailerRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext)
     {
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
@@ -80,7 +84,10 @@ public class RetailerController
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Retailer")
-                    UpdateRetailerRequest request) {
+                    UpdateRetailerRequest request,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing Retailer record
         Retailer retailer = retailerRepository.findOne(id);
@@ -144,7 +151,10 @@ public class RetailerController
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteRetailer(@PathVariable
-                                             @ApiParam(value = "The id of the Retailer to delete") Long id) {
+                                             @ApiParam(value = "The id of the Retailer to delete") Long id,
+                                         @RequestHeader(value="Request-Context", required=false)
+                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                 String requestContext) {
         try {
             retailerRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -163,7 +173,10 @@ public class RetailerController
     public ResponseEntity<Retailer> getRetailerById(
             @PathVariable
             @ApiParam(value = "The id of the Retailer to retrieve")
-                    Long id)
+                    Long id,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext)
     {
         Retailer retailer = retailerRepository.findOne(id);
         if (retailer == null)
@@ -213,7 +226,10 @@ public class RetailerController
             @RequestParam(name = "modifiedBefore", required = false)
             @ApiParam(value = "Retailers modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();

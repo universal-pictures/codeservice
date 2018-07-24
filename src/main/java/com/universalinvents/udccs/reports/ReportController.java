@@ -14,15 +14,14 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +57,10 @@ public class ReportController {
     @ApiOperation(value = "Get a summarized report of objects")
     @RequestMapping(method = RequestMethod.GET,
                     produces = "application/json")
-    public ResponseEntity<SummaryReport> getSummaryReport() {
+    public ResponseEntity<SummaryReport> getSummaryReport(
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
         SummaryReport report = new SummaryReport();
         report.setStudios(studioRepository.count());
         report.setPartners(referralPartnerRepository.count());
@@ -73,7 +75,10 @@ public class ReportController {
     @RequestMapping(method = RequestMethod.GET,
                     value = "/codes",
                     produces = "application/json")
-    public ResponseEntity<CodeSummaryReport> getCodeSummaryReport() {
+    public ResponseEntity<CodeSummaryReport> getCodeSummaryReport(
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
         MasterCodeDetails masterDetails = new MasterCodeDetails();
         masterDetails.setIssued(masterCodeRepository.countByStatus(MasterCode.Status.ISSUED));
         masterDetails.setPaired(masterCodeRepository.countByStatus(MasterCode.Status.PAIRED));
@@ -97,7 +102,10 @@ public class ReportController {
     @RequestMapping(method = RequestMethod.GET,
                     value = "/codes/master",
                     produces = "application/json")
-    public ResponseEntity<MasterCodeReport> getMasterCodeReport() {
+    public ResponseEntity<MasterCodeReport> getMasterCodeReport(
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Start from the top and populate the report in this order:
         // totals, studios, content, partners, apps
@@ -218,7 +226,10 @@ public class ReportController {
     @RequestMapping(method = RequestMethod.GET,
                     value = "/codes/retailer",
                     produces = "application/json")
-    public ResponseEntity<RetailerCodeReport> getRetailerCodeReport() {
+    public ResponseEntity<RetailerCodeReport> getRetailerCodeReport(
+            @RequestHeader(value="Request-Context", required=false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Start from the top and populate the report in this order:
         // totals, studios, content, retailers, formats
