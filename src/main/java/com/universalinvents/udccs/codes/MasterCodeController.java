@@ -313,7 +313,7 @@ public class MasterCodeController {
         }
 
         // Check if we're past our expiration date.  If so, set our status appropriately.
-        if (masterCode.getExpiresOn().compareTo(new Date()) < 0) {
+        if (masterCode.getExpiresOn() != null && masterCode.getExpiresOn().compareTo(new Date()) < 0) {
             masterCode.setStatus(MasterCode.Status.EXPIRED);
             masterCode.setModifiedOn(new Date());
             masterCodeRepository.saveAndFlush(masterCode);
