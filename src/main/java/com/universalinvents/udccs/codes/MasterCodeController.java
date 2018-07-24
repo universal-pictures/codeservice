@@ -70,19 +70,8 @@ public class MasterCodeController {
     private RestTemplate restTemplate;
 
     @CrossOrigin
-    @ApiOperation(value = "Obtain a Master Code",
-            notes = "A Master Code is given to a customer for future redemption of its related content. " +
-                    "You may either generate a code on the fly or retrieve one that was previously ingested. " +
-                    "Here's how that works:\n\n<br/>" +
-                    "If *request.create* is *true*:\n" +
-                    "1. Generate a new ISSUED code and return it to the user\n\n" +
-                    "If *request.create* is *false* (or undefined):\n" +
-                    "1. Find an UNALLOCATED code for the given content\n" +
-                    "2. Update that code's status to ISSUED\n" +
-                    "3. Return the updated code to the user\n\n" +
-                    "Additionally, if *request.create* is *true* then the following parameters are required:\n" +
-                    "* *request.appId*\n" +
-                    "* *request.partnerId*")
+    @ApiOperation(value = "Create a Master Code",
+            notes = "A Master Code is generated for future redemption of its related content.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = MasterCode.class),
@@ -100,59 +89,26 @@ public class MasterCodeController {
                                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                                String requestContext) {
 
-        //
-        // If request.create is true:
-        //   1) Simply create a new ISSUED code and return to the user
-        //
-        // If request.create is false:
-        //   1) Find an UNALLOCATED code for the given content
-        //   2) Update that code's status to ISSUED
-        //   3) Return the updated code to the user
-        //
-        if (request.getCreate()) {
-            Content content = contentRepository.findOne(request.getContentId());
-            if (content == null)
-                return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
+        Content content = contentRepository.findOne(request.getContentId());
+        if (content == null)
+            return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.BAD_REQUEST);
 
-            ReferralPartner referralPartner = null;
-            if (request.getPartnerId() != null) {
-                referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
-                if (referralPartner == null)
-                    return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
-                            HttpStatus.BAD_REQUEST);
-            } else {
-                return new ResponseEntity(new ApiError("partnerId parameter is required when create is true."),
-                        HttpStatus.BAD_REQUEST);
-            }
+        ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
+        if (referralPartner == null)
+            return new ResponseEntity(new ApiError("ReferralPartner id expressed is not found."),
+                    HttpStatus.BAD_REQUEST);
 
-            App app = null;
-            if (request.getAppId() != null) {
-                app = appRepository.findOne(request.getAppId());
-                if (app == null)
-                    return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
-            } else {
-                return new ResponseEntity(new ApiError("appId parameter is required when create is true."),
-                        HttpStatus.BAD_REQUEST);
-            }
+        App app = appRepository.findOne(request.getAppId());
+        if (app == null)
+            return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
-            String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
-            MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
-                    request.getExpiresOn(), referralPartner, app, content, MasterCode.Status.ISSUED,
-                    request.getExternalId());
-            masterCodeRepository.save(masterCode);
-            return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
-        } else {
-            try {
-                MasterCode masterCode = getMasterCode(request.getContentId(), request.getFormat(),
-                        MasterCode.Status.UNALLOCATED);
-                masterCode.setStatus(MasterCode.Status.ISSUED);
-                masterCode.setExternalId(request.getExternalId());
-                masterCodeRepository.save(masterCode);
-                return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
-            }
-        }
+
+        String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
+        MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
+                request.getExpiresOn(), referralPartner, app, content, MasterCode.Status.ISSUED,
+                request.getExternalId());
+        masterCodeRepository.save(masterCode);
+        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
 
 //    @CrossOrigin

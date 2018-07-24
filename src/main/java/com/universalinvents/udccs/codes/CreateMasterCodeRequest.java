@@ -27,18 +27,13 @@ public class CreateMasterCodeRequest {
     @ApiModelProperty(value = "The id of the referral partner that's creating this code. Required if *create* " +
                       "is 'true'",
                       example = "1",
-                      required = false)
+                      required = true)
     private Long partnerId;
     @ApiModelProperty(value = "The id of the app that's being used to create this code. Required if *create* " +
                       "is 'true'",
                       example = "2",
-                      required = false)
+                      required = true)
     private Long appId;
-    @ApiModelProperty(value = "Should a new code be generated or just use an already ingested one? 'true' = " +
-                      "generate new code, 'false' or not specified (default) = use ingested code",
-                      example = "true",
-                      required = false)
-    private Boolean create = Boolean.FALSE;  // Default to FALSE
     @ApiModelProperty(value = "A field used to store any external identifier related to this code such as a " +
                       "transaction id.",
                       example = "123-53242-3234eff-2234f-231232",
@@ -55,13 +50,12 @@ public class CreateMasterCodeRequest {
     }
 
     public CreateMasterCodeRequest(Long contentId, String format, String createdBy, Long partnerId, Long appId,
-                                   Boolean create, String externalId, Date expiresOn) {
+                                   String externalId, Date expiresOn) {
         this.contentId = contentId;
         this.format = format;
         this.createdBy = createdBy;
         this.partnerId = partnerId;
         this.appId = appId;
-        this.create = create;
         this.externalId = externalId;
         this.expiresOn = expiresOn;
     }
@@ -104,14 +98,6 @@ public class CreateMasterCodeRequest {
 
     public void setAppId(Long appId) {
         this.appId = appId;
-    }
-
-    public Boolean getCreate() {
-        return create;
-    }
-
-    public void setCreate(Boolean create) {
-        this.create = create;
     }
 
     public String getExternalId() {
