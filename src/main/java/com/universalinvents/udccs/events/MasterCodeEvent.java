@@ -1,7 +1,6 @@
 package com.universalinvents.udccs.events;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.codes.MasterCode;
 
@@ -12,6 +11,7 @@ public class MasterCodeEvent extends AbstractEvent {
     private String code;
     private Long appId;
     private Long contentId;
+
     private String createdBy;
     private Date createdOn;
     private Date modifiedOn;
@@ -45,6 +45,46 @@ public class MasterCodeEvent extends AbstractEvent {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public Long getAppId() {
+        return appId;
+    }
+
+    public Long getContentId() {
+        return contentId;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public Date getCreatedOn() {
+        return createdOn;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public String getPairedRetailerCode() {
+        return pairedRetailerCode;
+    }
+
+    public MasterCode.Status getStatus() {
+        return status;
     }
 
 }

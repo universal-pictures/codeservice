@@ -1,11 +1,12 @@
 package com.universalinvents.udccs.codes;
 
-import com.mysql.fabric.Response;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
+import com.universalinvents.udccs.events.EventStreamingController;
+import com.universalinvents.udccs.events.EventWrapper;
+import com.universalinvents.udccs.events.EventConfig;
+import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
-import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
-import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
@@ -29,12 +30,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 @Api(tags = {"Retailer Code Controller"},
      description = "Operations pertaining to retailer codes")
@@ -64,6 +60,12 @@ public class RetailerCodeController {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private EventStreamingController eventStreamingController;
+
+    @Autowired
+    private EventConfig eventConfig;
 
     /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
     *
@@ -163,6 +165,12 @@ public class RetailerCodeController {
         masterCode.setStatus(MasterCode.Status.REDEEMED);
         masterCode.setModifiedOn(modifiedDate);
         masterCodeRepository.saveAndFlush(masterCode);
+
+        // Send a 'masterCodeRedeemed' event
+        MasterCodeEvent event = new MasterCodeEvent(masterCode);
+        EventWrapper eventWrapper = new EventWrapper(
+                "master-code","masterCodeRedeemed", event, requestContext, eventConfig.getSchemaVersion());
+        eventStreamingController.putRecord(eventWrapper.toString());
 
         return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
     }

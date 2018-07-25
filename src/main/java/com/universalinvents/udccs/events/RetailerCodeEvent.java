@@ -12,6 +12,7 @@ public class RetailerCodeEvent extends AbstractEvent {
     private Long contentId;
     private Date createdOn;
     private String format;
+
     private Date modifiedOn;
     private String pairedMasterCode;
     private Long retailerId;
@@ -40,6 +41,38 @@ public class RetailerCodeEvent extends AbstractEvent {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public Long getContentId() {
+        return contentId;
+    }
+
+    public Date getCreatedOn() {
+        return createdOn;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public String getPairedMasterCode() {
+        return pairedMasterCode;
+    }
+
+    public Long getRetailerId() {
+        return retailerId;
+    }
+
+    public RetailerCode.Status getStatus() {
+        return status;
     }
 
 }

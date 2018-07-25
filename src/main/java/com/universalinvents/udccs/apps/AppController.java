@@ -2,6 +2,7 @@ package com.universalinvents.udccs.apps;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;

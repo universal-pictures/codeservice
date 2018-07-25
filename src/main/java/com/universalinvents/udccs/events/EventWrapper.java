@@ -3,24 +3,27 @@ package com.universalinvents.udccs.events;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.persistence.GeneratedValue;
-
 import java.util.Date;
+import java.util.UUID;
 
 public class EventWrapper {
 
     private Date timestamp;
+    private String object;
     private String event;
-
-    @GeneratedValue(generator = "uuid2")
     private String eventId;
-
     private AbstractEvent data;
+    private String traceId;
+    private String schemaVersion;
 
-    public EventWrapper(String event, AbstractEvent data) {
+    public EventWrapper(String object, String event, AbstractEvent data, String traceId, String schemaVersion) {
+        this.object = object;
         this.timestamp = new Date();
         this.event = event;
         this.data = data;
+        this.traceId = traceId;
+        this.eventId = UUID.randomUUID().toString();
+        this.schemaVersion = schemaVersion;
     }
 
     @Override
@@ -33,6 +36,34 @@ public class EventWrapper {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public String getObject() {
+        return object;
+    }
+
+    public String getEvent() {
+        return event;
+    }
+
+    public String getEventId() {
+        return eventId;
+    }
+
+    public AbstractEvent getData() {
+        return data;
+    }
+
+    public String getTraceId() {
+        return traceId;
+    }
+
+    public String getSchemaVersion() {
+        return schemaVersion;
     }
 
 }
