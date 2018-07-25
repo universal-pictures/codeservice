@@ -210,7 +210,7 @@ public class RetailerCodeController {
         // If the returned status is EXPIRED, then update the status of the Retailer Code
         Retailer retailer = retailerCode.getRetailer();
         if (retailer.getBaseUrl() != null) {
-            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/refresh";
+            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/status/refresh";
             Map<String, String> vars = new HashMap<String, String>();
             vars.put("code", code);
             HttpHeaders headers = new HttpHeaders();

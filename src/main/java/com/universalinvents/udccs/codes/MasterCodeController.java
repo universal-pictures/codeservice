@@ -570,11 +570,26 @@ public class MasterCodeController {
             isModified = true;
         }
 
-        // If the paired RetailerCode is truly expired,
+        // If the paired RetailerCode is truly expired and the MasterCode has not expired,
         // then update the Pairing object with a new RetailerCode for the same content with the same Retailer
         else if (masterCode.isPaired()) {
             Pairing pairing = masterCode.getPairing();
             RetailerCode rc = pairing.getRetailerCode();
+
+            // Check if the status is out of date (i.e. the code is already past its expiration date).
+            // If so, update our status appropriately.
+            if (masterCode.getStatus() != MasterCode.Status.EXPIRED
+                    && masterCode.getExpiresOn() != null
+                    && masterCode.getExpiresOn().compareTo(new Date()) < 0) {
+                masterCode.setStatus(MasterCode.Status.EXPIRED);
+                masterCode.setModifiedOn(new Date());
+                masterCodeRepository.saveAndFlush(masterCode);
+            }
+
+            if (masterCode.getStatus() == MasterCode.Status.EXPIRED) {
+                return new ResponseEntity(new ApiError("The selected Master Code is already expired"),
+                        HttpStatus.BAD_REQUEST);
+            }
 
             boolean isExpiredRetailerCode;
             try {
@@ -691,7 +706,7 @@ public class MasterCodeController {
     }
 
     private boolean isRetailerCodeExpired(String code, String baseUrl, String requestContext) throws ApiError {
-        String url = baseUrl + "/retailerCodes/{code}/refresh";
+        String url = baseUrl + "/retailerCodes/{code}/status/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);
         HttpHeaders headers = new HttpHeaders();
