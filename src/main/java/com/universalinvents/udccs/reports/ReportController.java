@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Api(tags = {"Report Controller"},
-     description = "Basic Reporting operations")
+        description = "Basic Reporting operations")
 @RestController
 @RequestMapping("/api/reports")
 public class ReportController {
@@ -56,9 +56,9 @@ public class ReportController {
     @CrossOrigin
     @ApiOperation(value = "Get a summarized report of objects")
     @RequestMapping(method = RequestMethod.GET,
-                    produces = "application/json")
+            produces = "application/json")
     public ResponseEntity<SummaryReport> getSummaryReport(
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
         SummaryReport report = new SummaryReport();
@@ -73,22 +73,23 @@ public class ReportController {
     @CrossOrigin
     @ApiOperation(value = "Get a summarized report of code stats")
     @RequestMapping(method = RequestMethod.GET,
-                    value = "/codes",
-                    produces = "application/json")
+            value = "/codes",
+            produces = "application/json")
     public ResponseEntity<CodeSummaryReport> getCodeSummaryReport(
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
         MasterCodeDetails masterDetails = new MasterCodeDetails();
         masterDetails.setIssued(masterCodeRepository.countByStatus(MasterCode.Status.ISSUED));
         masterDetails.setPaired(masterCodeRepository.countByStatus(MasterCode.Status.PAIRED));
         masterDetails.setRedeemed(masterCodeRepository.countByStatus(MasterCode.Status.REDEEMED));
-        masterDetails.setUnallocated(masterCodeRepository.countByStatus(MasterCode.Status.UNALLOCATED));
+        masterDetails.setExpired(masterCodeRepository.countByStatus(MasterCode.Status.EXPIRED));
 
         RetailerCodeDetails retailerDetails = new RetailerCodeDetails();
         retailerDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
         retailerDetails.setExpired(retailerCodeRepository.countByStatus(RetailerCode.Status.EXPIRED));
+        retailerDetails.setZombied(retailerCodeRepository.countByStatus(RetailerCode.Status.ZOMBIED));
 
         CodeSummaryReport report = new CodeSummaryReport();
         report.setMasterCodes(masterDetails);
@@ -100,10 +101,10 @@ public class ReportController {
     @CrossOrigin
     @ApiOperation(value = "Get a report of Master Code stats")
     @RequestMapping(method = RequestMethod.GET,
-                    value = "/codes/master",
-                    produces = "application/json")
+            value = "/codes/master",
+            produces = "application/json")
     public ResponseEntity<MasterCodeReport> getMasterCodeReport(
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -113,7 +114,7 @@ public class ReportController {
 
         // ============= TOTALS ==============
         MasterCodeDetails masterTotalDetails = new MasterCodeDetails();
-        masterTotalDetails.setUnallocated(masterCodeRepository.countByStatus(MasterCode.Status.UNALLOCATED));
+        masterTotalDetails.setExpired(masterCodeRepository.countByStatus(MasterCode.Status.EXPIRED));
         masterTotalDetails.setIssued(masterCodeRepository.countByStatus(MasterCode.Status.ISSUED));
         masterTotalDetails.setPaired(masterCodeRepository.countByStatus(MasterCode.Status.PAIRED));
         masterTotalDetails.setRedeemed(masterCodeRepository.countByStatus(MasterCode.Status.REDEEMED));
@@ -128,8 +129,8 @@ public class ReportController {
             List<Content> contents = contentRepository.findByStudio(studio);
 
             MasterCodeDetails masterStudioDetails = new MasterCodeDetails();
-            masterStudioDetails.setUnallocated(
-                    masterCodeRepository.countByContentInAndStatus(contents, MasterCode.Status.UNALLOCATED));
+            masterStudioDetails.setExpired(
+                    masterCodeRepository.countByContentInAndStatus(contents, MasterCode.Status.EXPIRED));
             masterStudioDetails.setIssued(
                     masterCodeRepository.countByContentInAndStatus(contents, MasterCode.Status.ISSUED));
             masterStudioDetails.setPaired(
@@ -143,8 +144,8 @@ public class ReportController {
             for (Content content : contents) {
 
                 MasterCodeDetails masterContentDetails = new MasterCodeDetails();
-                masterContentDetails.setUnallocated(
-                        masterCodeRepository.countByContentAndStatus(content, MasterCode.Status.UNALLOCATED));
+                masterContentDetails.setExpired(
+                        masterCodeRepository.countByContentAndStatus(content, MasterCode.Status.EXPIRED));
                 masterContentDetails.setIssued(
                         masterCodeRepository.countByContentAndStatus(content, MasterCode.Status.ISSUED));
                 masterContentDetails.setPaired(
@@ -162,19 +163,19 @@ public class ReportController {
                 for (ReferralPartner partner : partners) {
 
                     MasterCodeDetails masterPartnerDetails = new MasterCodeDetails();
-                    masterPartnerDetails.setUnallocated(
+                    masterPartnerDetails.setExpired(
                             masterCodeRepository.countByContentAndReferralPartnerAndStatus(content, partner,
-                                                                                           MasterCode.Status
-                                                                                                   .UNALLOCATED));
+                                    MasterCode.Status
+                                            .EXPIRED));
                     masterPartnerDetails.setIssued(
                             masterCodeRepository.countByContentAndReferralPartnerAndStatus(content, partner,
-                                                                                           MasterCode.Status.ISSUED));
+                                    MasterCode.Status.ISSUED));
                     masterPartnerDetails.setPaired(
                             masterCodeRepository.countByContentAndReferralPartnerAndStatus(content, partner,
-                                                                                           MasterCode.Status.PAIRED));
+                                    MasterCode.Status.PAIRED));
                     masterPartnerDetails.setRedeemed(
                             masterCodeRepository.countByContentAndReferralPartnerAndStatus(content, partner,
-                                                                                           MasterCode.Status.REDEEMED));
+                                    MasterCode.Status.REDEEMED));
 
 
                     // ============= APPS ================
@@ -185,28 +186,28 @@ public class ReportController {
                         MasterCodeDetails masterAppDetails = new MasterCodeDetails();
                         masterAppDetails.setIssued(
                                 masterCodeRepository.countByContentAndReferralPartnerAndAppAndStatus(content, partner,
-                                                                                                     app,
-                                                                                                     MasterCode
-                                                                                                             .Status
-                                                                                                             .ISSUED));
+                                        app,
+                                        MasterCode
+                                                .Status
+                                                .ISSUED));
                         masterAppDetails.setPaired(
                                 masterCodeRepository.countByContentAndReferralPartnerAndAppAndStatus(content, partner,
-                                                                                                     app,
-                                                                                                     MasterCode
-                                                                                                             .Status
-                                                                                                             .PAIRED));
+                                        app,
+                                        MasterCode
+                                                .Status
+                                                .PAIRED));
                         masterAppDetails.setRedeemed(
                                 masterCodeRepository.countByContentAndReferralPartnerAndAppAndStatus(content, partner,
-                                                                                                     app,
-                                                                                                     MasterCode
-                                                                                                             .Status
-                                                                                                             .REDEEMED));
-                        masterAppDetails.setUnallocated(
+                                        app,
+                                        MasterCode
+                                                .Status
+                                                .REDEEMED));
+                        masterAppDetails.setExpired(
                                 masterCodeRepository.countByContentAndReferralPartnerAndAppAndStatus(content, partner,
-                                                                                                     app,
-                                                                                                     MasterCode
-                                                                                                             .Status
-                                                                                                             .UNALLOCATED));
+                                        app,
+                                        MasterCode
+                                                .Status
+                                                .EXPIRED));
                         appDetails.add(new AppDetails(app.getName(), masterAppDetails));
                     }
                     partnerDetails.add(new PartnerDetails(partner.getName(), masterPartnerDetails, appDetails));
@@ -224,10 +225,10 @@ public class ReportController {
     @CrossOrigin
     @ApiOperation(value = "Get a report of Retailer Code stats")
     @RequestMapping(method = RequestMethod.GET,
-                    value = "/codes/retailer",
-                    produces = "application/json")
+            value = "/codes/retailer",
+            produces = "application/json")
     public ResponseEntity<RetailerCodeReport> getRetailerCodeReport(
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -240,6 +241,7 @@ public class ReportController {
         retailerTotalDetails.setPaired(retailerCodeRepository.countByStatus(RetailerCode.Status.PAIRED));
         retailerTotalDetails.setRedeemed(retailerCodeRepository.countByStatus(RetailerCode.Status.REDEEMED));
         retailerTotalDetails.setExpired(retailerCodeRepository.countByStatus(RetailerCode.Status.EXPIRED));
+        retailerTotalDetails.setZombied(retailerCodeRepository.countByStatus(RetailerCode.Status.ZOMBIED));
         retailerCodeReport.setRetailerCodes(retailerTotalDetails);
 
 
@@ -257,6 +259,8 @@ public class ReportController {
                     retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.REDEEMED));
             retailerStudioDetails.setExpired(
                     retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.EXPIRED));
+            retailerStudioDetails.setZombied(
+                    retailerCodeRepository.countByContentInAndStatus(contents, RetailerCode.Status.ZOMBIED));
 
 
             // ============= CONTENT =============
@@ -270,6 +274,8 @@ public class ReportController {
                         retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.REDEEMED));
                 retailerContentDetails.setExpired(
                         retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.EXPIRED));
+                retailerContentDetails.setZombied(
+                        retailerCodeRepository.countByContentAndStatus(content, RetailerCode.Status.ZOMBIED));
 
                 // ============= RETAILERS ============
                 List<RetailerDetails> retailerDetails = new ArrayList<>();
@@ -279,39 +285,48 @@ public class ReportController {
                     RetailerCodeDetails retailerRetailerDetails = new RetailerCodeDetails();
                     retailerRetailerDetails.setPaired(
                             retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
-                                                                                      RetailerCode.Status.PAIRED));
+                                    RetailerCode.Status.PAIRED));
                     retailerRetailerDetails.setRedeemed(
                             retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
-                                                                                      RetailerCode.Status.REDEEMED));
+                                    RetailerCode.Status.REDEEMED));
                     retailerRetailerDetails.setExpired(
                             retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
                                     RetailerCode.Status.EXPIRED));
+                    retailerRetailerDetails.setZombied(
+                            retailerCodeRepository.countByContentAndRetailerAndStatus(content, retailer,
+                                    RetailerCode.Status.ZOMBIED));
 
 
                     // ============= FORMATS ================
                     List<FormatDetails> formatDetails = new ArrayList<FormatDetails>();
                     List<String> formats = retailerCodeRepository.findDistinctFormatsByContentAndRetailer(content,
-                                                                                                          retailer);
+                            retailer);
                     for (String format : formats) {
                         RetailerCodeDetails retailerFormatDetails = new RetailerCodeDetails();
                         retailerFormatDetails.setPaired(
                                 retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
-                                                                                                   format,
-                                                                                                   RetailerCode
-                                                                                                           .Status
-                                                                                                           .PAIRED));
+                                        format,
+                                        RetailerCode
+                                                .Status
+                                                .PAIRED));
                         retailerFormatDetails.setRedeemed(
                                 retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
-                                                                                                   format,
-                                                                                                   RetailerCode
-                                                                                                           .Status
-                                                                                                           .REDEEMED));
+                                        format,
+                                        RetailerCode
+                                                .Status
+                                                .REDEEMED));
                         retailerFormatDetails.setExpired(
                                 retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
                                         format,
                                         RetailerCode
                                                 .Status
                                                 .EXPIRED));
+                        retailerFormatDetails.setZombied(
+                                retailerCodeRepository.countByContentAndRetailerAndFormatAndStatus(content, retailer,
+                                        format,
+                                        RetailerCode
+                                                .Status
+                                                .ZOMBIED));
 
                         formatDetails.add(new FormatDetails(format, retailerFormatDetails));
                     }

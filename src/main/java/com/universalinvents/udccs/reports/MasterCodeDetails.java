@@ -6,20 +6,20 @@ public class MasterCodeDetails {
 
     @JsonProperty("ISSUED")
     private long issued;
-    @JsonProperty("UNALLOCATED")
-    private long unallocated;
     @JsonProperty("PAIRED")
     private long paired;
     @JsonProperty("REDEEMED")
     private long redeemed;
+    @JsonProperty("EXPIRED")
+    private long expired;
 
     public MasterCodeDetails() {}
 
-    public MasterCodeDetails(long issued, long unallocated, long paired, long redeemed) {
+    public MasterCodeDetails(long issued, long paired, long redeemed, long expired) {
         this.issued = issued;
-        this.unallocated = unallocated;
         this.paired = paired;
         this.redeemed = redeemed;
+        this.expired = expired;
     }
 
     public long getIssued() {
@@ -28,14 +28,6 @@ public class MasterCodeDetails {
 
     public void setIssued(long issued) {
         this.issued = issued;
-    }
-
-    public long getUnallocated() {
-        return unallocated;
-    }
-
-    public void setUnallocated(long unallocated) {
-        this.unallocated = unallocated;
     }
 
     public long getPaired() {
@@ -52,5 +44,13 @@ public class MasterCodeDetails {
 
     public void setRedeemed(long redeemed) {
         this.redeemed = redeemed;
+    }
+
+    public long getExpired() {
+        return expired;
+    }
+
+    public void setExpired(long expired) {
+        this.expired = expired;
     }
 }
