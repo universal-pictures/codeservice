@@ -558,8 +558,17 @@ public class MasterCodeController {
             Pairing pairing = masterCode.getPairing();
             RetailerCode rc = pairing.getRetailerCode();
 
-            if (masterCode.getStatus() == MasterCode.Status.EXPIRED ||
-                    (masterCode.getExpiresOn() != null && masterCode.getExpiresOn().compareTo(new Date()) < 0)) {
+            // Check if the status is out of date (i.e. the code is already past its expiration date).
+            // If so, update our status appropriately.
+            if (masterCode.getStatus() != MasterCode.Status.EXPIRED
+                    && masterCode.getExpiresOn() != null
+                    && masterCode.getExpiresOn().compareTo(new Date()) < 0) {
+                masterCode.setStatus(MasterCode.Status.EXPIRED);
+                masterCode.setModifiedOn(new Date());
+                masterCodeRepository.saveAndFlush(masterCode);
+            }
+
+            if (masterCode.getStatus() == MasterCode.Status.EXPIRED) {
                 return new ResponseEntity(new ApiError("The selected Master Code is already expired"),
                         HttpStatus.BAD_REQUEST);
             }
