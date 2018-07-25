@@ -8,6 +8,7 @@ import com.universalinvents.udccs.partners.ReferralPartner;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by kkirkland on 10/19/17.
@@ -119,5 +120,25 @@ public class App {
 
     public void setMasterCodes(List<MasterCode> masterCodes) {
         this.masterCodes = masterCodes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        App app = (App) o;
+        return Objects.equals(id, app.id) &&
+                Objects.equals(name, app.name) &&
+                Objects.equals(description, app.description) &&
+                Objects.equals(createdOn, app.createdOn) &&
+                Objects.equals(modifiedOn, app.modifiedOn) &&
+                Objects.equals(accessToken, app.accessToken) &&
+                Objects.equals(status, app.status) &&
+                Objects.equals(referralPartner, app.referralPartner);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, createdOn, modifiedOn, accessToken, status, referralPartner);
     }
 }
