@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Api(tags = {"Report Controller"},
@@ -279,7 +278,7 @@ public class ReportController {
 
                 // ============= RETAILERS ============
                 List<RetailerDetails> retailerDetails = new ArrayList<>();
-                List<Retailer> retailers = retailerRepository.findByContentsIn(Collections.singletonList(content));
+                List<Retailer> retailers = retailerCodeRepository.findDistinctRetailersByContentId(content.getId());
                 for (Retailer retailer : retailers) {
 
                     RetailerCodeDetails retailerRetailerDetails = new RetailerCodeDetails();

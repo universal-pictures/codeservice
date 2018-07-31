@@ -1,6 +1,5 @@
 package com.universalinvents.udccs.retailers;
 
-import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,13 +18,7 @@ public class RetailerSpecification implements Specification<Retailer> {
     @Override
     public Predicate toPredicate(Root<Retailer> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         if (criteria.getOperand().equalsIgnoreCase(":")) {
-            if (criteria.getKey().equalsIgnoreCase("contentId")) {
-                Join<Retailer, Content> contents = root.join("contents");
-                return cb.equal(contents.get("id"), criteria.getValue());
-            } else if (criteria.getKey().equalsIgnoreCase("contentIds")) {
-                Join<Retailer, Content> contents = root.join("contents");
-                return root.get("contents").in(criteria.getValue());
-            } else if (criteria.getKey().equalsIgnoreCase("partnerId")) {
+            if (criteria.getKey().equalsIgnoreCase("partnerId")) {
                 Join<Retailer, ReferralPartner> partners = root.join("referralPartners");
                 return cb.equal(partners.get("id"), criteria.getValue());
             } else if (criteria.getKey().equalsIgnoreCase("partnerIds")) {

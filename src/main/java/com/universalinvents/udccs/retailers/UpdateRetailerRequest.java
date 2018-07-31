@@ -12,10 +12,6 @@ public class UpdateRetailerRequest {
                       example = "Movies Anywhere",
                       required = false)
     private String name;
-    @ApiModelProperty(value = "Does this retailer allow for dynamic code generation? (Default is false)",
-                      example = "false",
-                      required = false)
-    private Boolean generateCodes = Boolean.FALSE;
     @ApiModelProperty(value = "A URL pointing to a logo for this retailer",
                       example = "http://example.com/mylogoimage.png",
                       required = false)
@@ -39,10 +35,9 @@ public class UpdateRetailerRequest {
 
     public UpdateRetailerRequest() {}
 
-    public UpdateRetailerRequest(String name, Boolean generateCodes, String logoUrl, String redemptionUrl,
+    public UpdateRetailerRequest(String name, String logoUrl, String redemptionUrl,
                                  String status, String externalId, String baseUrl) {
         this.name = name;
-        this.generateCodes = generateCodes;
         this.logoUrl = logoUrl;
         this.redemptionUrl = redemptionUrl;
         this.status = status;
@@ -64,14 +59,6 @@ public class UpdateRetailerRequest {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Boolean getGenerateCodes() {
-        return generateCodes;
-    }
-
-    public void setGenerateCodes(Boolean generateCodes) {
-        this.generateCodes = generateCodes;
     }
 
     public String getLogoUrl() {

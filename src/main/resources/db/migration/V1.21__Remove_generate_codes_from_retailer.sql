@@ -1,0 +1,1 @@
+ALTER TABLE udccs.retailer DROP COLUMN generate_codes;
