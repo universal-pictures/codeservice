@@ -1,8 +1,6 @@
 package com.universalinvents.udccs.contents;
 
 import com.universalinvents.udccs.exception.ApiError;
-import com.universalinvents.udccs.retailers.Retailer;
-import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 @Api(tags = {"Content Controller"},
@@ -29,9 +26,6 @@ import java.util.List;
 public class ContentController {
     @Autowired
     private ContentRepository contentRepository;
-
-    @Autowired
-    private RetailerRepository retailerRepository;
 
     @Autowired
     private StudioRepository studioRepository;
@@ -44,7 +38,7 @@ public class ContentController {
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Content.class),
-            @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
+            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody
@@ -54,13 +48,6 @@ public class ContentController {
                                                  @RequestHeader(value="Request-Context", required=false)
                                                      @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                              String requestContext) {
-
-        HashSet<Retailer> retailers = null;
-        try {
-            retailers = getRetailers(request);
-        } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
-        }
 
         Studio studio = studioRepository.findOne(request.getStudioId());
         if (studio == null)
@@ -74,7 +61,6 @@ public class ContentController {
         content.setStatus(request.getStatus());
         content.setMsrp(request.getMsrp());
         content.setStudio(studio);
-        content.setRetailers(retailers);
         content.setCreatedOn(new Date());
 
         contentRepository.save(content);
@@ -85,14 +71,12 @@ public class ContentController {
     @CrossOrigin
     @ApiOperation(value = "Update a Content Entry",
                   notes = "You may update any properties of a Content record except its EIDR.  Specify values " +
-                  "for those properties you wish to overwrite.  Please note that when specifying any of these " +
-                  "values, they will overwrite existing values; especially retailerIds.  If you wish to add " +
-                  "a Retailer to the list, you must ensure to include any of the current values here.")
+                  "for those properties you wish to overwrite.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Content was not modified", response = Content.class),
             @ApiResponse(code = 404, message = "Content is Not Found", response = ApiError.class),
-            @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
+            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> updateContent(@PathVariable
@@ -112,14 +96,6 @@ public class ContentController {
 
         // Update values from request - if set
         boolean isModified = false;
-        if (request.getRetailerIds() != null) {
-            try {
-                content.setRetailers(getRetailers(request));
-                isModified = true;
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
-            }
-        }
 
         if (request.getStudioId() != null) {
             Studio studio = studioRepository.findOne(request.getStudioId());
@@ -159,17 +135,6 @@ public class ContentController {
 
         // Nothing was modified.  Just return the found Content.
         return new ResponseEntity<Content>(content, HttpStatus.NOT_MODIFIED);
-    }
-
-    private HashSet<Retailer> getRetailers(ContentRequest request) throws ApiError {
-        HashSet<Retailer> retailers = new HashSet();
-        for (Long retailerId : request.getRetailerIds()) {
-            Retailer foundRetailer = retailerRepository.findOne(retailerId);
-            if (foundRetailer == null) throw new ApiError("Retailer id " + retailerId + " is not found.");
-
-            retailers.add(foundRetailer);
-        }
-        return retailers;
     }
 
     @CrossOrigin
@@ -241,9 +206,6 @@ public class ContentController {
             @RequestParam(name = "studioId", required = false)
             @ApiParam(value = "Studio related to Content")
                     Long studioId,
-            @RequestParam(name = "retailerId", required = false)
-            @ApiParam(value = "Retailer related to Content.")
-                    Long retailerId,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "Content with the given status (ACTIVE or INACTIVE)")
                     String status,
@@ -278,15 +240,6 @@ public class ContentController {
                 return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("studio", ":", studioId));
-            }
-        }
-
-        if (retailerId != null) {
-            Retailer retailer = retailerRepository.findOne(retailerId);
-            if (retailer == null) {
-                return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
-            } else {
-                params.add(new SqlCriteria("retailerId", ":", retailerId));
             }
         }
 

@@ -9,14 +9,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-/**
- * Created by dsherman on 2/27/17.
- */
 public interface RetailerCodeRepository extends JpaRepository<RetailerCode, String>,
         JpaSpecificationExecutor<RetailerCode> {
     @Query(value = "SELECT DISTINCT format FROM RetailerCode WHERE content = :content AND retailer = :retailer")
     List<String> findDistinctFormatsByContentAndRetailer(@Param("content") Content content,
                                                          @Param("retailer") Retailer retailer);
+
+    @Query(value = "SELECT DISTINCT retailer FROM RetailerCode WHERE content_id = :contentId")
+    List<Retailer> findDistinctRetailersByContentId(@Param("contentId") Long contentId);
 
     long countByStatus(RetailerCode.Status status);
 
