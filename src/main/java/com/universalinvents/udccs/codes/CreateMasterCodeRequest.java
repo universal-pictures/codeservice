@@ -42,7 +42,7 @@ public class CreateMasterCodeRequest {
     @ApiModelProperty(value = "When does this code expire? This parameter is immutable so once you determine its " +
             "value here it can not be updated later. Use the following format: yyyy-MM-dd'T'HH:mm:ss.SSSZ. " +
             "If unspecified, this code will not expire.",
-            example = "2020-01-01'T'00:00:01.000Z",
+            example = "2020-01-01T00:00:01.000Z",
             required = false)
     private Date expiresOn;
 

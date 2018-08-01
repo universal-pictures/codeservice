@@ -113,7 +113,7 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("App id expressed is not found."), HttpStatus.NOT_FOUND);
 
         // Ensure the given app is related to the given referral partner
-        if ( ! referralPartner.getApps().contains(app) )
+        if (!referralPartner.getApps().contains(app)) {
             return new ResponseEntity(new ApiError("App id " + request.getAppId() + " is not related with " +
                     "Referral Partner id " + request.getPartnerId() + "."), HttpStatus.BAD_REQUEST);
 
@@ -504,7 +504,6 @@ public class MasterCodeController {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
             @ApiResponse(code = 400, message = "Specified Retailer Not Found,\n" +
-                    "Retailer does not have requested Content,\n" +
                     "Referral Partner does not have access to Retailer", response = ApiError.class),
             @ApiResponse(code = 409, message = "Master Code is already paired OR\n" +
                     "Retailer Code unavailable for Content", response = ApiError.class)
@@ -531,9 +530,6 @@ public class MasterCodeController {
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
-        if (!masterCode.getContent().getRetailers().contains(retailer))
-            return new ResponseEntity(new ApiError("Retailer does not have requested Content."), HttpStatus.BAD_REQUEST);
-
         if (!masterCode.getReferralPartner().getRetailers().contains(retailer))
             return new ResponseEntity(new ApiError("Referral Partner does not have access to selected Retailer."),
                     HttpStatus.BAD_REQUEST);
@@ -550,13 +546,11 @@ public class MasterCodeController {
         Date modifiedDate = new Date();
         boolean isModified = false;
         if (masterCode.getStatus() == MasterCode.Status.ISSUED) {
-            if (retailerCode == null) {
-                try {
-                    retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
-                            requestContext);
-                } catch (ApiError apiError) {
-                    return new ResponseEntity(apiError, HttpStatus.CONFLICT);
-                }
+            try {
+                retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
+                        requestContext);
+            } catch (ApiError apiError) {
+                return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
 
             Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
@@ -594,8 +588,7 @@ public class MasterCodeController {
             boolean isExpiredRetailerCode;
             try {
                 isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl(), requestContext);
-            }
-            catch (ApiError apiError) {
+            } catch (ApiError apiError) {
                 return new ResponseEntity(apiError, HttpStatus.CONFLICT);
             }
 
@@ -604,8 +597,7 @@ public class MasterCodeController {
                 try {
                     retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
                             requestContext);
-                }
-                catch (ApiError apiError) {
+                } catch (ApiError apiError) {
                     return new ResponseEntity(apiError, HttpStatus.CONFLICT);
                 }
 

@@ -1,13 +1,11 @@
 package com.universalinvents.udccs.contents;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.studios.Studio;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.Set;
 
 /**
  * Created by dsherman on 2/27/17.
@@ -27,12 +25,6 @@ public class Content {
     private BigDecimal msrp;
     private Date createdOn;
     private Date modifiedOn;
-
-    @ManyToMany
-    @JoinTable(name = "content_retailer",
-               joinColumns = @JoinColumn(name = "content_id", referencedColumnName = "id"),
-               inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
-    private Set<Retailer> retailers;
 
     @ManyToOne
     @JoinColumn(name = "studioId")
@@ -81,14 +73,6 @@ public class Content {
 
     public void setGtm(String gtm) {
         this.gtm = gtm;
-    }
-
-    public Set<Retailer> getRetailers() {
-        return retailers;
-    }
-
-    public void setRetailers(Set<Retailer> retailers) {
-        this.retailers = retailers;
     }
 
     public String getEidrv() {
@@ -157,13 +141,6 @@ public class Content {
         sb.append("\n\tModified On: ").append(getModifiedOn());
         sb.append("\n\tStatus: ").append(getStatus());
         sb.append("\n\tRetailers: ");
-        if (retailers == null) {
-            sb.append("\n\t\t- null");
-        } else {
-            for (Retailer retailer : retailers) {
-                sb.append("\n\t\t- ").append(retailer.getName());
-            }
-        }
 
         return sb.toString();
     }

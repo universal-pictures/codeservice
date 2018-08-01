@@ -1,7 +1,5 @@
 package com.universalinvents.udccs.retailers;
 
-import com.universalinvents.udccs.contents.Content;
-import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -33,9 +31,6 @@ public class RetailerController
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
 
-    @Autowired
-    private ContentRepository contentRepository;
-
     @CrossOrigin
     @ApiOperation(value = "Create a Retailer Entry",
                   notes = "A Retailer represents a company that provides Content to consumers and " +
@@ -55,7 +50,6 @@ public class RetailerController
     {
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
-        retailer.setGenerateCodes(request.getGenerateCodes());
         retailer.setLogoUrl(request.getLogoUrl());
         retailer.setRedemptionUrl(request.getRedemptionUrl());
         retailer.setStatus(request.getStatus());
@@ -98,11 +92,6 @@ public class RetailerController
         boolean isModified = false;
         if (request.getName() != null) {
             retailer.setName(request.getName());
-            isModified = true;
-        }
-
-        if (request.getGenerateCodes() != null) {
-            retailer.setGenerateCodes(request.getGenerateCodes());
             isModified = true;
         }
 
@@ -196,9 +185,6 @@ public class RetailerController
     })
     @RequestMapping(method= RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Retailer>> getRetailers(
-            @RequestParam(name = "contentId", required = false)
-            @ApiParam(value = "Content related to Retailers.")
-                    Long contentId,
             @RequestParam(name = "partnerId", required = false)
             @ApiParam(value = "Referral Partner related to Retailers.")
                     Long partnerId,
@@ -233,16 +219,6 @@ public class RetailerController
 
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
-
-        if (contentId != null) {
-            Content content = contentRepository.findOne(contentId);
-            if (content == null) {
-                return new ResponseEntity(new ApiError("Content id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
-            } else {
-                params.add(new SqlCriteria("contentId", ":", contentId));
-            }
-        }
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
