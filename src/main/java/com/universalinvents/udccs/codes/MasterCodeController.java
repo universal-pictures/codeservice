@@ -116,6 +116,7 @@ public class MasterCodeController {
         if (!referralPartner.getApps().contains(app)) {
             return new ResponseEntity(new ApiError("App id " + request.getAppId() + " is not related with " +
                     "Referral Partner id " + request.getPartnerId() + "."), HttpStatus.BAD_REQUEST);
+        }
 
         String code = CCFUtility.generateCode(content.getStudio().getCodePrefix());
         MasterCode masterCode = new MasterCode(code, request.getFormat(), request.getCreatedBy(), new Date(),
