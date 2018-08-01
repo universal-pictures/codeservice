@@ -4,6 +4,10 @@ import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
+import com.universalinvents.udccs.events.EventStreamingController;
+import com.universalinvents.udccs.events.EventWrapper;
+import com.universalinvents.udccs.events.EventConfig;
+import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
@@ -69,6 +73,12 @@ public class MasterCodeController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private EventStreamingController eventStreamingController;
+
+    @Autowired
+    private EventConfig eventConfig;
+
     @CrossOrigin
     @ApiOperation(value = "Create a Master Code",
             notes = "A Master Code is generated for future redemption of its related content.")
@@ -113,6 +123,13 @@ public class MasterCodeController {
                 request.getExpiresOn(), referralPartner, app, content, MasterCode.Status.ISSUED,
                 request.getExternalId());
         masterCodeRepository.save(masterCode);
+
+        // Send a 'masterCodeIssued' event
+        MasterCodeEvent event = new MasterCodeEvent(masterCode);
+        EventWrapper eventWrapper = new EventWrapper(
+                "master-code","masterCodeIssued", event, requestContext, eventConfig.getSchemaVersion());
+        eventStreamingController.putRecord(eventWrapper.toString());
+
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
     }
 
@@ -528,6 +545,7 @@ public class MasterCodeController {
 
         // If the MasterCode isn't already PAIRED or REDEEMED, then fetch a retailer code from the Retailer Service
         Date modifiedDate = new Date();
+        boolean isModified = false;
         if (masterCode.getStatus() == MasterCode.Status.ISSUED) {
             try {
                 retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
@@ -543,6 +561,8 @@ public class MasterCodeController {
             masterCode.setStatus(MasterCode.Status.PAIRED);
             masterCode.setModifiedOn(modifiedDate);
             masterCodeRepository.saveAndFlush(masterCode);
+
+            isModified = true;
         }
 
         // If the paired RetailerCode is truly expired and the MasterCode has not expired,
@@ -587,18 +607,32 @@ public class MasterCodeController {
                 pairing.setPairedBy(request.getPairedBy());
                 pairing.setPairedOn(modifiedDate);
                 pairingRepository.saveAndFlush(pairing);
-            } else if (rc.getStatus() == RetailerCode.Status.EXPIRED) {
+
+                isModified = true;
+            }
+            else if (rc.getStatus() == RetailerCode.Status.EXPIRED) {
                 // This RetailerCode isn't truly expired, so update its status back to PAIRED
                 rc.setStatus(RetailerCode.Status.PAIRED);
                 rc.setModifiedOn(modifiedDate);
                 retailerCodeRepository.saveAndFlush(rc);
-            } else
+
+                isModified = true;
+            }
+            else
                 return new ResponseEntity(new ApiError("Master Code expressed is already paired."), HttpStatus.CONFLICT);
         }
 
         // Incompatible status
         else
             return new ResponseEntity(new ApiError("Incompatible status for pairing."), HttpStatus.CONFLICT);
+
+        if (isModified) {
+            // Send a 'masterCodePaired' event
+            MasterCodeEvent event = new MasterCodeEvent(masterCode);
+            EventWrapper eventWrapper = new EventWrapper(
+                    "master-code","masterCodePaired", event, requestContext, eventConfig.getSchemaVersion());
+            eventStreamingController.putRecord(eventWrapper.toString());
+        }
 
         // Success
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
@@ -653,6 +687,12 @@ public class MasterCodeController {
         masterCode.setStatus(MasterCode.Status.ISSUED);
         masterCode.setModifiedOn(modifiedOn);
         masterCodeRepository.saveAndFlush(masterCode);
+
+        // Send a 'masterCodeUnpaired' event
+        MasterCodeEvent event = new MasterCodeEvent(masterCode);
+        EventWrapper eventWrapper = new EventWrapper(
+                "master-code","masterCodeUnpaired", event, requestContext, eventConfig.getSchemaVersion());
+        eventStreamingController.putRecord(eventWrapper.toString());
 
         // Success
         return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
