@@ -1,6 +1,7 @@
 package com.universalinvents.udccs.retailers;
 
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalEidrMappingsResponse;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
@@ -11,43 +12,51 @@ import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Api(tags = {"Retailer Controller"},
-     description = "Operations pertaining to retailers")
+        description = "Operations pertaining to retailers")
 @RestController
 @RequestMapping("/api/retailers")
-public class RetailerController
-{
+public class RetailerController {
     @Autowired
     private RetailerRepository retailerRepository;
 
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
     @CrossOrigin
     @ApiOperation(value = "Create a Retailer Entry",
-                  notes = "A Retailer represents a company that provides Content to consumers and " +
-                          "the ability to acquire said Content through Retailer Codes.")
+            notes = "A Retailer represents a company that provides Content to consumers and " +
+                    "the ability to acquire said Content through Retailer Codes.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Retailer.class)
     })
-    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
+    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Retailer> createRetailer(
             @RequestBody
             @ApiParam(value = "Provide properties for the Retailer.", required = true)
                     CreateRetailerRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext)
-    {
+                    String requestContext) {
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
         retailer.setLogoUrl(request.getLogoUrl());
@@ -64,8 +73,8 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Update a Retailer Entry",
-                  notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
-                          "specifying any of these values, they will overwrite existing values.")
+            notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
+                    "specifying any of these values, they will overwrite existing values.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Retailer was not modified", response = Retailer.class),
@@ -79,7 +88,7 @@ public class RetailerController
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Retailer")
                     UpdateRetailerRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -132,7 +141,7 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Delete a Retailer Entry",
-                  notes = "Delete a Retailer record that has not yet been associated with a Retailer Code.")
+            notes = "Delete a Retailer record that has not yet been associated with a Retailer Code.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
@@ -140,8 +149,8 @@ public class RetailerController
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteRetailer(@PathVariable
-                                             @ApiParam(value = "The id of the Retailer to delete") Long id,
-                                         @RequestHeader(value="Request-Context", required=false)
+                                         @ApiParam(value = "The id of the Retailer to delete") Long id,
+                                         @RequestHeader(value = "Request-Context", required = false)
                                          @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                  String requestContext) {
         try {
@@ -158,15 +167,14 @@ public class RetailerController
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Retailer> getRetailerById(
             @PathVariable
             @ApiParam(value = "The id of the Retailer to retrieve")
                     Long id,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext)
-    {
+                    String requestContext) {
         Retailer retailer = retailerRepository.findOne(id);
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -176,14 +184,14 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Search Retailers",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Content or Referral Partner Not Found",
-                         response = ApiError.class)
+                    response = ApiError.class)
     })
-    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Retailer>> getRetailers(
             @RequestParam(name = "partnerId", required = false)
             @ApiParam(value = "Referral Partner related to Retailers.")
@@ -197,6 +205,12 @@ public class RetailerController
             @RequestParam(name = "externalId", required = false)
             @ApiParam(value = "Retailers with this external id.")
                     String externalId,
+            @RequestParam(name = "eidr", required = false)
+            @ApiParam(value = "Retailers that potentially have content related to this eidr (See 'hasInventory')")
+                    String eidr,
+            @RequestParam(name = "hasInventory", required = false, defaultValue = "true")
+            @ApiParam(value = "If eidr is specified then only return retailers with the content in stock (See 'eidr')")
+                    boolean hasInventory,
             @RequestParam(name = "createdAfter", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             @ApiParam(value = "Retailers created after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
@@ -213,7 +227,7 @@ public class RetailerController
             @ApiParam(value = "Retailers modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date modifiedOnBefore,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -224,7 +238,7 @@ public class RetailerController
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("partnerId", ":", partnerId));
             }
@@ -271,7 +285,59 @@ public class RetailerController
             retailers = retailerRepository.findAll(query);
         }
 
+        // Now that we have a list of potential retailers, further filter it if
+        // eidr was specified.
+        List<Retailer> returnRetailers = new ArrayList<Retailer>();
+        if (eidr == null) {
+            returnRetailers = retailers;
+        } else {
+            String encodedEidr = null;
+            try {
+                encodedEidr = URLEncoder.encode(eidr, StandardCharsets.UTF_8.name());
+            } catch (UnsupportedEncodingException e) {
+                return new ResponseEntity(new ApiError("Unable to encode EIDR to " + StandardCharsets.UTF_8.name()),
+                        HttpStatus.BAD_REQUEST);
+            }
 
-        return new ResponseEntity<List<Retailer>>(retailers, HttpStatus.OK);
+            // Loop through found Retailers
+            for (Retailer retailer : retailers) {
+                // Using the baseUrl property of this Retailer, call it's EST Inventory service
+                // for inventory records related to the given eidr.
+                String baseUrl = retailer.getBaseUrl();
+                if (baseUrl != null) {
+                    URI url = URI.create(baseUrl + "/eidrMappings/" + encodedEidr + "/inventoryCount");
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                    headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+                    headers.set("Request-Context", requestContext);
+                    HttpEntity entity = new HttpEntity(null, headers);
+
+                    try {
+                        ExternalEidrMappingsResponse externalEm = restTemplate.exchange(url, HttpMethod.GET, entity,
+                                ExternalEidrMappingsResponse.class).getBody();
+
+                        // If we only want results with content in stock, remove those without enough inventory
+                        if (hasInventory) {
+                            if (externalEm.getCount() >= externalEm.getMinInventoryCount()) {
+                                returnRetailers.add(retailer);
+                            }
+                        } else {
+                            returnRetailers.add(retailer);
+                        }
+                    } catch (HttpClientErrorException e) {
+                        // If it's a 404, ignore since that just means the retailer doesn't know about the eidr at all
+                        if (! e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                        }
+                    } catch (HttpServerErrorException e) {
+                        return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                    } catch (RestClientException e) {
+                        return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                    }
+                }
+            }
+        }
+
+        return new ResponseEntity<List<Retailer>>(returnRetailers, HttpStatus.OK);
     }
 }
