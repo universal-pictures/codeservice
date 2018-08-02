@@ -209,7 +209,7 @@ public class RetailerController {
             @ApiParam(value = "Retailers that potentially have content related to this eidr (See 'hasInventory')")
                     String eidr,
             @RequestParam(name = "hasInventory", required = false, defaultValue = "true")
-            @ApiParam(value = "Retailers that have the content specified by eidr in stock (See 'eidr')")
+            @ApiParam(value = "If eidr is specified then only return retailers with the content in stock (See 'eidr')")
                     boolean hasInventory,
             @RequestParam(name = "createdAfter", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
