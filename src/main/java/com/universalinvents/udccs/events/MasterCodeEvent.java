@@ -15,7 +15,8 @@ public class MasterCodeEvent extends AbstractEvent {
     private String createdBy;
     private Date createdOn;
     private Date modifiedOn;
-    private String externalId;
+    private String masterCodeExternalId;
+    private String retailerExternalId;
     private String format;
     private String pairedRetailerCode;
     private MasterCode.Status status;
@@ -27,10 +28,13 @@ public class MasterCodeEvent extends AbstractEvent {
         this.createdBy = masterCode.getCreatedBy();
         this.createdOn = masterCode.getCreatedOn();
         this.modifiedOn = masterCode.getModifiedOn();
-        this.externalId = masterCode.getExternalId();
+        this.masterCodeExternalId = masterCode.getExternalId();
         this.format = masterCode.getFormat();
         this.pairedRetailerCode = masterCode.isPaired()
                 ? masterCode.getPairing().getRetailerCode().getCode()
+                : null;
+        this.retailerExternalId = masterCode.isPaired()
+                ? masterCode.getPairing().getRetailerCode().getRetailer().getExternalId()
                 : null;
         this.status = masterCode.getStatus();
     }
@@ -71,8 +75,12 @@ public class MasterCodeEvent extends AbstractEvent {
         return modifiedOn;
     }
 
-    public String getExternalId() {
-        return externalId;
+    public String getMasterCodeExternalId() {
+        return masterCodeExternalId;
+    }
+
+    public String getRetailerExternalId() {
+        return retailerExternalId;
     }
 
     public String getFormat() {
