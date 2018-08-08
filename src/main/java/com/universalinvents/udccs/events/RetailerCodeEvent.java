@@ -17,6 +17,8 @@ public class RetailerCodeEvent extends AbstractEvent {
     private String pairedMasterCode;
     private Long retailerId;
     private RetailerCode.Status status;
+    private String masterCodeExternalId;
+    private String retailerExternalId;
 
     public RetailerCodeEvent(RetailerCode retailerCode) {
         this.code = retailerCode.getCode();
@@ -29,6 +31,12 @@ public class RetailerCodeEvent extends AbstractEvent {
                 : null;
         this.retailerId = retailerCode.getRetailer().getId();
         this.status = retailerCode.getStatus();
+        this.masterCodeExternalId = retailerCode.isPaired()
+                ? retailerCode.getPairing().getMasterCode().getExternalId()
+                : null;
+        this.retailerExternalId = retailerCode.isPaired()
+                ? retailerCode.getRetailer().getExternalId()
+                : null;
     }
 
     @Override
@@ -75,4 +83,11 @@ public class RetailerCodeEvent extends AbstractEvent {
         return status;
     }
 
+    public String getMasterCodeExternalId() {
+        return masterCodeExternalId;
+    }
+
+    public String getRetailerExternalId() {
+        return retailerExternalId;
+    }
 }
