@@ -1,6 +1,7 @@
 package com.universalinvents.udccs.partners;
 
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.exception.RecordNotFoundException;
 import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
@@ -57,15 +58,15 @@ public class ReferralPartnerController {
         HashSet<Retailer> retailers = null;
         try {
             retailers = getRetailers(request);
-        } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
+        } catch (RecordNotFoundException e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
         HashSet<Studio> studios = null;
         try {
             studios = getStudios(request);
-        } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
+        } catch (RecordNotFoundException e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
         ReferralPartner referralPartner = new ReferralPartner();
@@ -120,8 +121,8 @@ public class ReferralPartnerController {
             try {
                 referralPartner.setRetailers(getRetailers(request));
                 isModified = true;
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
+            } catch (RecordNotFoundException e) {
+                return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -129,8 +130,8 @@ public class ReferralPartnerController {
             try {
                 referralPartner.setStudios(getStudios(request));
                 isModified = true;
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
+            } catch (RecordNotFoundException e) {
+                return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -173,22 +174,22 @@ public class ReferralPartnerController {
         return new ResponseEntity<ReferralPartner>(referralPartner, HttpStatus.NOT_MODIFIED);
     }
 
-    private HashSet<Retailer> getRetailers(ReferralPartnerRequest request) throws ApiError {
+    private HashSet<Retailer> getRetailers(ReferralPartnerRequest request) throws RecordNotFoundException {
         HashSet<Retailer> retailers = new HashSet();
         for (Long retailerId : request.getRetailerIds()) {
             Retailer foundRetailer = retailerRepository.findOne(retailerId);
-            if (foundRetailer == null) throw new ApiError("Retailer id " + retailerId + " is not found.");
+            if (foundRetailer == null) throw new RecordNotFoundException("Retailer id " + retailerId + " is not found.");
 
             retailers.add(foundRetailer);
         }
         return retailers;
     }
 
-    private HashSet<Studio> getStudios(ReferralPartnerRequest request) throws ApiError {
+    private HashSet<Studio> getStudios(ReferralPartnerRequest request) throws RecordNotFoundException {
         HashSet<Studio> studios = new HashSet();
         for (Long studioId : request.getStudioIds()) {
             Studio foundStudio = studioRepository.findOne(studioId);
-            if (foundStudio == null) throw new ApiError("Studio id " + studioId + " is not found.");
+            if (foundStudio == null) throw new RecordNotFoundException("Studio id " + studioId + " is not found.");
 
             studios.add(foundStudio);
         }
