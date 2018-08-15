@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -549,7 +548,7 @@ public class MasterCodeController {
                 retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
                         requestContext);
             } catch (Exception e) {
-                return new ResponseEntity(e.getMessage(), HttpStatus.CONFLICT);
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
             }
 
             Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
@@ -588,7 +587,7 @@ public class MasterCodeController {
             try {
                 isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl(), requestContext);
             } catch (Exception e) {
-                return new ResponseEntity(e.getMessage(), HttpStatus.CONFLICT);
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
             }
 
             if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredRetailerCode) {
@@ -597,7 +596,7 @@ public class MasterCodeController {
                     retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
                             requestContext);
                 } catch (Exception e) {
-                    return new ResponseEntity(e.getMessage(), HttpStatus.CONFLICT);
+                    return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
                 }
 
                 // Update the pairing record
@@ -711,8 +710,7 @@ public class MasterCodeController {
     }
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format,
-                                                  Retailer retailer, String requestContext)
-            throws HttpClientErrorException, HttpServerErrorException, RestClientException {
+                                                  Retailer retailer, String requestContext) {
         String url = retailer.getBaseUrl() + "/retailerCodes";
         ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
         HttpHeaders headers = new HttpHeaders();
