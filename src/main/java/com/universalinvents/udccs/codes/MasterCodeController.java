@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.contents.Content;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 
 @Api(tags = {"Master Code Controller"},
@@ -710,7 +712,13 @@ public class MasterCodeController {
             return status.getStatus().equals("EXPIRED");
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                throw new RecordNotFoundException(e.getResponseBodyAsString());
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    ApiError error = mapper.readValue(e.getResponseBodyAsString(), ApiError.class);
+                    throw new RecordNotFoundException(error.getMessage());
+                } catch (IOException e1) {
+                    throw new RecordNotFoundException(e.getResponseBodyAsString());
+                }
             } else {
                 throw e;
             }
@@ -738,7 +746,13 @@ public class MasterCodeController {
             return retailerCodeRepository.save(retailerCode);
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                throw new RecordNotFoundException(e.getResponseBodyAsString());
+                ObjectMapper mapper = new ObjectMapper();
+                try {
+                    ApiError error = mapper.readValue(e.getResponseBodyAsString(), ApiError.class);
+                    throw new RecordNotFoundException(error.getMessage());
+                } catch (IOException e1) {
+                    throw new RecordNotFoundException(e.getResponseBodyAsString());
+                }
             } else {
                 throw e;
             }
