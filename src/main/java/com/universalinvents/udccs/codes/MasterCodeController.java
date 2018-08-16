@@ -714,7 +714,7 @@ public class MasterCodeController {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-                    ApiError error = mapper.readValue(e.getResponseBodyAsString(), ApiError.class);
+                    ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
                     throw new RecordNotFoundException(error.getMessage());
                 } catch (IOException e1) {
                     throw new RecordNotFoundException(e.getResponseBodyAsString());
@@ -748,7 +748,7 @@ public class MasterCodeController {
             if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                 ObjectMapper mapper = new ObjectMapper();
                 try {
-                    ApiError error = mapper.readValue(e.getResponseBodyAsString(), ApiError.class);
+                    ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
                     throw new RecordNotFoundException(error.getMessage());
                 } catch (IOException e1) {
                     throw new RecordNotFoundException(e.getResponseBodyAsString());
