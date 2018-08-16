@@ -717,6 +717,7 @@ public class MasterCodeController {
                     ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
                     throw new RecordNotFoundException(error.getMessage());
                 } catch (IOException e1) {
+                    e1.printStackTrace();
                     throw new RecordNotFoundException(e.getResponseBodyAsString());
                 }
             } else {
@@ -751,6 +752,7 @@ public class MasterCodeController {
                     ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
                     throw new RecordNotFoundException(error.getMessage());
                 } catch (IOException e1) {
+                    e1.printStackTrace();
                     throw new RecordNotFoundException(e.getResponseBodyAsString());
                 }
             } else {
