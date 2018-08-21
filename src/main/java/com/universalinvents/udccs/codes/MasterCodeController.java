@@ -455,6 +455,7 @@ public class MasterCodeController {
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Master Code was not modified", response = MasterCode.class),
+            @ApiResponse(code = 400, message = "Content related to Master Code is not found", response = ApiError.class),
             @ApiResponse(code = 404, message = "Master Code is Not Found", response = ApiError.class),
     })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{code}", produces = "application/json")
@@ -473,6 +474,12 @@ public class MasterCodeController {
         MasterCode masterCode = masterCodeRepository.findOne(code);
         if (masterCode == null)
             return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
+
+        // US-273: Don't allow any update if its current status is REDEEMED
+        if (masterCode.getStatus().equals(MasterCode.Status.REDEEMED)) {
+            return new ResponseEntity(new ApiError("Master Code is already REDEEMED and can not be updated."),
+                    HttpStatus.NOT_MODIFIED);
+        }
 
         // Update values from request - if set
         boolean isModified = false;
