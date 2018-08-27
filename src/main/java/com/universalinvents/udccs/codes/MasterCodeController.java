@@ -38,6 +38,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.*;
 
 @Api(tags = {"Master Code Controller"},
@@ -561,7 +562,7 @@ public class MasterCodeController {
             }
 
             Pairing pairing = new Pairing(masterCode, retailerCode, request.getPairedBy(), "ACTIVE");
-            pairingRepository.saveAndFlush(pairing);
+            pairingRepository.save(pairing);
 
             // Update the status of the MasterCode
             masterCode.setStatus(MasterCode.Status.PAIRED);
@@ -749,7 +750,8 @@ public class MasterCodeController {
             externalRc = restTemplate.exchange(url, HttpMethod.POST, entity,
                     ExternalRetailerCodeResponse.class).getBody();
             RetailerCode retailerCode = new RetailerCode(
-                    externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer, externalRc.getExpiresOn());
+                    externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer,
+                    Date.from(externalRc.getExpiresOn().atZone(ZoneId.systemDefault()).toInstant()));
 
             return retailerCodeRepository.save(retailerCode);
         } catch (HttpStatusCodeException e) {
