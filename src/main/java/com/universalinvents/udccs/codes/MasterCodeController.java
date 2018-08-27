@@ -567,7 +567,10 @@ public class MasterCodeController {
             // Update the status of the MasterCode
             masterCode.setStatus(MasterCode.Status.PAIRED);
             masterCode.setModifiedOn(modifiedDate);
-            masterCodeRepository.saveAndFlush(masterCode);
+            masterCode.setPairing(pairing);
+
+            // Add the pairing object to RetailerCode
+            retailerCode.setPairing(pairing);
 
             isModified = true;
         }
@@ -585,7 +588,6 @@ public class MasterCodeController {
                     && masterCode.getExpiresOn().compareTo(new Date()) < 0) {
                 masterCode.setStatus(MasterCode.Status.EXPIRED);
                 masterCode.setModifiedOn(new Date());
-                masterCodeRepository.saveAndFlush(masterCode);
             }
 
             if (masterCode.getStatus() == MasterCode.Status.EXPIRED) {
