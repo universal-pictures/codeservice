@@ -681,18 +681,20 @@ public class MasterCodeController {
             return new ResponseEntity(new ApiError("Unable to unpair a Retailer Code with a status of " + retailerCode.getStatus()), HttpStatus.BAD_REQUEST);
         }
 
+        // Unpair codes
+        pairingRepository.delete(masterCode.getPairing());
+
         // Update Retailer Code status to ZOMBIED
         Date modifiedOn = new Date();
         retailerCode.setStatus(RetailerCode.Status.ZOMBIED);
         retailerCode.setModifiedOn(modifiedOn);
+        retailerCode.setPairing(null);
         retailerCodeRepository.save(retailerCode);
-
-        // Unpair codes
-        pairingRepository.delete(masterCode.getPairing());
 
         // Update Master Code status to ISSUED
         masterCode.setStatus(MasterCode.Status.ISSUED);
         masterCode.setModifiedOn(modifiedOn);
+        masterCode.setPairing(null);
         masterCodeRepository.saveAndFlush(masterCode);
 
         // Send a 'masterCodeUnpaired' event
