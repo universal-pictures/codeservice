@@ -603,7 +603,15 @@ public class MasterCodeController {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
             }
 
-            if (rc.getStatus() == RetailerCode.Status.EXPIRED && isExpiredRetailerCode) {
+            if (isExpiredRetailerCode) {
+                // Check if the Retailer Code status is out of sync with the true EXPIRED status
+                // If so, update the status
+                if (rc.getStatus() != RetailerCode.Status.EXPIRED) {
+                    rc.setStatus(RetailerCode.Status.EXPIRED);
+                    rc.setModifiedOn(modifiedDate);
+                    retailerCodeRepository.saveAndFlush(rc);
+                }
+
                 // This RetailerCode is truly expired, so pair with a new RetailerCode
                 try {
                     retailerCode = fetchAndSaveRetailerCode(masterCode.getContent(), masterCode.getFormat(), retailer,
