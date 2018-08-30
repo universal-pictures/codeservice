@@ -10,6 +10,7 @@ import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.events.EventWrapper;
 import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.exception.HttpException;
 import com.universalinvents.udccs.exception.RecordNotFoundException;
 import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
@@ -684,14 +685,18 @@ public class MasterCodeController {
         // Unpair codes
         pairingRepository.delete(masterCode.getPairing());
 
-        // Update Retailer Code status to ZOMBIED
-        Date modifiedOn = new Date();
-        retailerCode.setStatus(RetailerCode.Status.ZOMBIED);
-        retailerCode.setModifiedOn(modifiedOn);
-        retailerCode.setPairing(null);
-        retailerCodeRepository.save(retailerCode);
+        // Kill the code with the Retailer
+        try {
+            killRetailerCode(retailerCode, requestContext);
+        } catch (Exception e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+        }
+
+        // Delete Retailer Code record
+        retailerCodeRepository.delete(retailerCode);
 
         // Update Master Code status to ISSUED
+        Date modifiedOn = new Date();
         masterCode.setStatus(MasterCode.Status.ISSUED);
         masterCode.setModifiedOn(modifiedOn);
         masterCode.setPairing(null);
@@ -708,7 +713,7 @@ public class MasterCodeController {
     }
 
     private boolean isRetailerCodeExpired(String code, String baseUrl, String requestContext)
-            throws RecordNotFoundException {
+            throws RecordNotFoundException, HttpException {
         String url = baseUrl + "/retailerCodes/{code}/status/refresh";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("code", code);
@@ -717,30 +722,20 @@ public class MasterCodeController {
         headers.set("Request-Context", requestContext);
         HttpEntity entity = new HttpEntity(headers);
 
-        ExternalRetailerCodeStatusResponse status;
+        ExternalRetailerCodeStatusResponse status = null;
         try {
             status = restTemplate.exchange(url, HttpMethod.GET, entity,
                     ExternalRetailerCodeStatusResponse.class, vars).getBody();
-            return status.getStatus().equals("EXPIRED");
+
         } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-                    ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
-                    throw new RecordNotFoundException(error.getMessage());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                    throw new RecordNotFoundException(e.getResponseBodyAsString());
-                }
-            } else {
-                throw e;
-            }
+            handleHttpStatusCodeException(e);
         }
+        return status.getStatus().equals("EXPIRED");
     }
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format,
                                                   Retailer retailer, String requestContext)
-            throws RecordNotFoundException {
+            throws RecordNotFoundException, HttpException {
         String url = retailer.getBaseUrl() + "/retailerCodes";
         ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
         HttpHeaders headers = new HttpHeaders();
@@ -750,93 +745,47 @@ public class MasterCodeController {
         HttpEntity<ExternalRetailerCodeRequest> entity = new HttpEntity<ExternalRetailerCodeRequest>(request, headers);
 
         ExternalRetailerCodeResponse externalRc;
+        RetailerCode retailerCode = null;
         try {
             externalRc = restTemplate.exchange(url, HttpMethod.POST, entity,
                     ExternalRetailerCodeResponse.class).getBody();
-            RetailerCode retailerCode = new RetailerCode(
+            retailerCode = new RetailerCode(
                     externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer,
                     Date.from(externalRc.getExpiresOn().atZone(ZoneId.systemDefault()).toInstant()));
-
-            return retailerCodeRepository.save(retailerCode);
         } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                ObjectMapper mapper = new ObjectMapper();
-                try {
-                    ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
-                    throw new RecordNotFoundException(error.getMessage());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                    throw new RecordNotFoundException(e.getResponseBodyAsString());
-                }
-            } else {
-                throw e;
-            }
+            handleHttpStatusCodeException(e);
+        }
+        return retailerCodeRepository.save(retailerCode);
+    }
+
+    private void killRetailerCode(RetailerCode code, String requestContext)
+            throws HttpException {
+        String url = code.getRetailer().getBaseUrl() + "/retailerCodes/" + code.getCode() + "/kill";
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.set("Request-Context", requestContext);
+        HttpEntity entity = new HttpEntity(headers);
+
+        ExternalRetailerCodeResponse externalRc;
+        try {
+            externalRc = restTemplate.exchange(url, HttpMethod.PUT, entity,
+                    ExternalRetailerCodeResponse.class).getBody();
+        } catch (HttpStatusCodeException e) {
+            e.printStackTrace();
+            handleHttpStatusCodeException(e);
         }
     }
 
-//    private RetailerCode getRetailerCode(Content content, String format, Retailer retailer) throws ApiError {
-//        // Build a RetailerCode object with the values passed in
-//        RetailerCode retailerCode = new RetailerCode();
-//
-//        // Unpaired RetailerCodes for the given Content & Retailer
-//        retailerCode.setContent(content);
-//        retailerCode.setRetailer(retailer);
-//        retailerCode.setFormat(format);
-////        retailerCode.setStatus(RetailerCode.Status.UNALLOCATED);
-//
-//        // Find all of the matches sorted by their creation date
-//        List<RetailerCode> retailerCodes = retailerCodeRepository.findAll(Example.of(retailerCode),
-//                                                                          new Sort("createdOn"));
-//
-//        if (retailerCodes == null || retailerCodes.isEmpty()) {
-//            throw new ApiError("Retailer Code not available for selected Content");
-//        }
-//
-//        // Return just the first record found
-//        return retailerCodes.get(0);
-//    }
-
-//    private MasterCode getMasterCode(Long contentId, String format, MasterCode.Status status)
-//            throws IllegalArgumentException {
-//        // Build a MasterCode object with the values passed in
-//        MasterCode masterCode = new MasterCode();
-//
-//        Content content = contentRepository.findOne(contentId);
-//        if (content == null) {
-//            throw new IllegalArgumentException("Content id specified not found.");
-//        } else {
-//            masterCode.setContent(content);
-//        }
-//
-//        masterCode.setFormat(format);
-//        masterCode.setStatus(status);
-//
-//        // Find all of the matches sorted by their creation date
-//        List<MasterCode> masterCodes = masterCodeRepository.findAll(Example.of(masterCode), new Sort("createdOn"));
-//
-//        // Return just the first record found
-//        return masterCodes.get(0);
-//    }
-
-//    @CrossOrigin
-//    @ApiOperation("Alter Master Code redemption status")
-//    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/redeem")
-//    public ResponseEntity<MasterCode> redeemMasterCode(@PathVariable String code,
-//                                                       @RequestBody RedeemMasterCodeRequest request) {
-//        MasterCode masterCode = masterCodeRepository.findOne(code);
-//        if (masterCode == null)
-//            return new ResponseEntity(new ApiError("Master Code expressed is not found."), HttpStatus.NOT_FOUND);
-//
-//        if (masterCode.isRedeemed())
-//            return new ResponseEntity(new ApiError("Master Code expressed is already redeemed."), HttpStatus
-// .CONFLICT);
-//
-//        masterCode.setRedeemedOn(new Date());
-//        masterCode.setRedeemedBy(request.getRedeemedBy());
-//
-//        masterCodeRepository.save(masterCode);
-//
-//        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.CREATED);
-//    }
-
+    private void handleHttpStatusCodeException(HttpStatusCodeException e)
+            throws HttpException {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
+            throw new HttpException(error.getMessage());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            throw new HttpException(e.getResponseBodyAsString());
+        }
+    }
 }
