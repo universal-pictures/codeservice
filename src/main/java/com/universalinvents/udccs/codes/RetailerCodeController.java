@@ -2,9 +2,9 @@ package com.universalinvents.udccs.codes;
 
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
+import com.universalinvents.udccs.events.EventConfig;
 import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.events.EventWrapper;
-import com.universalinvents.udccs.events.EventConfig;
 import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
@@ -19,6 +19,8 @@ import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -279,7 +281,7 @@ public class RetailerCodeController {
                          response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<RetailerCode>> getRetailerCodes(
+    public ResponseEntity<Page<RetailerCode>> getRetailerCodes(
             @ApiParam(value = "Content related to Retailer Codes.")
             @RequestParam(name = "contentId", required = false)
                     Long contentId,
@@ -324,7 +326,8 @@ public class RetailerCodeController {
                     Date expiresOnBefore,
             @RequestHeader(value="Request-Context", required=false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext) {
+                    String requestContext,
+            Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -402,18 +405,18 @@ public class RetailerCodeController {
             specs.add(new RetailerCodeSpecification(param));
         }
 
-        List<RetailerCode> retailerCodes = new ArrayList<RetailerCode>();
+        Page<RetailerCode> retailerCodes;
         if (params.isEmpty()) {
-            retailerCodes = retailerCodeRepository.findAll();
+            retailerCodes = retailerCodeRepository.findAll(pageable);
         } else {
             Specification<RetailerCode> query = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 query = Specifications.where(query).and(specs.get(i));
             }
-            retailerCodes = retailerCodeRepository.findAll(query);
+            retailerCodes = retailerCodeRepository.findAll(query, pageable);
         }
 
-        return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
+        return new ResponseEntity<Page<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
 
 }

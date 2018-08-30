@@ -11,6 +11,8 @@ import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -250,7 +252,7 @@ public class ReferralPartnerController {
             @ApiResponse(code = 400, message = "Specified Retailer Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<ReferralPartner>> getPartners(
+    public ResponseEntity<Page<ReferralPartner>> getPartners(
             @RequestParam(name = "retailerId", required = false)
             @ApiParam(value = "Referral Partners related with this Retailer.")
                     Long retailerId,
@@ -287,7 +289,8 @@ public class ReferralPartnerController {
                     Date modifiedOnBefore,
             @RequestHeader(value="Request-Context", required=false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext) {
+                    String requestContext,
+            Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -345,18 +348,18 @@ public class ReferralPartnerController {
             specs.add(new ReferralPartnerSpecification(param));
         }
 
-        List<ReferralPartner> referralPartners = new ArrayList<ReferralPartner>();
+        Page<ReferralPartner> referralPartners;
         if (params.isEmpty()) {
-            referralPartners = referralPartnerRepository.findAll();
+            referralPartners = referralPartnerRepository.findAll(pageable);
         } else {
             Specification<ReferralPartner> query = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 query = Specifications.where(query).and(specs.get(i));
             }
-            referralPartners = referralPartnerRepository.findAll(query);
+            referralPartners = referralPartnerRepository.findAll(query, pageable);
         }
 
 
-        return new ResponseEntity<List<ReferralPartner>>(referralPartners, HttpStatus.OK);
+        return new ResponseEntity<Page<ReferralPartner>>(referralPartners, HttpStatus.OK);
     }
 }

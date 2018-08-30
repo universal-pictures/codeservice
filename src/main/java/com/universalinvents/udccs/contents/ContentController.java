@@ -8,6 +8,8 @@ import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -190,7 +192,7 @@ public class ContentController {
             @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Content>> getContents(
+    public ResponseEntity<Page<Content>> getContents(
             @RequestParam(name = "eidr", required = false)
             @ApiParam(value = "A unique EIDR value")
                     String eidr,
@@ -227,7 +229,8 @@ public class ContentController {
                     Date modifiedOnBefore,
             @RequestHeader(value="Request-Context", required=false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext) {
+                    String requestContext,
+            Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -280,18 +283,18 @@ public class ContentController {
             specs.add(new ContentSpecification(param));
         }
 
-        List<Content> contents = new ArrayList<Content>();
+        Page<Content> contents;
         if (params.isEmpty()) {
-            contents = contentRepository.findAll();
+            contents = contentRepository.findAll(pageable);
         } else {
             Specification<Content> query = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 query = Specifications.where(query).and(specs.get(i));
             }
-            contents = contentRepository.findAll(query);
+            contents = contentRepository.findAll(query, pageable);
         }
 
-        return new ResponseEntity<List<Content>>(contents, HttpStatus.OK);
+        return new ResponseEntity<Page<Content>>(contents, HttpStatus.OK);
     }
 
 }
