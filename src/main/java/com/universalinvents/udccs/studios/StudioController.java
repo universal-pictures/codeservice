@@ -8,13 +8,14 @@ import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 @Api(tags = {"Studio Controller"},
      description = "Operations pertaining to studios")
@@ -189,7 +190,7 @@ public class StudioController {
             @ApiResponse(code = 400, message = "Specified Content Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Studio>> getStudios(
+    public ResponseEntity<Page<Studio>> getStudios(
             @RequestParam(name = "contentId", required = false)
             @ApiParam(value = "Content related to Studios.")
                     Long contentId,
@@ -216,7 +217,8 @@ public class StudioController {
                     String externalId,
             @RequestHeader(value="Request-Context", required=false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext) {
+                    String requestContext,
+            Pageable pageable) {
 
         // Build a Studio object with the values passed in
         Studio studio = new Studio();
@@ -256,7 +258,7 @@ public class StudioController {
             studio.setExternalId(externalId);
         }
 
-        List<Studio> studios = studioRepository.findAll(Example.of(studio));
-        return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
+        Page<Studio> studios = studioRepository.findAll(Example.of(studio), pageable);
+        return new ResponseEntity<Page<Studio>>(studios, HttpStatus.OK);
     }
 }
