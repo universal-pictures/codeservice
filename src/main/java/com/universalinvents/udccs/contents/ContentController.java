@@ -16,13 +16,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Api(tags = {"Content Controller"},
-     description = "Operations pertaining to contents (movie titles)")
+        description = "Operations pertaining to contents (movie titles)")
 @RestController
 @RequestMapping("/api/contents")
 public class ContentController {
@@ -34,9 +35,9 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation(value = "Create a Content Entry",
-                  notes = "A Content record represents a basic movie title with minimal metadata. At this moment " +
-                  "an important property is *eidr* since it is utilized to look up additional metadata " +
-                  "from external movie title services.")
+            notes = "A Content record represents a basic movie title with minimal metadata. At this moment " +
+                    "an important property is *eidr* since it is utilized to look up additional metadata " +
+                    "from external movie title services.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Content.class),
@@ -44,12 +45,12 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody
-                                                     @ApiParam(value = "Provide properties for the Content.",
-                                                               required = true)
+                                                 @ApiParam(value = "Provide properties for the Content.",
+                                                         required = true)
                                                          CreateContentRequest request,
-                                                 @RequestHeader(value="Request-Context", required=false)
-                                                     @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                             String requestContext) {
+                                                 @RequestHeader(value = "Request-Context", required = false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
 
         Studio studio = studioRepository.findOne(request.getStudioId());
         if (studio == null)
@@ -72,8 +73,8 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation(value = "Update a Content Entry",
-                  notes = "You may update any properties of a Content record except its EIDR.  Specify values " +
-                  "for those properties you wish to overwrite.")
+            notes = "You may update any properties of a Content record except its EIDR.  Specify values " +
+                    "for those properties you wish to overwrite.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Content was not modified", response = Content.class),
@@ -82,14 +83,14 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> updateContent(@PathVariable
-                                                     @ApiParam(value = "The Content id to update", required = true)
-                                                             Long id,
+                                                 @ApiParam(value = "The Content id to update", required = true)
+                                                         Long id,
                                                  @RequestBody(required = false)
                                                  @ApiParam(value = "Provide updated properties for the Content")
                                                          UpdateContentRequest request,
-                                                 @RequestHeader(value="Request-Context", required=false)
-                                                     @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                             String requestContext) {
+                                                 @RequestHeader(value = "Request-Context", required = false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
 
         // Get existing Content record
         Content content = contentRepository.findOne(id);
@@ -141,8 +142,8 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation(value = "Delete a Content Entry",
-                  notes = "Delete a Content record that has not yet been associated with a Master Code or " +
-                  "Retailer Code.")
+            notes = "Delete a Content record that has not yet been associated with a Master Code or " +
+                    "Retailer Code.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
@@ -150,11 +151,11 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteContent(@PathVariable
-                                            @ApiParam(value = "The id of the Content to delete")
-                                                    Long id,
-                                        @RequestHeader(value="Request-Context", required=false)
-                                            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                    String requestContext) {
+                                        @ApiParam(value = "The id of the Content to delete")
+                                                Long id,
+                                        @RequestHeader(value = "Request-Context", required = false)
+                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                String requestContext) {
         try {
             contentRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -171,11 +172,11 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> getContentById(@PathVariable
-                                                      @ApiParam(value = "The id of the Content to retrieve")
-                                                              Long id,
-                                                  @RequestHeader(value="Request-Context", required=false)
-                                                      @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                              String requestContext) {
+                                                  @ApiParam(value = "The id of the Content to retrieve")
+                                                          Long id,
+                                                  @RequestHeader(value = "Request-Context", required = false)
+                                                  @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                          String requestContext) {
         Content content = contentRepository.findOne(id);
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -185,13 +186,23 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Content",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
     public ResponseEntity<Page<Content>> getContents(
             @RequestParam(name = "eidr", required = false)
             @ApiParam(value = "A unique EIDR value")
@@ -227,10 +238,12 @@ public class ContentController {
             @ApiParam(value = "Content modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date modifiedOnBefore,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext,
-            Pageable pageable) {
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 

@@ -19,6 +19,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @Api(tags = {"Referral Partner Controller"},
-     description = "Operations pertaining to referral partners")
+        description = "Operations pertaining to referral partners")
 @RestController
 @RequestMapping("/api/partners")
 public class ReferralPartnerController {
@@ -41,8 +42,8 @@ public class ReferralPartnerController {
 
     @CrossOrigin
     @ApiOperation(value = "Create a Referral Partner Entry",
-                  notes = "A Referral Partner represents a company that orchestrates the purchasing and " +
-                          "management of Master Codes (usually through a number of Apps they maintain).")
+            notes = "A Referral Partner represents a company that orchestrates the purchasing and " +
+                    "management of Master Codes (usually through a number of Apps they maintain).")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = ReferralPartner.class),
@@ -53,7 +54,7 @@ public class ReferralPartnerController {
             @RequestBody
             @ApiParam(value = "Provide properties for the Referral Partner.", required = true)
                     CreateReferralPartnerRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -90,10 +91,10 @@ public class ReferralPartnerController {
 
     @CrossOrigin
     @ApiOperation(value = "Update a Referral Partner Entry",
-                  notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
-                          "specifying any of these values, they will overwrite existing values; especially " +
-                          "retailerIds and studioIds.  If you wish to add a Retailer or Studio to its list, you must " +
-                          "ensure to include any of its current values here.")
+            notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
+                    "specifying any of these values, they will overwrite existing values; especially " +
+                    "retailerIds and studioIds.  If you wish to add a Retailer or Studio to its list, you must " +
+                    "ensure to include any of its current values here.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Referral Partner was not modified", response = ReferralPartner.class),
@@ -108,7 +109,7 @@ public class ReferralPartnerController {
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Referral Partner")
                     UpdateReferralPartnerRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -180,7 +181,8 @@ public class ReferralPartnerController {
         HashSet<Retailer> retailers = new HashSet();
         for (Long retailerId : request.getRetailerIds()) {
             Retailer foundRetailer = retailerRepository.findOne(retailerId);
-            if (foundRetailer == null) throw new RecordNotFoundException("Retailer id " + retailerId + " is not found.");
+            if (foundRetailer == null)
+                throw new RecordNotFoundException("Retailer id " + retailerId + " is not found.");
 
             retailers.add(foundRetailer);
         }
@@ -200,7 +202,7 @@ public class ReferralPartnerController {
 
     @CrossOrigin
     @ApiOperation(value = "Delete a Referral Partner Entry",
-                  notes = "Delete a Referral Partner record that has not yet been associated with a Master Code.")
+            notes = "Delete a Referral Partner record that has not yet been associated with a Master Code.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
@@ -208,11 +210,11 @@ public class ReferralPartnerController {
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deletePartner(@PathVariable
-                                            @ApiParam(value = "The id of the Referral Partner to delete")
-                                                    Long id,
-                                        @RequestHeader(value="Request-Context", required=false)
-                                            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                                                    String requestContext) {
+                                        @ApiParam(value = "The id of the Referral Partner to delete")
+                                                Long id,
+                                        @RequestHeader(value = "Request-Context", required = false)
+                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                String requestContext) {
         try {
             referralPartnerRepository.delete(id);
             return ResponseEntity.noContent().build();
@@ -232,7 +234,7 @@ public class ReferralPartnerController {
             @PathVariable
             @ApiParam(value = "The id of the Referral Partner to retrieve")
                     Long id,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -245,13 +247,23 @@ public class ReferralPartnerController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Referral Partners",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Retailer Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
     public ResponseEntity<Page<ReferralPartner>> getPartners(
             @RequestParam(name = "retailerId", required = false)
             @ApiParam(value = "Referral Partners related with this Retailer.")
@@ -287,10 +299,12 @@ public class ReferralPartnerController {
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
                     Date modifiedOnBefore,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext,
-            Pageable pageable) {
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -298,7 +312,7 @@ public class ReferralPartnerController {
             Retailer retailer = retailerRepository.findOne(retailerId);
             if (retailer == null) {
                 return new ResponseEntity(new ApiError("Retailer id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("retailerId", ":", retailerId));
             }
@@ -308,7 +322,7 @@ public class ReferralPartnerController {
             Studio studio = studioRepository.findOne(studioId);
             if (studio == null) {
                 return new ResponseEntity(new ApiError("Studio id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("studioId", ":", studioId));
             }

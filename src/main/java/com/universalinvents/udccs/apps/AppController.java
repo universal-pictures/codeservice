@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.jms.JMSException;
 import java.util.Date;
@@ -207,6 +208,16 @@ public class AppController {
     })
     @RequestMapping(method = RequestMethod.GET,
             produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
     public ResponseEntity<Page<App>> getApps(@ApiParam(value = "Referral Partner related to Apps.")
                                              @RequestParam(name = "partnerId",
                                                      required = false) Long partnerId,
@@ -222,7 +233,9 @@ public class AppController {
                                              @RequestHeader(value = "Request-Context", required = false)
                                              @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                      String requestContext,
-                                             Pageable pageable) {
+                                             @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                                                     "instead they are explained in the implicit params")
+                                                     Pageable pageable) {
 
         // Build an App object with the values passed in
         App app = new App();
