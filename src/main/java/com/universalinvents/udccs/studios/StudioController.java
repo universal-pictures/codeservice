@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.studios;
 
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
@@ -7,6 +8,7 @@ import com.universalinvents.udccs.utilities.ApiDefinitions;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -147,7 +149,8 @@ public class StudioController {
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
-            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+            @ApiResponse(code = 500, message = "Data integrity violation", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id,
@@ -156,9 +159,15 @@ public class StudioController {
                                                String requestContext) {
         try {
             studioRepository.delete(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ApiError("Studio with id + " + id + " not found"), HttpStatus.NOT_FOUND);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                return new ResponseEntity<>(new ApiError("Unable to delete because of dependencies"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(new ApiError("Unable to delete because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
