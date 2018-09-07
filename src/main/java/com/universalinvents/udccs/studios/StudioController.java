@@ -8,16 +8,18 @@ import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 @Api(tags = {"Studio Controller"},
-     description = "Operations pertaining to studios")
+        description = "Operations pertaining to studios")
 @RestController
 @RequestMapping("/api/studios")
 public class StudioController {
@@ -29,7 +31,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Create a Studio Entry",
-                  notes = "A Studio represents a company that creates Content.")
+            notes = "A Studio represents a company that creates Content.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Studio.class)
@@ -39,7 +41,7 @@ public class StudioController {
             @RequestBody
             @ApiParam(value = "Provide properties for the Studio.", required = true)
                     CreateStudioRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -63,8 +65,8 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Update a Studio Entry",
-                  notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
-                          "its existing value.")
+            notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
+                    "its existing value.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Studio was not modified", response = Studio.class),
@@ -78,7 +80,7 @@ public class StudioController {
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Studio")
                     UpdateStudioRequest request,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -149,7 +151,7 @@ public class StudioController {
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id,
-                                       @RequestHeader(value="Request-Context", required=false)
+                                       @RequestHeader(value = "Request-Context", required = false)
                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                String requestContext) {
         try {
@@ -169,7 +171,7 @@ public class StudioController {
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Studio> getStudioById(
             @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                     String requestContext) {
 
@@ -182,14 +184,24 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Studios",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Content Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Studio>> getStudios(
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
+    public ResponseEntity<Page<Studio>> getStudios(
             @RequestParam(name = "contentId", required = false)
             @ApiParam(value = "Content related to Studios.")
                     Long contentId,
@@ -214,9 +226,12 @@ public class StudioController {
             @RequestParam(name = "externalId", required = false)
             @ApiParam(value = "Studios with this external id.")
                     String externalId,
-            @RequestHeader(value="Request-Context", required=false)
+            @RequestHeader(value = "Request-Context", required = false)
             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
-                    String requestContext) {
+                    String requestContext,
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
         // Build a Studio object with the values passed in
         Studio studio = new Studio();
@@ -256,7 +271,7 @@ public class StudioController {
             studio.setExternalId(externalId);
         }
 
-        List<Studio> studios = studioRepository.findAll(Example.of(studio));
-        return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
+        Page<Studio> studios = studioRepository.findAll(Example.of(studio), pageable);
+        return new ResponseEntity<Page<Studio>>(studios, HttpStatus.OK);
     }
 }
