@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.events;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.codes.RetailerCode;
@@ -10,10 +11,13 @@ public class RetailerCodeEvent extends AbstractEvent {
 
     private String code;
     private Long contentId;
-    private Date createdOn;
     private String format;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    private Date createdOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private Date modifiedOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    private Date expiresOn;
     private String pairedMasterCode;
     private Long retailerId;
     private RetailerCode.Status status;
@@ -23,9 +27,10 @@ public class RetailerCodeEvent extends AbstractEvent {
     public RetailerCodeEvent(RetailerCode retailerCode) {
         this.code = retailerCode.getCode();
         this.contentId = retailerCode.getContent().getId();
-        this.createdOn = retailerCode.getCreatedOn();
         this.format = retailerCode.getFormat();
+        this.createdOn = retailerCode.getCreatedOn();
         this.modifiedOn = retailerCode.getModifiedOn();
+        this.expiresOn = retailerCode.getExpiresOn();
         this.pairedMasterCode = retailerCode.isPaired()
                 ? retailerCode.getPairing().getMasterCode().getCode()
                 : null;
@@ -89,5 +94,13 @@ public class RetailerCodeEvent extends AbstractEvent {
 
     public String getRetailerExternalId() {
         return retailerExternalId;
+    }
+
+    public Date getExpiresOn() {
+        return expiresOn;
+    }
+
+    public void setExpiresOn(Date expiresOn) {
+        this.expiresOn = expiresOn;
     }
 }
