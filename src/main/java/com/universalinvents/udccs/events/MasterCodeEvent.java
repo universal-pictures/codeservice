@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.events;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.codes.MasterCode;
@@ -13,8 +14,12 @@ public class MasterCodeEvent extends AbstractEvent {
     private Long contentId;
 
     private String createdBy;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private Date createdOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private Date modifiedOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    private Date expiresOn;
     private String masterCodeExternalId;
     private String retailerExternalId;
     private String format;
@@ -27,6 +32,7 @@ public class MasterCodeEvent extends AbstractEvent {
         this.contentId = masterCode.getContent().getId();
         this.createdBy = masterCode.getCreatedBy();
         this.createdOn = masterCode.getCreatedOn();
+        this.expiresOn = masterCode.getExpiresOn();
         this.modifiedOn = masterCode.getModifiedOn();
         this.masterCodeExternalId = masterCode.getExternalId();
         this.format = masterCode.getFormat();
@@ -95,4 +101,11 @@ public class MasterCodeEvent extends AbstractEvent {
         return status;
     }
 
+    public Date getExpiresOn() {
+        return expiresOn;
+    }
+
+    public void setExpiresOn(Date expiresOn) {
+        this.expiresOn = expiresOn;
+    }
 }

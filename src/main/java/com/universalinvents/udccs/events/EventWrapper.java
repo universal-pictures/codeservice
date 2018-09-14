@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.events;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 public class EventWrapper {
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private Date timestamp;
     private String object;
     private String event;
