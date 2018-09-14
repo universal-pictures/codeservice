@@ -1,0 +1,3 @@
+ALTER TABLE retailer ADD COLUMN generate_codes BOOLEAN NOT NULL DEFAULT 0;
+ALTER TABLE retailer ADD COLUMN logo_url VARCHAR(255);
+ALTER TABLE retailer ADD COLUMN redemption_url VARCHAR(255);

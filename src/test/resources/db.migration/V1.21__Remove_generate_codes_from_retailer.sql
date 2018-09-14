@@ -1,0 +1,1 @@
+ALTER TABLE retailer DROP COLUMN generate_codes;
