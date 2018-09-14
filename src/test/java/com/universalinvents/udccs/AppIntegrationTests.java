@@ -51,7 +51,7 @@ public class AppIntegrationTests {
         partner = new ReferralPartner(
                 "Partner",
                 "This is a test referral partner 1.",
-                "John Doe",
+                "Johnny Doe",
                 "admin1@universalinvents.com",
                 "(818) 555-55551",
                 now,
