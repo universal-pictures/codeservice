@@ -1,0 +1,1 @@
+ALTER TABLE retailer_code ADD CONSTRAINT UQ_rc_code_retailerid UNIQUE (code, retailer_id);

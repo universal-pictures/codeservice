@@ -1,0 +1,2 @@
+ALTER TABLE referral_partner ADD COLUMN logo_url VARCHAR(255);
+ALTER TABLE studio ADD COLUMN logo_url VARCHAR(255);
