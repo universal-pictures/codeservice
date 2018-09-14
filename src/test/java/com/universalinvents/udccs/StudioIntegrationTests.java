@@ -16,8 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Date;
-
 import static java.lang.Math.toIntExact;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -48,8 +46,6 @@ public class StudioIntegrationTests {
 
     @Before
     public void setup() throws Exception {
-        Date now = new Date();
-
         studio1 = new Studio(
                 "Test Studio 1",
                 "This is a test studio",

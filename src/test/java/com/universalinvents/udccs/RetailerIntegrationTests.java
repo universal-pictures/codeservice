@@ -61,7 +61,7 @@ public class RetailerIntegrationTests {
                 "US",
                 "ACTIVE",
                 null,
-                null,
+                "http://example.com/redeem",
                 "retailer-1-external-id",
                 MOCK_BASE_URL
         );
@@ -71,7 +71,7 @@ public class RetailerIntegrationTests {
                 "UK",
                 "ACTIVE",
                 null,
-                null,
+                "http://example.com/redeem",
                 "retailer-2-external-id",
                 MOCK_BASE_URL
         );
@@ -81,9 +81,9 @@ public class RetailerIntegrationTests {
                 "US",
                 "INACTIVE",
                 null,
-                null,
+                "http://example.com/redeem",
                 "retailer-3-external-id",
-                ""
+                null
         );
 
         partner = new ReferralPartner(
@@ -128,7 +128,7 @@ public class RetailerIntegrationTests {
     @Test
     public void getRetailersWithInventoryTest() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/api/retailers")
-                .param("eidr", "1.0")
+                .param("eidr", "101010/1.0")
                 .param("hasInventory", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.*", hasSize(2)));

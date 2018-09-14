@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
-import java.util.Date;
 
 import static java.lang.Math.toIntExact;
 import static org.hamcrest.Matchers.hasSize;
@@ -52,7 +51,6 @@ public class ContentIntegrationTests {
     public void setup() throws Exception {
 
         //Setup a dummy studio
-        Date now = new Date();
         studio = new Studio(
                 "Test Studio",
                 "This is a test studio",
