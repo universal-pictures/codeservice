@@ -114,6 +114,11 @@ public class AppController {
             isModified = true;
         }
 
+        if (request.getAccessToken() != null) {
+            app.setAccessToken(request.getAccessToken());
+            isModified = true;
+        }
+
         if (request.getName() != null) {
             app.setName(request.getName());
             isModified = true;
