@@ -50,10 +50,10 @@ public class AppIntegrationTests {
         Date now = new Date();
         partner = new ReferralPartner(
                 "Partner",
-                "This is a test referral partner.",
-                "Jane Doe",
-                "admin@universalinvents.com",
-                "(818) 555-5555",
+                "This is a test referral partner 1.",
+                "John Doe",
+                "admin1@universalinvents.com",
+                "(818) 555-55551",
                 now,
                 now,
                 "UK",
@@ -69,8 +69,8 @@ public class AppIntegrationTests {
                 now,
                 now,
                 "UK",
-                "https://api.universalinvents.com",
-                "ACTIVE"
+                "http://api.universalinvents.com",
+                "INACTIVE"
         );
 
         this.referralPartnerRepository.save(partner);
