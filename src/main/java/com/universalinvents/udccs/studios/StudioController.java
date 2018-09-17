@@ -5,20 +5,23 @@ import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Api(tags = {"Studio Controller"},
         description = "Operations pertaining to studios")
@@ -242,45 +245,59 @@ public class StudioController {
                     "instead they are explained in the implicit params")
                     Pageable pageable) {
 
-        // Build a Studio object with the values passed in
-        Studio studio = new Studio();
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                studio.setContents(Collections.singletonList(content));
+                params.add(new SqlCriteria("contentId", ":", contentId));
             }
         }
 
         if (name != null) {
-            studio.setName(name);
+            params.add(new SqlCriteria("name", ":", name));
         }
 
         if (contactName != null) {
-            studio.setContactName(contactName);
+            params.add(new SqlCriteria("contactName", ":", contactName));
         }
 
         if (contactEmail != null) {
-            studio.setContactEmail(contactEmail);
+            params.add(new SqlCriteria("contactEmail", ":", contactEmail));
         }
         if (codePrefix != null) {
-            studio.setCodePrefix(codePrefix);
+            params.add(new SqlCriteria("codePrefix", ":", codePrefix));
         }
         if (flags != null) {
-            studio.setFlags(flags);
+            params.add(new SqlCriteria("flags", ":", flags));
         }
 
         if (status != null) {
-            studio.setStatus(status);
+            params.add(new SqlCriteria("status", ":", status));
         }
 
         if (externalId != null) {
-            studio.setExternalId(externalId);
+            params.add(new SqlCriteria("externalId", ":", externalId));
         }
 
-        Page<Studio> studios = studioRepository.findAll(Example.of(studio), pageable);
+        List<Specification<Studio>> specs = new ArrayList<>();
+        for (SqlCriteria param : params) {
+            specs.add(new StudioSpecification(param));
+        }
+
+        Page<Studio> studios;
+        if (params.isEmpty()) {
+            studios = studioRepository.findAll(pageable);
+        } else {
+            Specification<Studio> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            studios = studioRepository.findAll(query, pageable);
+        }
+
         return new ResponseEntity<Page<Studio>>(studios, HttpStatus.OK);
     }
 }

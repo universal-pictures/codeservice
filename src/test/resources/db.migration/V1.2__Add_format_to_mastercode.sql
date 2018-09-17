@@ -1,0 +1,1 @@
+ALTER TABLE master_code ADD COLUMN format varchar(255);

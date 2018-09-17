@@ -1,0 +1,1 @@
+ALTER TABLE retailer_code MODIFY COLUMN `status` enum('PAIRED','REDEEMED','EXPIRED','ZOMBIED') NOT NULL;
