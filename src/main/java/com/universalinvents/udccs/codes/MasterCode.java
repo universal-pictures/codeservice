@@ -38,7 +38,7 @@ public class MasterCode {
 
     @ManyToOne
     @JoinColumn(name = "partnerId")
-    @JsonIgnoreProperties(value = {"codes", "apps"})
+    @JsonIgnoreProperties(value = {"codes", "apps", "retailers", "studios"})
     private ReferralPartner referralPartner;
 
     @ManyToOne
@@ -47,10 +47,11 @@ public class MasterCode {
 
     @ManyToOne
     @JoinColumn(name = "appId")
-    @JsonIgnoreProperties("masterCodes")
+    @JsonIgnoreProperties(value = {"masterCodes", "referralPartner"})
     private App app;
 
     @OneToOne(mappedBy = "masterCode")
+    @JsonIgnoreProperties(value = {"masterCode"})
     private Pairing pairing;
 
     public MasterCode() {
