@@ -146,9 +146,7 @@ public class StudioIntegrationTests {
         mvc.perform(MockMvcRequestBuilders.get("/api/studios")
                 .param("contentId", this.content.getId().toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.*", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].contents.*", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].contents[0].id", is(toIntExact(this.content.getId()))));
+                .andExpect(jsonPath("$.content.*", hasSize(1)));
     }
 
     @Test
@@ -194,7 +192,6 @@ public class StudioIntegrationTests {
                 .andExpect(jsonPath("$.content[0].codePrefix", is(this.studio1.getCodePrefix())))
                 .andExpect(jsonPath("$.content[0].contactEmail", is(this.studio1.getContactEmail())))
                 .andExpect(jsonPath("$.content[0].contactName", is(this.studio1.getContactName())))
-                .andExpect(jsonPath("$.content[0].contents[0].id", is(toIntExact(this.content.getId()))))
                 .andExpect(jsonPath("$.content[0].name", is(this.studio1.getName())))
                 .andExpect(jsonPath("$.content[0].status", is(this.studio1.getStatus())));
     }

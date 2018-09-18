@@ -1,7 +1,7 @@
 package com.universalinvents.udccs.studios;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.partners.ReferralPartner;
 
@@ -39,7 +39,7 @@ public class Studio {
     private Long flags; // bitwise placeholder for potential configuration
 
     @OneToMany(mappedBy = "studio")
-    @JsonIgnoreProperties("studio")
+    @JsonIgnore
     private List<Content> contents;
 
     @ManyToMany(mappedBy = "studios")
