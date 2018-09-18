@@ -29,7 +29,7 @@ public class App {
 
     @ManyToOne
     @JoinColumn(name = "partnerId")
-    @JsonIgnoreProperties({"apps", "codes"})
+    @JsonIgnoreProperties(value = {"apps", "codes", "retailers", "studios"})
     private ReferralPartner referralPartner;
 
     @OneToMany(mappedBy = "app")

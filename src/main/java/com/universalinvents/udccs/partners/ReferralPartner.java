@@ -43,6 +43,7 @@ public class ReferralPartner {
     @JoinTable(name = "partner_studio",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "studio_id", referencedColumnName = "id"))
+    @JsonIgnoreProperties(value = {"contents"})
     private Set<Studio> studios;
 
     @OneToMany(mappedBy = "referralPartner", cascade = CascadeType.ALL)
