@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.retailers.Retailer;
@@ -37,6 +38,7 @@ public class RetailerCode {
     private Retailer retailer;
 
     @OneToOne(mappedBy = "retailerCode")
+    @JsonIgnoreProperties(value = {"retailerCode"})
     private Pairing pairing;
 
     public RetailerCode() {

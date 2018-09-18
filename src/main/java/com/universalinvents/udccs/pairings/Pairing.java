@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.pairings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.codes.RetailerCode;
@@ -16,20 +17,22 @@ public class Pairing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonIgnore
     private Long id;
 
     private String pairedBy;
     private Date pairedOn;
+    @JsonIgnore
     private String status;
 
     @OneToOne
     @JoinColumn(name = "masterCode")
-    @JsonIgnoreProperties(value = {"pairing"})
+    @JsonIgnoreProperties(value = {"pairing", "content"})
     private MasterCode masterCode;
 
     @OneToOne
     @JoinColumn(name = "retailerCode")
-    @JsonIgnoreProperties(value = {"pairing"})
+    @JsonIgnoreProperties(value = {"pairing", "content"})
     private RetailerCode retailerCode;
 
     public Pairing () {}
