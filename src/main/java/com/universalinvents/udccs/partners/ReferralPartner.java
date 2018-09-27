@@ -33,13 +33,13 @@ public class ReferralPartner {
     private String logoUrl;
     private String status;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(name = "partner_retailer",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(name = "partner_studio",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "studio_id", referencedColumnName = "id"))
