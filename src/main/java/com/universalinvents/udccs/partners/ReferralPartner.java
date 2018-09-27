@@ -12,9 +12,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by dsherman on 2/27/17.
- */
 @Entity
 @Table(name = "referral_partner", uniqueConstraints = {@UniqueConstraint(name = "uk_partner", columnNames = {"id"})})
 public class ReferralPartner {
