@@ -34,6 +34,9 @@ public class AppController {
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
 
+    @Autowired
+    private MessagingController messagingController;
+
     @CrossOrigin
     @ApiOperation(value = "Create an App Entry",
             notes = "A Referral Partner can define multiple Apps that they provide to their users (i.e. iOS " +
@@ -168,8 +171,7 @@ public class AppController {
             appRepository.delete(id);
 
             // Send message about the deletion
-            MessagingController controller = new MessagingController();
-            controller.sendMessage("udccs_app_delete.fifo", appJson);
+            messagingController.sendMessage("udccs_app_delete.fifo", appJson);
 
             return ResponseEntity.noContent().build();
 
