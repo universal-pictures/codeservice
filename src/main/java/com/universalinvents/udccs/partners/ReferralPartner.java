@@ -12,9 +12,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by dsherman on 2/27/17.
- */
 @Entity
 @Table(name = "referral_partner", uniqueConstraints = {@UniqueConstraint(name = "uk_partner", columnNames = {"id"})})
 public class ReferralPartner {
@@ -33,13 +30,13 @@ public class ReferralPartner {
     private String logoUrl;
     private String status;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "partner_retailer",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "partner_studio",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "studio_id", referencedColumnName = "id"))
