@@ -18,6 +18,8 @@ import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -260,6 +262,9 @@ public class RetailerCodeController {
                                                         @RequestHeader(value = "Request-Context", required = false)
                                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                                 String requestContext) {
+        Logger log = LoggerFactory.getLogger("jsonLogger");
+        log.debug("Hey, I'm getting a retailer code!");
+
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
         if (retailerCode == null)
             return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
