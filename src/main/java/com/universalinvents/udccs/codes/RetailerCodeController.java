@@ -72,6 +72,8 @@ public class RetailerCodeController {
     @Autowired
     private EventConfig eventConfig;
 
+    private final Logger log = LoggerFactory.getLogger(RetailerCodeController.class);
+
     /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
     *
     @CrossOrigin
@@ -262,9 +264,6 @@ public class RetailerCodeController {
                                                         @RequestHeader(value = "Request-Context", required = false)
                                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
                                                                 String requestContext) {
-        Logger log = LoggerFactory.getLogger("jsonLogger");
-        log.debug("Hey, I'm getting a retailer code!");
-
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
         if (retailerCode == null)
             return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
                 <pattern>
@@ -19,10 +21,39 @@
             </providers>
         </encoder>
     </appender>
-    <logger name="jsonLogger" additivity="false" level="DEBUG">
-        <appender-ref ref="consoleAppender"/>
-    </logger>
-    <root level="INFO">
-        <appender-ref ref="consoleAppender"/>
-    </root>
+
+    <appender name="httpConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                {%message}%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logging settings for dev & test environments -->
+    <springProfile name="dev,test">
+        <logger name="com.universalinvents.udccs" additivity="false" level="DEBUG">
+            <appender-ref ref="jsonConsoleAppender"/>
+        </logger>
+        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="DEBUG">
+            <appender-ref ref="httpConsoleAppender"/>
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Logging settings for prod environments -->
+    <springProfile name="prod">
+        <logger name="com.universalinvents.udccs" additivity="false" level="INFO">
+            <appender-ref ref="jsonConsoleAppender"/>
+        </logger>
+        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="INFO">
+            <appender-ref ref="httpConsoleAppender"/>
+        </logger>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
 </configuration>
