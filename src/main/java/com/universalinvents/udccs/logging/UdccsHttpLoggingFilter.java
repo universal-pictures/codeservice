@@ -1,16 +1,15 @@
 package com.universalinvents.udccs.logging;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -25,28 +24,29 @@ public class UdccsHttpLoggingFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
 
-        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+        ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper((HttpServletRequest) request);
         ContentCachingResponseWrapper respWrapper = new ContentCachingResponseWrapper((HttpServletResponse) response);
 
-        filterChain.doFilter(request, respWrapper);
+        filterChain.doFilter(requestWrapper, respWrapper);
 
         // Log the request
         if (log.isDebugEnabled()) {
             // Lowercase all headers
             HashMap<String, String> headers = new HashMap<>();
-            for (String header : Collections.list(httpServletRequest.getHeaderNames())) {
-                headers.put(header, httpServletRequest.getHeader(header).toLowerCase());
+            for (String header : Collections.list(requestWrapper.getHeaderNames())) {
+                headers.put(header, requestWrapper.getHeader(header).toLowerCase());
             }
 
-            log.debug(buildRequestMessage(httpServletRequest.getMethod(), httpServletRequest.getRequestURI(),
-                    headers, httpServletRequest.getParameterMap(),
-                    IOUtils.toString(httpServletRequest.getInputStream(), (Charset) null)));
+            String body = new String(requestWrapper.getContentAsByteArray()).replaceAll("\\R", "");
+            log.debug(buildRequestMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                    headers, requestWrapper.getParameterMap(), body));
+
         }
 
         // Log the response
         String content = new String(respWrapper.getContentAsByteArray());
         if (log.isDebugEnabled()) {
-            log.debug(buildResponseMessage(httpServletRequest.getMethod(), httpServletRequest.getRequestURI(),
+            log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
                     String.valueOf(respWrapper.getStatus()), content));
         }
         response.getWriter().write(content);
@@ -100,6 +100,10 @@ public class UdccsHttpLoggingFilter implements Filter {
     }
 
     private String buildResponseMessage(String method, String uri, String statusCode, String body) {
+
+        if (body.isEmpty()) {
+            body = "\"\"";
+        }
 
         StringBuffer sb = new StringBuffer();
         sb.append("\"severity\":\"DEBUG\",");
