@@ -18,6 +18,8 @@ import com.universalinvents.udccs.studios.StudioRepository;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +71,8 @@ public class RetailerCodeController {
 
     @Autowired
     private EventConfig eventConfig;
+
+    private final Logger log = LoggerFactory.getLogger(RetailerCodeController.class);
 
     /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
     *
