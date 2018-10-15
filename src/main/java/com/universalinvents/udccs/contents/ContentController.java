@@ -43,7 +43,8 @@ public class ContentController {
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Content.class),
-            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class)
+            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class),
+            @ApiResponse(code = 409, message = "Duplicate EIDR specified", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody
@@ -68,7 +69,16 @@ public class ContentController {
         content.setStudio(studio);
         content.setCreatedOn(new Date());
 
-        contentRepository.save(content);
+        try {
+            contentRepository.save(content);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = e.getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                MySQLIntegrityConstraintViolationException me = (MySQLIntegrityConstraintViolationException) cause;
+                return new ResponseEntity(new ApiError(me.getMessage()), HttpStatus.CONFLICT);
+            }
+            return new ResponseEntity(new ApiError("Unable to create Content because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         return new ResponseEntity<Content>(content, HttpStatus.CREATED);
     }
