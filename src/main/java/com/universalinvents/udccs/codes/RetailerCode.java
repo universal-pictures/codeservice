@@ -1,5 +1,6 @@
 package com.universalinvents.udccs.codes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.pairings.Pairing;
 import com.universalinvents.udccs.retailers.Retailer;
@@ -7,17 +8,13 @@ import com.universalinvents.udccs.retailers.Retailer;
 import javax.persistence.*;
 import java.util.Date;
 
-/**
- * Created by mmonti on 3/20/17.
- * Updated by kkirkland on 10/25/2017.
- */
 @Entity
 @Table(name = "retailer_code")
 public class RetailerCode {
 
     // Legal status values
     public enum Status {
-        UNALLOCATED, PAIRED, REDEEMED
+        PAIRED, REDEEMED, EXPIRED, ZOMBIED
     }
 
     @Id
@@ -25,10 +22,11 @@ public class RetailerCode {
 
     private Date createdOn;
     private Date modifiedOn;
+    private Date expiresOn;
     private String format;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('PAIRED', 'REDEEMED', 'EXPIRED', 'ZOMBIED')")
     private Status status;
 
     @ManyToOne
@@ -40,6 +38,7 @@ public class RetailerCode {
     private Retailer retailer;
 
     @OneToOne(mappedBy = "retailerCode")
+    @JsonIgnoreProperties(value = {"retailerCode"})
     private Pairing pairing;
 
     public RetailerCode() {
@@ -51,7 +50,7 @@ public class RetailerCode {
      * @param code
      */
     public RetailerCode(final String code, final Content content, final String format, final Status status,
-                        final Retailer retailer) {
+                        final Retailer retailer, final Date expiresOn) {
         this.code = code;
         this.content = content;
         this.format = format;
@@ -59,6 +58,7 @@ public class RetailerCode {
         this.status = status;
         this.createdOn = new Date();
         this.modifiedOn = createdOn; // Use the same date for new objects
+        this.expiresOn = expiresOn;
     }
 
     public String getCode() {
@@ -84,6 +84,10 @@ public class RetailerCode {
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
     }
+
+    public Date getExpiresOn() { return expiresOn; }
+
+    public void setExpiresOn(Date expiresOn) { this.expiresOn = expiresOn; }
 
     public Content getContent() {
         return content;

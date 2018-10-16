@@ -1,7 +1,6 @@
 package com.universalinvents.udccs.contents;
 
 import java.math.BigDecimal;
-import java.util.Set;
 
 public interface ContentRequest {
 
@@ -22,7 +21,4 @@ public interface ContentRequest {
 
     Long getStudioId();
     void setStudioId(Long studioId);
-
-    Set<Long> getRetailerIds();
-    void setRetailerIds(Set<Long> retailerIds);
 }

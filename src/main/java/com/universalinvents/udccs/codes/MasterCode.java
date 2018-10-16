@@ -16,9 +16,10 @@ import java.util.Date;
 @Entity
 @Table(name = "master_code", uniqueConstraints = {@UniqueConstraint(name = "uk_master_code", columnNames = {"code"})})
 public class MasterCode {
+
     // Legal status values
     public enum Status {
-        UNALLOCATED, ISSUED, PAIRED, REDEEMED
+        ISSUED, PAIRED, REDEEMED, EXPIRED
     }
 
     @Id
@@ -27,15 +28,17 @@ public class MasterCode {
     private String createdBy;
     private Date createdOn;
     private Date modifiedOn;
+    private Date expiresOn;
     private String format;
+    private String externalId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED')")
+    @Column(name = "status", columnDefinition = "enum('ISSUED', 'PAIRED', 'REDEEMED', 'EXPIRED')")
     private Status status;
 
     @ManyToOne
     @JoinColumn(name = "partnerId")
-    @JsonIgnoreProperties(value = {"codes", "apps"})
+    @JsonIgnoreProperties(value = {"codes", "apps", "retailers", "studios"})
     private ReferralPartner referralPartner;
 
     @ManyToOne
@@ -44,25 +47,28 @@ public class MasterCode {
 
     @ManyToOne
     @JoinColumn(name = "appId")
-    @JsonIgnoreProperties("masterCodes")
+    @JsonIgnoreProperties(value = {"masterCodes", "referralPartner"})
     private App app;
 
     @OneToOne(mappedBy = "masterCode")
+    @JsonIgnoreProperties(value = {"masterCode"})
     private Pairing pairing;
 
     public MasterCode() {
     }
 
-    public MasterCode(String code, String format, String createdBy, Date createdOn, ReferralPartner referralPartner,
-                      App app, Content content, Status status) {
+    public MasterCode(String code, String format, String createdBy, Date createdOn, Date expiresOn,
+                      ReferralPartner referralPartner, App app, Content content, Status status, String externalId) {
         this.code = code;
         this.format = format;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
+        this.expiresOn = expiresOn;
         this.referralPartner = referralPartner;
         this.app = app;
         this.content = content;
         this.status = status;
+        this.externalId = externalId;
         this.modifiedOn = createdOn; // Make the dates match for new objects
     }
 
@@ -104,6 +110,14 @@ public class MasterCode {
 
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
+    }
+
+    public Date getExpiresOn() {
+        return expiresOn;
+    }
+
+    public void setExpiresOn(Date expiresOn) {
+        this.expiresOn = expiresOn;
     }
 
     public ReferralPartner getReferralPartner() {
@@ -148,6 +162,14 @@ public class MasterCode {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 //
 //    public boolean isRedeemed() { return redeemedOn != null; }

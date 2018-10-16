@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <pattern>
+                    <!-- For details of available variables see:
+                    https://logback.qos.ch/manual/layouts.html#conversionWord
+                    -->
+                    <pattern>
+                        {
+                        "severity": "%level",
+                        "timestamp": "%date{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}",
+                        "name": "%class{16}.%method",
+                        "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="httpConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                {%message}%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logging settings for dev & test environments -->
+    <springProfile name="dev,test">
+        <logger name="com.universalinvents.udccs" additivity="false" level="DEBUG">
+            <appender-ref ref="jsonConsoleAppender"/>
+        </logger>
+        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="DEBUG">
+            <appender-ref ref="httpConsoleAppender"/>
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Logging settings for prod environments -->
+    <springProfile name="prod">
+        <logger name="com.universalinvents.udccs" additivity="false" level="INFO">
+            <appender-ref ref="jsonConsoleAppender"/>
+        </logger>
+        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="INFO">
+            <appender-ref ref="httpConsoleAppender"/>
+        </logger>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

@@ -1,18 +1,17 @@
 package com.universalinvents.udccs.partners;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.codes.MasterCode;
 import com.universalinvents.udccs.retailers.Retailer;
+import com.universalinvents.udccs.studios.Studio;
 
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by dsherman on 2/27/17.
- */
 @Entity
 @Table(name = "referral_partner", uniqueConstraints = {@UniqueConstraint(name = "uk_partner", columnNames = {"id"})})
 public class ReferralPartner {
@@ -28,27 +27,36 @@ public class ReferralPartner {
     private Date createdOn;
     private Date modifiedOn;
     private String regionCode;
+    private String logoUrl;
     private String status;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "partner_retailer",
                joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "retailer_id", referencedColumnName = "id"))
     private Set<Retailer> retailers;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "partner_studio",
+               joinColumns = @JoinColumn(name = "partner_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "studio_id", referencedColumnName = "id"))
+    @JsonIgnoreProperties(value = {"contents"})
+    private Set<Studio> studios;
 
     @OneToMany(mappedBy = "referralPartner", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("referralPartner")
     private List<App> apps;
 
     @OneToMany(mappedBy = "referralPartner")
-    @JsonIgnoreProperties("referralPartner")
+    @JsonIgnore
     private List<MasterCode> codes;
 
     public ReferralPartner() {
     }
 
     public ReferralPartner(String name, String description, String contactName, String contactEmail,
-                           String contactPhone, Date createdOn, Date modifiedOn, String regionCode, String status) {
+                           String contactPhone, Date createdOn, Date modifiedOn, String regionCode, String logoUrl,
+                           String status) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
@@ -57,6 +65,7 @@ public class ReferralPartner {
         this.createdOn = createdOn;
         this.modifiedOn = modifiedOn;
         this.regionCode = regionCode;
+        this.logoUrl = logoUrl;
         this.status = status;
     }
 
@@ -162,5 +171,21 @@ public class ReferralPartner {
 
     public void setCodes(List<MasterCode> codes) {
         this.codes = codes;
+    }
+
+    public Set<Studio> getStudios() {
+        return studios;
+    }
+
+    public void setStudios(Set<Studio> studios) {
+        this.studios = studios;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

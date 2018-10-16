@@ -1,28 +1,39 @@
 package com.universalinvents.udccs.retailers;
 
-import com.universalinvents.udccs.contents.Content;
-import com.universalinvents.udccs.contents.ContentRepository;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalEidrMappingsResponse;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
-import org.springframework.data.domain.Example;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Collections;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Api(tags = {"Retailer Controller"},
-     description = "Operations pertaining to retailers")
+        description = "Operations pertaining to retailers")
 @RestController
 @RequestMapping("/api/retailers")
-public class RetailerController
-{
+public class RetailerController {
     @Autowired
     private RetailerRepository retailerRepository;
 
@@ -30,26 +41,32 @@ public class RetailerController
     private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
-    private ContentRepository contentRepository;
+    private RestTemplate restTemplate;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Retailer Entry",
-                  notes = "A Retailer represents a company that provides Content to consumers and " +
-                          "the ability to acquire said Content through Retailer Codes.")
+            notes = "A Retailer represents a company that provides Content to consumers and " +
+                    "the ability to acquire said Content through Retailer Codes.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Retailer.class)
     })
-    @RequestMapping(method= RequestMethod.POST, produces = "application/json")
+    @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Retailer> createRetailer(
             @RequestBody
             @ApiParam(value = "Provide properties for the Retailer.", required = true)
-                    CreateRetailerRequest request)
-    {
+                    CreateRetailerRequest request,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
         Retailer retailer = new Retailer();
         retailer.setName(request.getName());
+        retailer.setLogoUrl(request.getLogoUrl());
+        retailer.setRedemptionUrl(request.getRedemptionUrl());
         retailer.setStatus(request.getStatus());
         retailer.setCreatedOn(new Date());
+        retailer.setExternalId(request.getExternalId());
+        retailer.setBaseUrl(request.getBaseUrl());
 
         retailerRepository.save(retailer);
 
@@ -58,8 +75,8 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Update a Retailer Entry",
-                  notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
-                          "specifying any of these values, they will overwrite existing values.")
+            notes = "Specify values for those properties you wish to overwrite.  Please note that when " +
+                    "specifying any of these values, they will overwrite existing values.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Retailer was not modified", response = Retailer.class),
@@ -72,7 +89,10 @@ public class RetailerController
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Retailer")
-                    UpdateRetailerRequest request) {
+                    UpdateRetailerRequest request,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing Retailer record
         Retailer retailer = retailerRepository.findOne(id);
@@ -86,8 +106,28 @@ public class RetailerController
             isModified = true;
         }
 
+        if (request.getLogoUrl() != null) {
+            retailer.setLogoUrl(request.getLogoUrl());
+            isModified = true;
+        }
+
+        if (request.getRedemptionUrl() != null) {
+            retailer.setRedemptionUrl(request.getRedemptionUrl());
+            isModified = true;
+        }
+
         if (request.getStatus() != null) {
             retailer.setStatus(request.getStatus());
+            isModified = true;
+        }
+
+        if (request.getExternalId() != null) {
+            retailer.setExternalId(request.getExternalId());
+            isModified = true;
+        }
+
+        if (request.getBaseUrl() != null) {
+            retailer.setBaseUrl(request.getBaseUrl());
             isModified = true;
         }
 
@@ -103,20 +143,30 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Delete a Retailer Entry",
-                  notes = "Delete a Retailer record that has not yet been associated with a Retailer Code.")
+            notes = "Delete a Retailer record that has not yet been associated with a Retailer Code.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
-            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+            @ApiResponse(code = 500, message = "Data integrity violation", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteRetailer(@PathVariable
-                                             @ApiParam(value = "The id of the Retailer to delete") Long id) {
+                                         @ApiParam(value = "The id of the Retailer to delete") Long id,
+                                         @RequestHeader(value = "Request-Context", required = false)
+                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                 String requestContext) {
         try {
             retailerRepository.delete(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ApiError("Retailer with id + " + id + " not found"), HttpStatus.NOT_FOUND);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                return new ResponseEntity<>(new ApiError("Unable to delete because of dependencies"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(new ApiError("Unable to delete because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -126,12 +176,14 @@ public class RetailerController
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
-    @RequestMapping(method= RequestMethod.GET, value = "/{id}", produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Retailer> getRetailerById(
             @PathVariable
             @ApiParam(value = "The id of the Retailer to retrieve")
-                    Long id)
-    {
+                    Long id,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
         Retailer retailer = retailerRepository.findOne(id);
         if (retailer == null)
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -141,18 +193,15 @@ public class RetailerController
 
     @CrossOrigin
     @ApiOperation(value = "Search Retailers",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Content or Referral Partner Not Found",
-                         response = ApiError.class)
+                    response = ApiError.class)
     })
-    @RequestMapping(method= RequestMethod.GET, produces = "application/json")
+    @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<List<Retailer>> getRetailers(
-            @RequestParam(name = "contentId", required = false)
-            @ApiParam(value = "Content related to Retailers.")
-                    Long contentId,
             @RequestParam(name = "partnerId", required = false)
             @ApiParam(value = "Referral Partner related to Retailers.")
                     Long partnerId,
@@ -161,38 +210,143 @@ public class RetailerController
                     String name,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "Retailers with the given status (ACTIVE or INACTIVE)")
-                    String status) {
+                    String status,
+            @RequestParam(name = "externalId", required = false)
+            @ApiParam(value = "Retailers with this external id.")
+                    String externalId,
+            @RequestParam(name = "eidr", required = false)
+            @ApiParam(value = "Retailers that potentially have content related to this eidr (See 'hasInventory')")
+                    String eidr,
+            @RequestParam(name = "hasInventory", required = false, defaultValue = "true")
+            @ApiParam(value = "If eidr is specified then only return retailers with the content in stock (See 'eidr')")
+                    boolean hasInventory,
+            @RequestParam(name = "createdAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @ApiParam(value = "Retailers created after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+                    Date createdOnAfter,
+            @RequestParam(name = "createdBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @ApiParam(value = "Retailers created before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+                    Date createdOnBefore,
+            @RequestParam(name = "modifiedAfter", required = false)
+            @ApiParam(value = "Retailers modified after the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnAfter,
+            @RequestParam(name = "modifiedBefore", required = false)
+            @ApiParam(value = "Retailers modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date modifiedOnBefore,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
-        // Build a Retailer object with the values passed in
-        Retailer retailer = new Retailer();
 
-        if (contentId != null) {
-            Content content = contentRepository.findOne(contentId);
-            if (content == null) {
-                return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
-            } else {
-                retailer.setContents(Collections.singleton(content));
-            }
-        }
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (partnerId != null) {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
-                return new ResponseEntity(new ApiError("Referral Partner id specified not found."), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
+                        HttpStatus.BAD_REQUEST);
             } else {
-                retailer.setReferralPartners(Collections.singleton(referralPartner));
+                params.add(new SqlCriteria("partnerId", ":", partnerId));
             }
         }
 
         if (name != null) {
-            retailer.setName(name);
+            params.add(new SqlCriteria("name", ":", name));
         }
 
         if (status != null) {
-            retailer.setStatus(status);
+            params.add(new SqlCriteria("status", ":", status));
         }
 
-        List<Retailer> retailers = retailerRepository.findAll(Example.of(retailer));
-        return new ResponseEntity<List<Retailer>>(retailers, HttpStatus.OK);
+        if (externalId != null) {
+            params.add(new SqlCriteria("externalId", ":", externalId));
+        }
+
+        if (createdOnAfter != null) {
+            params.add(new SqlCriteria("createdOn", ">", createdOnAfter));
+        }
+        if (createdOnBefore != null) {
+            params.add(new SqlCriteria("createdOn", "<", createdOnBefore));
+        }
+        if (modifiedOnAfter != null) {
+            params.add(new SqlCriteria("modifiedOn", ">", modifiedOnAfter));
+        }
+        if (modifiedOnBefore != null) {
+            params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
+        }
+
+        List<Specification<Retailer>> specs = new ArrayList<>();
+        for (SqlCriteria param : params) {
+            specs.add(new RetailerSpecification(param));
+        }
+
+        List<Retailer> retailers = new ArrayList<Retailer>();
+        if (params.isEmpty()) {
+            retailers = retailerRepository.findAll();
+        } else {
+            Specification<Retailer> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            retailers = retailerRepository.findAll(query);
+        }
+
+        // Now that we have a list of potential retailers, further filter it if
+        // eidr was specified.
+        List<Retailer> returnRetailers = new ArrayList<Retailer>();
+        if (eidr == null) {
+            returnRetailers = retailers;
+        } else {
+            String encodedEidr = null;
+            try {
+                encodedEidr = URLEncoder.encode(eidr, StandardCharsets.UTF_8.name());
+            } catch (UnsupportedEncodingException e) {
+                return new ResponseEntity(new ApiError("Unable to encode EIDR to " + StandardCharsets.UTF_8.name()),
+                        HttpStatus.BAD_REQUEST);
+            }
+
+            // Loop through found Retailers
+            for (Retailer retailer : retailers) {
+                // Using the baseUrl property of this Retailer, call it's EST Inventory service
+                // for inventory records related to the given eidr.
+                String baseUrl = retailer.getBaseUrl();
+                if (baseUrl != null) {
+                    URI url = URI.create(baseUrl + "/eidrMappings/" + encodedEidr + "/inventoryCount");
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                    headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+                    headers.set("Request-Context", requestContext);
+                    HttpEntity entity = new HttpEntity(null, headers);
+
+                    try {
+                        ExternalEidrMappingsResponse externalEm = restTemplate.exchange(url, HttpMethod.GET, entity,
+                                ExternalEidrMappingsResponse.class).getBody();
+
+                        // If we only want results with content in stock, remove those without enough inventory
+                        if (hasInventory) {
+                            if (externalEm.getCount() >= externalEm.getMinInventoryCount()) {
+                                returnRetailers.add(retailer);
+                            }
+                        } else {
+                            returnRetailers.add(retailer);
+                        }
+                    } catch (HttpClientErrorException e) {
+                        // If it's a 404, ignore since that just means the retailer doesn't know about the eidr at all
+                        if (! e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                        }
+                    } catch (HttpServerErrorException e) {
+                        return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                    } catch (RestClientException e) {
+                        return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                    }
+                }
+            }
+        }
+
+        return new ResponseEntity<List<Retailer>>(returnRetailers, HttpStatus.OK);
     }
 }

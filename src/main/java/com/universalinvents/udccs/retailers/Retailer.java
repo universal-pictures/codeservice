@@ -1,19 +1,17 @@
 package com.universalinvents.udccs.retailers;
 
-import com.universalinvents.udccs.contents.Content;
-import com.universalinvents.udccs.partners.ReferralPartner;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
-/**
- * Created by dsherman on 2/27/17.
- * Updated by kkirkland on 12/13/17.
- */
 @Entity
-@Table(name = "retailer", uniqueConstraints = {@UniqueConstraint(name = "uk_retailer", columnNames = {"id"})})
+@Table(name = "retailer",
+        uniqueConstraints = {@UniqueConstraint(name = "uk_retailer",
+                columnNames = {"id"})})
 public class Retailer {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,11 +21,11 @@ public class Retailer {
     private String regionCode;
     private Date createdOn;
     private Date modifiedOn;
+    private String logoUrl;
+    private String redemptionUrl;
     private String status;
-
-    @ManyToMany(mappedBy = "retailers")
-    @JsonBackReference
-    private Set<Content> contents;
+    private String externalId;
+    private String baseUrl;
 
     @ManyToMany(mappedBy = "retailers")
     @JsonBackReference
@@ -36,11 +34,16 @@ public class Retailer {
     public Retailer() {
     }
 
-    public Retailer(String name, String regionCode, String status) {
+    public Retailer(String name, String regionCode, String status, String logoUrl,
+                    String redemptionUrl, String externalId, String baseUrl) {
         this.name = name;
         this.regionCode = regionCode;
         this.createdOn = new Date();
         this.status = status;
+        this.logoUrl = logoUrl;
+        this.redemptionUrl = redemptionUrl;
+        this.externalId = externalId;
+        this.baseUrl = baseUrl;
     }
 
     public Long getId() {
@@ -75,6 +78,14 @@ public class Retailer {
         this.createdOn = createdOn;
     }
 
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -83,12 +94,20 @@ public class Retailer {
         this.status = status;
     }
 
-    public Set<Content> getContents() {
-        return contents;
+    public String getLogoUrl() {
+        return logoUrl;
     }
 
-    public void setContents(Set<Content> contents) {
-        this.contents = contents;
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getRedemptionUrl() {
+        return redemptionUrl;
+    }
+
+    public void setRedemptionUrl(String redemptionUrl) {
+        this.redemptionUrl = redemptionUrl;
     }
 
     public Set<ReferralPartner> getReferralPartners() {
@@ -99,40 +118,40 @@ public class Retailer {
         this.referralPartners = referralPartners;
     }
 
+    public String getExternalId() { return externalId; }
+
+    public void setExternalId(String externalId) { this.externalId = externalId; }
+
+    public String getBaseUrl() { return baseUrl; }
+
+    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Retailer retailer = (Retailer) o;
-
-        if (!id.equals(retailer.id)) return false;
-        if (name != null ? !name.equals(retailer.name) : retailer.name != null) return false;
-        if (regionCode != null ? !regionCode.equals(retailer.regionCode) : retailer.regionCode != null) return false;
-        if (status != null ? !status.equals(retailer.status) : retailer.status != null) return false;
-        return createdOn != null ? createdOn.equals(retailer.createdOn) : retailer.createdOn == null;
+        return Objects.equals(id, retailer.id) && Objects.equals(name, retailer.name) && Objects.equals(regionCode,
+                retailer.regionCode) && Objects
+                .equals(createdOn, retailer.createdOn) && Objects.equals(modifiedOn,
+                retailer.modifiedOn) && Objects.equals(logoUrl, retailer.logoUrl) && Objects.equals(
+                redemptionUrl, retailer.redemptionUrl) && Objects.equals(status, retailer.status) &&
+                Objects.equals(referralPartners, retailer.referralPartners);
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (regionCode != null ? regionCode.hashCode() : 0);
-        result = 31 * result + (createdOn != null ? createdOn.hashCode() : 0);
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        return result;
+        return Objects.hash(id, name, regionCode, createdOn, modifiedOn, logoUrl, redemptionUrl, status,
+                referralPartners);
     }
 
     @Override
     public String toString() {
-        return "Retailer{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", regionCode='" + regionCode + '\'' + ", createdOn=" + createdOn + ", status=" + status + ", contents=" + contents + ", referralPartners=" + referralPartners + '}';
-    }
-
-    public Date getModifiedOn() {
-        return modifiedOn;
-    }
-
-    public void setModifiedOn(Date modifiedOn) {
-        this.modifiedOn = modifiedOn;
+        return "Retailer{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", regionCode='" + regionCode + '\'' +
+                ", createdOn=" + createdOn + ", status=" + status +
+                ", logoUrl=" + logoUrl + ", redemptionUrl=" + redemptionUrl +
+                ", referralPartners=" + referralPartners + '}';
     }
 }

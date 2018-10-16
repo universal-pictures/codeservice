@@ -1,28 +1,31 @@
 package com.universalinvents.udccs.contents;
 
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.exception.ApiError;
-import com.universalinvents.udccs.retailers.Retailer;
-import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 @Api(tags = {"Content Controller"},
-     description = "Operations pertaining to contents (movie titles)")
+        description = "Operations pertaining to contents (movie titles)")
 @RestController
 @RequestMapping("/api/contents")
 public class ContentController {
@@ -30,33 +33,27 @@ public class ContentController {
     private ContentRepository contentRepository;
 
     @Autowired
-    private RetailerRepository retailerRepository;
-
-    @Autowired
     private StudioRepository studioRepository;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Content Entry",
-                  notes = "A Content record represents a basic movie title with minimal metadata. At this moment " +
-                  "an important property is *eidr* since it is utilized to look up additional metadata " +
-                  "from external movie title services.")
+            notes = "A Content record represents a basic movie title with minimal metadata. At this moment " +
+                    "an important property is *eidr* since it is utilized to look up additional metadata " +
+                    "from external movie title services.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Content.class),
-            @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
+            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class),
+            @ApiResponse(code = 409, message = "Duplicate EIDR specified", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<Content> createContent(@RequestBody
-                                                     @ApiParam(value = "Provide properties for the Content.",
-                                                               required = true)
-                                                         CreateContentRequest request) {
-
-        HashSet<Retailer> retailers = null;
-        try {
-            retailers = getRetailers(request);
-        } catch (ApiError apiError) {
-            return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
-        }
+                                                 @ApiParam(value = "Provide properties for the Content.",
+                                                         required = true)
+                                                         CreateContentRequest request,
+                                                 @RequestHeader(value = "Request-Context", required = false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
 
         Studio studio = studioRepository.findOne(request.getStudioId());
         if (studio == null)
@@ -70,33 +67,42 @@ public class ContentController {
         content.setStatus(request.getStatus());
         content.setMsrp(request.getMsrp());
         content.setStudio(studio);
-        content.setRetailers(retailers);
         content.setCreatedOn(new Date());
 
-        contentRepository.save(content);
+        try {
+            contentRepository.save(content);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = e.getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                MySQLIntegrityConstraintViolationException me = (MySQLIntegrityConstraintViolationException) cause;
+                return new ResponseEntity(new ApiError(me.getMessage()), HttpStatus.CONFLICT);
+            }
+            return new ResponseEntity(new ApiError("Unable to create Content because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         return new ResponseEntity<Content>(content, HttpStatus.CREATED);
     }
 
     @CrossOrigin
     @ApiOperation(value = "Update a Content Entry",
-                  notes = "You may update any properties of a Content record except its EIDR.  Specify values " +
-                  "for those properties you wish to overwrite.  Please note that when specifying any of these " +
-                  "values, they will overwrite existing values; especially retailerIds.  If you wish to add " +
-                  "a Retailer to the list, you must ensure to include any of the current values here.")
+            notes = "You may update any properties of a Content record except its EIDR.  Specify values " +
+                    "for those properties you wish to overwrite.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Content was not modified", response = Content.class),
             @ApiResponse(code = 404, message = "Content is Not Found", response = ApiError.class),
-            @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
+            @ApiResponse(code = 400, message = "Specified Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.PATCH, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> updateContent(@PathVariable
-                                                     @ApiParam(value = "The Content id to update", required = true)
-                                                             Long id,
+                                                 @ApiParam(value = "The Content id to update", required = true)
+                                                         Long id,
                                                  @RequestBody(required = false)
                                                  @ApiParam(value = "Provide updated properties for the Content")
-                                                         UpdateContentRequest request) {
+                                                         UpdateContentRequest request,
+                                                 @RequestHeader(value = "Request-Context", required = false)
+                                                 @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                         String requestContext) {
 
         // Get existing Content record
         Content content = contentRepository.findOne(id);
@@ -105,14 +111,6 @@ public class ContentController {
 
         // Update values from request - if set
         boolean isModified = false;
-        if (request.getRetailerIds() != null) {
-            try {
-                content.setRetailers(getRetailers(request));
-                isModified = true;
-            } catch (ApiError apiError) {
-                return new ResponseEntity(apiError, HttpStatus.BAD_REQUEST);
-            }
-        }
 
         if (request.getStudioId() != null) {
             Studio studio = studioRepository.findOne(request.getStudioId());
@@ -154,35 +152,34 @@ public class ContentController {
         return new ResponseEntity<Content>(content, HttpStatus.NOT_MODIFIED);
     }
 
-    private HashSet<Retailer> getRetailers(ContentRequest request) throws ApiError {
-        HashSet<Retailer> retailers = new HashSet();
-        for (Long retailerId : request.getRetailerIds()) {
-            Retailer foundRetailer = retailerRepository.findOne(retailerId);
-            if (foundRetailer == null) throw new ApiError("Retailer id " + retailerId + " is not found.");
-
-            retailers.add(foundRetailer);
-        }
-        return retailers;
-    }
-
     @CrossOrigin
     @ApiOperation(value = "Delete a Content Entry",
-                  notes = "Delete a Content record that has not yet been associated with a Master Code or " +
-                  "Retailer Code.")
+            notes = "Delete a Content record that has not yet been associated with a Master Code or " +
+                    "Retailer Code.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
-            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+            @ApiResponse(code = 500, message = "Data integrity violation", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
     public ResponseEntity deleteContent(@PathVariable
-                                            @ApiParam(value = "The id of the Content to delete")
-                                                    Long id) {
+                                        @ApiParam(value = "The id of the Content to delete")
+                                                Long id,
+                                        @RequestHeader(value = "Request-Context", required = false)
+                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                String requestContext) {
         try {
             contentRepository.delete(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ApiError("Content with id + " + id + " not found"), HttpStatus.NOT_FOUND);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                return new ResponseEntity<>(new ApiError("Unable to delete because of dependencies"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(new ApiError("Unable to delete because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -194,8 +191,11 @@ public class ContentController {
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Content> getContentById(@PathVariable
-                                                      @ApiParam(value = "The id of the Content to retrieve")
-                                                              Long id) {
+                                                  @ApiParam(value = "The id of the Content to retrieve")
+                                                          Long id,
+                                                  @RequestHeader(value = "Request-Context", required = false)
+                                                  @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                          String requestContext) {
         Content content = contentRepository.findOne(id);
         if (content == null)
             return new ResponseEntity(new ApiError("Content id expressed is not found."), HttpStatus.NOT_FOUND);
@@ -205,14 +205,24 @@ public class ContentController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Content",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Retailer or Studio Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Content>> getContents(
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
+    public ResponseEntity<Page<Content>> getContents(
             @RequestParam(name = "eidr", required = false)
             @ApiParam(value = "A unique EIDR value")
                     String eidr,
@@ -228,9 +238,6 @@ public class ContentController {
             @RequestParam(name = "studioId", required = false)
             @ApiParam(value = "Studio related to Content")
                     Long studioId,
-            @RequestParam(name = "retailerId", required = false)
-            @ApiParam(value = "Retailer related to Content.")
-                    Long retailerId,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "Content with the given status (ACTIVE or INACTIVE)")
                     String status,
@@ -249,7 +256,13 @@ public class ContentController {
             @RequestParam(name = "modifiedBefore", required = false)
             @ApiParam(value = "Content modified before the given date and time (yyyy-MM-dd’T’HH:mm:ss.SSSZ)")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext,
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -262,15 +275,6 @@ public class ContentController {
                 return new ResponseEntity(new ApiError("Studio id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
                 params.add(new SqlCriteria("studio", ":", studioId));
-            }
-        }
-
-        if (retailerId != null) {
-            Retailer retailer = retailerRepository.findOne(retailerId);
-            if (retailer == null) {
-                return new ResponseEntity(new ApiError("Retailer id specified not found."), HttpStatus.BAD_REQUEST);
-            } else {
-                params.add(new SqlCriteria("retailerId", ":", retailerId));
             }
         }
 
@@ -311,18 +315,18 @@ public class ContentController {
             specs.add(new ContentSpecification(param));
         }
 
-        List<Content> contents = new ArrayList<Content>();
+        Page<Content> contents;
         if (params.isEmpty()) {
-            contents = contentRepository.findAll();
+            contents = contentRepository.findAll(pageable);
         } else {
             Specification<Content> query = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 query = Specifications.where(query).and(specs.get(i));
             }
-            contents = contentRepository.findAll(query);
+            contents = contentRepository.findAll(query, pageable);
         }
 
-        return new ResponseEntity<List<Content>>(contents, HttpStatus.OK);
+        return new ResponseEntity<Page<Content>>(contents, HttpStatus.OK);
     }
 
 }

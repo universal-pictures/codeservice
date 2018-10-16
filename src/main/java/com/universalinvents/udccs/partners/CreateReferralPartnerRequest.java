@@ -32,6 +32,14 @@ public class CreateReferralPartnerRequest implements ReferralPartnerRequest {
                       example = "[1, 2]",
                       required = true)
     private Set<Long> retailerIds;
+    @ApiModelProperty(value = "A list of Studio id's that this Referral Partner has business relations with",
+                      example = "[1, 2]",
+                      required = true)
+    private Set<Long> studioIds;
+    @ApiModelProperty(value = "A URL pointing to a logo for this Referral Partner",
+                      example = "http://example.com/mylogoimage.png",
+                      required = false)
+    private String logoUrl;
     @ApiModelProperty(value = "ACTIVE or INACTIVE",
                       example = "ACTIVE",
                       required = true)
@@ -41,13 +49,16 @@ public class CreateReferralPartnerRequest implements ReferralPartnerRequest {
     }
 
     public CreateReferralPartnerRequest(String name, String description, String contactName, String contactEmail,
-                                        String contactPhone, Set<Long> retailerIds, String status) {
+                                        String contactPhone, Set<Long> retailerIds, Set<Long> studioIds, String logoUrl,
+                                        String status) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.contactEmail = contactEmail;
         this.contactPhone = contactPhone;
         this.retailerIds = retailerIds;
+        this.studioIds = studioIds;
+        this.logoUrl = logoUrl;
         this.status = status;
     }
 
@@ -105,5 +116,21 @@ public class CreateReferralPartnerRequest implements ReferralPartnerRequest {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Set<Long> getStudioIds() {
+        return studioIds;
+    }
+
+    public void setStudioIds(Set<Long> studioIds) {
+        this.studioIds = studioIds;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

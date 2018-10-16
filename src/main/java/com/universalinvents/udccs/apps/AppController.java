@@ -2,24 +2,29 @@ package com.universalinvents.udccs.apps;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.messaging.MessagingController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.jms.JMSException;
 import java.util.Date;
-import java.util.List;
 
 @Api(tags = {"App Controller"},
-     description = "Operations pertaining to apps")
+        description = "Operations pertaining to apps")
 @RestController
 @RequestMapping("/api/apps")
 public class AppController {
@@ -29,21 +34,27 @@ public class AppController {
     @Autowired
     private ReferralPartnerRepository referralPartnerRepository;
 
+    @Autowired
+    private MessagingController messagingController;
+
     @CrossOrigin
     @ApiOperation(value = "Create an App Entry",
-                  notes = "A Referral Partner can define multiple Apps that they provide to their users (i.e. iOS " +
-                          "App, Android App, etc.). Most activity dealing with codes is then related to the app a " +
-                          "user is using.")
+            notes = "A Referral Partner can define multiple Apps that they provide to their users (i.e. iOS " +
+                    "App, Android App, etc.). Most activity dealing with codes is then related to the app a " +
+                    "user is using.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = App.class),
             @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.POST,
-                    produces = "application/json")
+            produces = "application/json")
     public ResponseEntity<App> createApp(@RequestBody
                                          @ApiParam(value = "Provide properties for a new App.", required = true)
-                                                 AppRequest request) {
+                                                 AppRequest request,
+                                         @RequestHeader(value = "Request-Context", required = false)
+                                         @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                 String requestContext) {
 
         ReferralPartner referralPartner = referralPartnerRepository.findOne(request.getPartnerId());
         if (referralPartner == null)
@@ -64,8 +75,8 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation(value = "Update an App Entry",
-                  notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
-                          "its existing value.")
+            notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
+                    "its existing value.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "App was not modified", response = App.class),
@@ -73,15 +84,18 @@ public class AppController {
             @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.PATCH,
-                    value = "/{id}",
-                    produces = "application/json")
+            value = "/{id}",
+            produces = "application/json")
     public ResponseEntity<App> updateApp(
             @PathVariable
             @ApiParam(value = "The id of the App to change")
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the App")
-                    AppRequest request) {
+                    AppRequest request,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing App record
         App app = appRepository.findOne(id);
@@ -100,6 +114,11 @@ public class AppController {
 
         if (request.getDescription() != null) {
             app.setDescription(request.getDescription());
+            isModified = true;
+        }
+
+        if (request.getAccessToken() != null) {
+            app.setAccessToken(request.getAccessToken());
             isModified = true;
         }
 
@@ -125,19 +144,23 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation(value = "Delete an App Entry",
-                  notes = "Delete an App that has not yet been associated with any codes.  If it has been associated " +
-                          "with codes, it will not be deleted and will result in an error.\n\n" +
-                          "After successful deletion, an SQS message is emitted on the *udccs_app_delete.fifo* queue " +
-                          "in AWS to allow for additional processing if necessary.")
+            notes = "Delete an App that has not yet been associated with any codes.  If it has been associated " +
+                    "with codes, it will not be deleted and will result in an error.\n\n" +
+                    "After successful deletion, an SQS message is emitted on the *udccs_app_delete.fifo* queue " +
+                    "in AWS to allow for additional processing if necessary.")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
-            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+            @ApiResponse(code = 500, message = "Data integrity violation", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE,
-                    value = "/{id}",
-                    produces = "application/json")
-    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App to delete") Long id) {
+            value = "/{id}",
+            produces = "application/json")
+    public ResponseEntity deleteApp(@PathVariable @ApiParam(value = "The id of the App to delete") Long id,
+                                    @RequestHeader(value = "Request-Context", required = false)
+                                    @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                            String requestContext) {
         try {
             // First get the existing app record
             App app = appRepository.findOne(id);
@@ -148,15 +171,18 @@ public class AppController {
             appRepository.delete(id);
 
             // Send message about the deletion
-            MessagingController controller = new MessagingController();
-            controller.sendMessage("udccs_app_delete.fifo", appJson);
+            messagingController.sendMessage("udccs_app_delete.fifo", appJson);
 
             return ResponseEntity.noContent().build();
 
-        } catch (ResourceNotFoundException e) {
+        } catch (ResourceNotFoundException | JsonProcessingException e) {
             return ResponseEntity.notFound().build();
-        } catch (JsonProcessingException e) {
-            return ResponseEntity.notFound().build();
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                return new ResponseEntity<>(new ApiError("Unable to delete because of dependencies"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(new ApiError("Unable to delete because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (JMSException e) {
             // This situation is okay although we'll have to
             // manually clean up any Cognito records later
@@ -171,10 +197,13 @@ public class AppController {
             @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET,
-                    value = "/{id}",
-                    produces = "application/json")
+            value = "/{id}",
+            produces = "application/json")
     public ResponseEntity<App> getAppById(
-            @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id) {
+            @PathVariable @ApiParam(value = "The id of the App to retrieve") Long id,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         App app = appRepository.findOne(id);
         if (app == null)
@@ -185,26 +214,42 @@ public class AppController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Apps",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Referral Partner Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET,
-                    produces = "application/json")
-    public ResponseEntity<List<App>> getApps(@ApiParam(value = "Referral Partner related to Apps.")
+            produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
+    public ResponseEntity<Page<App>> getApps(@ApiParam(value = "Referral Partner related to Apps.")
                                              @RequestParam(name = "partnerId",
-                                                           required = false) Long partnerId,
+                                                     required = false) Long partnerId,
                                              @ApiParam(value = "The name of an App to find.  Exact match only.")
                                              @RequestParam(name = "name",
-                                                           required = false) String name,
+                                                     required = false) String name,
                                              @ApiParam(value = "An AWS access token related to an App.")
                                              @RequestParam(name = "accessToken",
-                                                           required = false) String accessToken,
+                                                     required = false) String accessToken,
                                              @ApiParam(value = "Apps with the given status (ACTIVE or INACTIVE)")
                                              @RequestParam(name = "status",
-                                                           required = false) String status) {
+                                                     required = false) String status,
+                                             @RequestHeader(value = "Request-Context", required = false)
+                                             @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                     String requestContext,
+                                             @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                                                     "instead they are explained in the implicit params")
+                                                     Pageable pageable) {
 
         // Build an App object with the values passed in
         App app = new App();
@@ -213,7 +258,7 @@ public class AppController {
             ReferralPartner referralPartner = referralPartnerRepository.findOne(partnerId);
             if (referralPartner == null) {
                 return new ResponseEntity(new ApiError("Referral Partner id specified not found."),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             } else {
                 app.setReferralPartner(referralPartner);
             }
@@ -231,7 +276,7 @@ public class AppController {
             app.setStatus(status);
         }
 
-        List<App> apps = appRepository.findAll(Example.of(app));
-        return new ResponseEntity<List<App>>(apps, HttpStatus.OK);
+        Page<App> apps = appRepository.findAll(Example.of(app), pageable);
+        return new ResponseEntity<Page<App>>(apps, HttpStatus.OK);
     }
 }

@@ -3,9 +3,10 @@ package com.universalinvents.udccs.exception;
 /**
  *
  */
-public class ApiError extends Throwable {
+public class ApiError {
     private String message;
 
+    public ApiError () {}
     public ApiError(final String message) {
         this.message = message;
     }

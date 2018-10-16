@@ -4,7 +4,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.math.BigDecimal;
-import java.util.Set;
 
 /**
  * Created by dsherman on 2/27/17.
@@ -37,23 +36,18 @@ public class UpdateContentRequest implements ContentRequest {
                       example = "1",
                       required = false)
     private Long studioId;
-    @ApiModelProperty(value = "A list of related Retailer id's",
-                      example = "[1, 2]",
-                      required = false)
-    private Set<Long> retailerIds;
 
     public UpdateContentRequest() {
     }
 
     public UpdateContentRequest(String title, String eidrv, String gtm, String status, BigDecimal msrp,
-                                Long studioId, Set<Long> retailerIds) {
+                                Long studioId) {
         this.title = title;
         this.eidrv = eidrv;
         this.gtm = gtm;
         this.status = status;
         this.msrp = msrp;
         this.studioId = studioId;
-        this.retailerIds = retailerIds;
     }
 
     public String getTitle() {
@@ -104,11 +98,4 @@ public class UpdateContentRequest implements ContentRequest {
         this.studioId = studioId;
     }
 
-    public Set<Long> getRetailerIds() {
-        return retailerIds;
-    }
-
-    public void setRetailerIds(Set<Long> retailerIds) {
-        this.retailerIds = retailerIds;
-    }
 }

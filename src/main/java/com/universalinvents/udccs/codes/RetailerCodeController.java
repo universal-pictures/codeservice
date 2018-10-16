@@ -2,7 +2,12 @@ package com.universalinvents.udccs.codes;
 
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
+import com.universalinvents.udccs.events.EventConfig;
+import com.universalinvents.udccs.events.EventStreamingController;
+import com.universalinvents.udccs.events.EventWrapper;
+import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
@@ -10,29 +15,38 @@ import com.universalinvents.udccs.retailers.Retailer;
 import com.universalinvents.udccs.retailers.RetailerRepository;
 import com.universalinvents.udccs.studios.Studio;
 import com.universalinvents.udccs.studios.StudioRepository;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
 import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import springfox.documentation.annotations.ApiIgnore;
 
-import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Api(tags = {"Retailer Code Controller"},
-     description = "Operations pertaining to retailer codes")
+        description = "Operations pertaining to retailer codes")
 @RestController
 @RequestMapping("/api/codes/retailer")
 public class RetailerCodeController {
     @Autowired
     private RetailerCodeRepository retailerCodeRepository;
+
+    @Autowired
+    private MasterCodeRepository masterCodeRepository;
 
     @Autowired
     private ContentRepository contentRepository;
@@ -49,6 +63,19 @@ public class RetailerCodeController {
     @Autowired
     private PairingRepository pairingRepository;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private EventStreamingController eventStreamingController;
+
+    @Autowired
+    private EventConfig eventConfig;
+
+    private final Logger log = LoggerFactory.getLogger(RetailerCodeController.class);
+
+    /* Ingesting retailer codes will now be handled by that retailer's specific code generation service
+    *
     @CrossOrigin
     @ApiOperation(value = "Ingest a Retailer Code",
                   notes = "Use this endpoint to ingest codes from an external source. Retailer Codes " +
@@ -86,8 +113,142 @@ public class RetailerCodeController {
             return new ResponseEntity(new ApiError("Retailer id expressed is not found."), HttpStatus.BAD_REQUEST);
 
         final RetailerCode retailerCode = new RetailerCode(code, content, request.getFormat(),
-                                                           RetailerCode.Status.UNALLOCATED, retailer);
+                                                           RetailerCode.Status.UNALLOCATED, retailer, null);
         return new ResponseEntity<RetailerCode>(retailerCodeRepository.save(retailerCode), HttpStatus.CREATED);
+    }
+    */
+
+    @CrossOrigin
+    @ApiOperation(value = "Redeem a Retailer Code and its paired Master Code")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully redeemed", response = RetailerCode.class),
+            @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Retailer Code or paired Master Code have an incompatible status. " +
+                    "Both must be PAIRED to redeem.", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/redeem", produces = "application/json")
+    @Transactional
+    public ResponseEntity<RetailerCode> redeemCode(@PathVariable String code,
+                                                   @RequestHeader(value = "Request-Context", required = false)
+                                                   @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                           String requestContext) {
+
+        // Get the RetailerCode object
+        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the RetailerCode has a PAIRED status
+        if (retailerCode.getStatus() != RetailerCode.Status.PAIRED) {
+            return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
+                    " can't be redeemed.  It must be " +
+                    RetailerCode.Status.PAIRED + " to redeem."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the paired MasterCode object
+        List<Specification<MasterCode>> specs = new ArrayList<>();
+        specs.add(new MasterCodeSpecification(new SqlCriteria("pairing.retailer_code", ":",
+                retailerCode.getCode())));
+        MasterCode masterCode = masterCodeRepository.findOne(specs.get(0));
+
+        // Ensure the MasterCode has a PAIRED status
+        if (masterCode.getStatus() != MasterCode.Status.PAIRED) {
+            return new ResponseEntity(new ApiError("Master Code with a status of " + masterCode.getStatus() +
+                    " can't be redeemed.  It must be " +
+                    MasterCode.Status.PAIRED + " to redeem."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Update RetailerCode status to REDEEMED
+        Date modifiedDate = new Date();
+        retailerCode.setStatus(RetailerCode.Status.REDEEMED);
+        retailerCode.setModifiedOn(modifiedDate);
+        retailerCodeRepository.saveAndFlush(retailerCode);
+
+        // Update MasterCode status to REDEEMED
+        masterCode.setStatus(MasterCode.Status.REDEEMED);
+        masterCode.setModifiedOn(modifiedDate);
+        masterCodeRepository.saveAndFlush(masterCode);
+
+        // Send a 'masterCodeRedeemed' event
+        MasterCodeEvent event = new MasterCodeEvent(masterCode);
+        EventWrapper eventWrapper = new EventWrapper(
+                "master-code", "masterCodeRedeemed", event, requestContext, eventConfig.getSchemaVersion());
+        eventStreamingController.putRecord(eventWrapper.toString());
+
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+    }
+
+    @CrossOrigin
+    @ApiOperation(value = "Try to expire an unredeemed Retailer Code",
+            notes = "If the Retailer Code hasn't reached its expiration date, then this method will return a " +
+                    "304 Not Modified.")
+    @ResponseStatus(value = HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully expired", response = RetailerCode.class),
+            @ApiResponse(code = 304, message = "This Retailer Code has not reached its expiration date", response = ApiError.class),
+            @ApiResponse(code = 404, message = "Specified Retailer Code Not Found", response = ApiError.class),
+            @ApiResponse(code = 400, message = "Retailer Code has an incompatible status", response = ApiError.class)
+    })
+    @RequestMapping(method = RequestMethod.PUT, value = "/{code}/expire", produces = "application/json")
+    @Transactional
+    public ResponseEntity<RetailerCode> expireCode(@PathVariable String code,
+                                                   @RequestHeader(value = "Request-Context", required = false)
+                                                   @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                           String requestContext) {
+
+        // Get the RetailerCode object
+        RetailerCode retailerCode = retailerCodeRepository.findOne(code);
+        if (retailerCode == null) {
+            return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
+        }
+
+        // Ensure the RetailerCode is not already redeemed
+        if (retailerCode.getStatus() == RetailerCode.Status.REDEEMED) {
+            return new ResponseEntity(new ApiError("Retailer Code with a status of " + retailerCode.getStatus() +
+                    " can't be expired."),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the latest status of this retailer code from the Retailer Code Service
+        // If the returned status is EXPIRED, then update the status of the Retailer Code
+        Retailer retailer = retailerCode.getRetailer();
+        if (retailer.getBaseUrl() != null) {
+            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/status/refresh";
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("code", code);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            headers.set("Request-Context", requestContext);
+            HttpEntity entity = new HttpEntity(headers);
+
+            ExternalRetailerCodeStatusResponse status;
+            try {
+                status = restTemplate.exchange(url, HttpMethod.GET, entity, ExternalRetailerCodeStatusResponse.class, vars)
+                        .getBody();
+            } catch (HttpClientErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
+            } catch (HttpServerErrorException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            } catch (RestClientException e) {
+                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            if (status.getStatus().equals("EXPIRED")) {
+                // Update RetailerCode status to EXPIRED
+                Date modifiedDate = new Date();
+                retailerCode.setStatus(RetailerCode.Status.EXPIRED);
+                retailerCode.setModifiedOn(modifiedDate);
+                retailerCodeRepository.saveAndFlush(retailerCode);
+
+                return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+            }
+        }
+
+        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
@@ -98,8 +259,11 @@ public class RetailerCodeController {
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{code}", produces = "application/json")
     public ResponseEntity<RetailerCode> getRetailerCode(@PathVariable
-                                                            @ApiParam(value = "The Retailer Code to retrieve")
-                                                                    String code) {
+                                                        @ApiParam(value = "The Retailer Code to retrieve")
+                                                                String code,
+                                                        @RequestHeader(value = "Request-Context", required = false)
+                                                        @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                                                String requestContext) {
         RetailerCode retailerCode = retailerCodeRepository.findOne(code);
         if (retailerCode == null)
             return new ResponseEntity(new ApiError("Retailer Code expressed is not found."), HttpStatus.NOT_FOUND);
@@ -109,17 +273,27 @@ public class RetailerCodeController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Retailer Codes",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400,
-                         message = "Specified Content or Retailer Not Found\n" +
-                                   "Bad status value specified",
-                         response = ApiError.class)
+                    message = "Specified Content or Retailer Not Found\n" +
+                            "Bad status value specified",
+                    response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<RetailerCode>> getRetailerCodes(
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
+    public ResponseEntity<Page<RetailerCode>> getRetailerCodes(
             @ApiParam(value = "Content related to Retailer Codes.")
             @RequestParam(name = "contentId", required = false)
                     Long contentId,
@@ -153,7 +327,21 @@ public class RetailerCodeController {
             @ApiParam(value = "Retailer Codes modified before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
             @RequestParam(name = "modifiedBefore", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                    Date modifiedOnBefore) {
+                    Date modifiedOnBefore,
+            @ApiParam(value = "Retailer Codes that expire after the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresAfter", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnAfter,
+            @ApiParam(value = "Retailer Codes that expire before the given date and time (yyyy-MM-dd'T'HH:mm:ss.SSSZ).")
+            @RequestParam(name = "expiresBefore", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                    Date expiresOnBefore,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext,
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
         ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
@@ -203,7 +391,7 @@ public class RetailerCodeController {
             } catch (IllegalArgumentException e) {
                 return new ResponseEntity(new ApiError(
                         "Status value not allowed. Please use one of: " + Arrays.asList(RetailerCode.Status.values())),
-                                          HttpStatus.BAD_REQUEST);
+                        HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -219,24 +407,30 @@ public class RetailerCodeController {
         if (modifiedOnBefore != null) {
             params.add(new SqlCriteria("modifiedOn", "<", modifiedOnBefore));
         }
+        if (expiresOnAfter != null) {
+            params.add(new SqlCriteria("expiresOn", ">", expiresOnAfter));
+        }
+        if (expiresOnBefore != null) {
+            params.add(new SqlCriteria("expiresOn", "<", expiresOnBefore));
+        }
 
         List<Specification<RetailerCode>> specs = new ArrayList<>();
         for (SqlCriteria param : params) {
             specs.add(new RetailerCodeSpecification(param));
         }
 
-        List<RetailerCode> retailerCodes = new ArrayList<RetailerCode>();
+        Page<RetailerCode> retailerCodes;
         if (params.isEmpty()) {
-            retailerCodes = retailerCodeRepository.findAll();
+            retailerCodes = retailerCodeRepository.findAll(pageable);
         } else {
             Specification<RetailerCode> query = specs.get(0);
             for (int i = 1; i < specs.size(); i++) {
                 query = Specifications.where(query).and(specs.get(i));
             }
-            retailerCodes = retailerCodeRepository.findAll(query);
+            retailerCodes = retailerCodeRepository.findAll(query, pageable);
         }
 
-        return new ResponseEntity<List<RetailerCode>>(retailerCodes, HttpStatus.OK);
+        return new ResponseEntity<Page<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
 
 }

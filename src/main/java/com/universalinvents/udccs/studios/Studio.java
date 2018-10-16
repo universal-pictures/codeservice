@@ -1,12 +1,15 @@
 package com.universalinvents.udccs.studios;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.universalinvents.udccs.contents.Content;
+import com.universalinvents.udccs.partners.ReferralPartner;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by kkirkland on 10/25/17.
@@ -25,6 +28,8 @@ public class Studio {
     private String contactPhone;
     private Date createdOn;
     private Date modifiedOn;
+    private String logoUrl;
+    private String externalId;
 
     @NotNull
     @Column(nullable = false)
@@ -34,22 +39,28 @@ public class Studio {
     private Long flags; // bitwise placeholder for potential configuration
 
     @OneToMany(mappedBy = "studio")
-    @JsonIgnoreProperties("studio")
+    @JsonIgnore
     private List<Content> contents;
+
+    @ManyToMany(mappedBy = "studios")
+    @JsonBackReference
+    private Set<ReferralPartner> referralPartners;
 
     public Studio() {}
 
     public Studio(String name, String description, String contactName, String contactEmail, String contactPhone,
-                  String codePrefix, String status, Long flags) {
+                  String codePrefix, String logoUrl, String status, Long flags, String externalId) {
         this.name = name;
         this.description = description;
         this.contactName = contactName;
         this.contactEmail = contactEmail;
         this.contactPhone = contactPhone;
         this.codePrefix = codePrefix;
+        this.logoUrl = logoUrl;
         this.status = status;
         this.flags = flags;
         this.createdOn = new Date();
+        this.externalId = externalId;
     }
 
     public String getName() {
@@ -147,4 +158,24 @@ public class Studio {
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
     }
+
+    public Set<ReferralPartner> getReferralPartners() {
+        return referralPartners;
+    }
+
+    public void setReferralPartners(Set<ReferralPartner> referralPartners) {
+        this.referralPartners = referralPartners;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getExternalId() { return externalId; }
+
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 }

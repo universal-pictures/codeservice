@@ -22,6 +22,9 @@ public interface ReferralPartnerRequest {
     public Set<Long> getRetailerIds();
     public void setRetailerIds(Set<Long> retailerIds);
 
+    public Set<Long> getStudioIds();
+    public void setStudioIds(Set<Long> studioIds);
+
     public String getStatus();
     public void setStatus(String status);
 }

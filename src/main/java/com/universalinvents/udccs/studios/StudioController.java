@@ -1,22 +1,30 @@
 package com.universalinvents.udccs.studios;
 
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.contents.Content;
 import com.universalinvents.udccs.contents.ContentRepository;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.utilities.ApiDefinitions;
+import com.universalinvents.udccs.utilities.SqlCriteria;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.config.ResourceNotFoundException;
-import org.springframework.data.domain.Example;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @Api(tags = {"Studio Controller"},
-     description = "Operations pertaining to studios")
+        description = "Operations pertaining to studios")
 @RestController
 @RequestMapping("/api/studios")
 public class StudioController {
@@ -28,7 +36,7 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Create a Studio Entry",
-                  notes = "A Studio represents a company that creates Content.")
+            notes = "A Studio represents a company that creates Content.")
     @ResponseStatus(value = HttpStatus.CREATED)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Created", response = Studio.class)
@@ -37,7 +45,10 @@ public class StudioController {
     public ResponseEntity<Studio> createStudio(
             @RequestBody
             @ApiParam(value = "Provide properties for the Studio.", required = true)
-                    CreateStudioRequest request) {
+                    CreateStudioRequest request,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         Studio studio = new Studio();
         studio.setName(request.getName());
@@ -48,7 +59,9 @@ public class StudioController {
         studio.setStatus(request.getStatus());
         studio.setFlags(request.getFlags());
         studio.setCodePrefix(request.getCodePrefix());
+        studio.setLogoUrl(request.getLogoUrl());
         studio.setCreatedOn(new Date());
+        studio.setExternalId(request.getExternalId());
 
         studioRepository.save(studio);
 
@@ -57,8 +70,8 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Update a Studio Entry",
-                  notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
-                          "its existing value.")
+            notes = "Specify just the properties you want to change.  Any specified property will overwrite " +
+                    "its existing value.")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 304, message = "Studio was not modified", response = Studio.class),
@@ -71,7 +84,10 @@ public class StudioController {
                     Long id,
             @RequestBody(required = false)
             @ApiParam(value = "Provide updated properties for the Studio")
-                    UpdateStudioRequest request) {
+                    UpdateStudioRequest request,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         // Get existing Studio record
         Studio studio = studioRepository.findOne(id);
@@ -112,6 +128,14 @@ public class StudioController {
             studio.setCodePrefix(request.getCodePrefix());
             isModified = true;
         }
+        if (request.getLogoUrl() != null) {
+            studio.setLogoUrl(request.getLogoUrl());
+            isModified = true;
+        }
+        if (request.getExternalId() != null) {
+            studio.setExternalId(request.getExternalId());
+            isModified = true;
+        }
 
         if (isModified) {
             studio.setModifiedOn(new Date());
@@ -128,15 +152,25 @@ public class StudioController {
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "No Content"),
-            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class)
+            @ApiResponse(code = 404, message = "Not Found", response = ApiError.class),
+            @ApiResponse(code = 500, message = "Data integrity violation", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.DELETE, value = "/{id}", produces = "application/json")
-    public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id) {
+    public ResponseEntity deleteStudio(@PathVariable @ApiParam(value = "The id of the Studio to delete") Long id,
+                                       @RequestHeader(value = "Request-Context", required = false)
+                                       @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                                               String requestContext) {
         try {
             studioRepository.delete(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(new ApiError("Studio with id + " + id + " not found"), HttpStatus.NOT_FOUND);
+        } catch (DataIntegrityViolationException e) {
+            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            if (cause instanceof MySQLIntegrityConstraintViolationException) {
+                return new ResponseEntity<>(new ApiError("Unable to delete because of dependencies"), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(new ApiError("Unable to delete because of a data integrity violation"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -148,7 +182,10 @@ public class StudioController {
     })
     @RequestMapping(method = RequestMethod.GET, value = "/{id}", produces = "application/json")
     public ResponseEntity<Studio> getStudioById(
-            @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id) {
+            @PathVariable @ApiParam(value = "The id of the Studio to retrieve") Long id,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext) {
 
         Studio studio = studioRepository.findOne(id);
         if (studio == null)
@@ -159,14 +196,24 @@ public class StudioController {
 
     @CrossOrigin
     @ApiOperation(value = "Search Studios",
-                  notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
-                          "to filter the results (AND as opposed to OR)")
+            notes = "All parameters are optional.  If multiple parameters are specified, all are used together " +
+                    "to filter the results (AND as opposed to OR)")
     @ResponseStatus(value = HttpStatus.OK)
     @ApiResponses(value = {
             @ApiResponse(code = 400, message = "Specified Content Not Found", response = ApiError.class)
     })
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<List<Studio>> getStudios(
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N)", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. " +
+                            "Multiple sort criteria are supported.")
+    })
+    public ResponseEntity<Page<Studio>> getStudios(
             @RequestParam(name = "contentId", required = false)
             @ApiParam(value = "Content related to Studios.")
                     Long contentId,
@@ -187,43 +234,70 @@ public class StudioController {
                     Long flags,
             @RequestParam(name = "status", required = false)
             @ApiParam(value = "ACTIVE or INACTIVE")
-                    String status) {
+                    String status,
+            @RequestParam(name = "externalId", required = false)
+            @ApiParam(value = "Studios with this external id.")
+                    String externalId,
+            @RequestHeader(value = "Request-Context", required = false)
+            @ApiParam(value = ApiDefinitions.REQUEST_CONTEXT_HEADER_DESC)
+                    String requestContext,
+            @ApiIgnore("Ignored because swagger ui shows the wrong params, " +
+                    "instead they are explained in the implicit params")
+                    Pageable pageable) {
 
-        // Build a Studio object with the values passed in
-        Studio studio = new Studio();
+        ArrayList<SqlCriteria> params = new ArrayList<SqlCriteria>();
 
         if (contentId != null) {
             Content content = contentRepository.findOne(contentId);
             if (content == null) {
                 return new ResponseEntity(new ApiError("Content id specified not found."), HttpStatus.BAD_REQUEST);
             } else {
-                studio.setContents(Collections.singletonList(content));
+                params.add(new SqlCriteria("contentId", ":", contentId));
             }
         }
 
         if (name != null) {
-            studio.setName(name);
+            params.add(new SqlCriteria("name", ":", name));
         }
 
         if (contactName != null) {
-            studio.setContactName(contactName);
+            params.add(new SqlCriteria("contactName", ":", contactName));
         }
 
         if (contactEmail != null) {
-            studio.setContactEmail(contactEmail);
+            params.add(new SqlCriteria("contactEmail", ":", contactEmail));
         }
         if (codePrefix != null) {
-            studio.setCodePrefix(codePrefix);
+            params.add(new SqlCriteria("codePrefix", ":", codePrefix));
         }
         if (flags != null) {
-            studio.setFlags(flags);
+            params.add(new SqlCriteria("flags", ":", flags));
         }
 
         if (status != null) {
-            studio.setStatus(status);
+            params.add(new SqlCriteria("status", ":", status));
         }
 
-        List<Studio> studios = studioRepository.findAll(Example.of(studio));
-        return new ResponseEntity<List<Studio>>(studios, HttpStatus.OK);
+        if (externalId != null) {
+            params.add(new SqlCriteria("externalId", ":", externalId));
+        }
+
+        List<Specification<Studio>> specs = new ArrayList<>();
+        for (SqlCriteria param : params) {
+            specs.add(new StudioSpecification(param));
+        }
+
+        Page<Studio> studios;
+        if (params.isEmpty()) {
+            studios = studioRepository.findAll(pageable);
+        } else {
+            Specification<Studio> query = specs.get(0);
+            for (int i = 1; i < specs.size(); i++) {
+                query = Specifications.where(query).and(specs.get(i));
+            }
+            studios = studioRepository.findAll(query, pageable);
+        }
+
+        return new ResponseEntity<Page<Studio>>(studios, HttpStatus.OK);
     }
 }

@@ -1,9 +1,13 @@
 package com.universalinvents.udccs.partners;
 
+import com.universalinvents.udccs.codes.MasterCode;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-/**
- * Created by dsherman on 2/27/17.
- */
-public interface ReferralPartnerRepository extends JpaRepository<ReferralPartner, Long> {
+import java.util.List;
+
+
+public interface ReferralPartnerRepository extends JpaRepository<ReferralPartner, Long>, JpaSpecificationExecutor<ReferralPartner> {
+//    @Query(value = "SELECT p FROM ReferralPartner p JOIN p.codes c WHERE c.content ")
+    List<ReferralPartner> findDistinctByCodesIn(List<MasterCode> masterCodes);
 }
