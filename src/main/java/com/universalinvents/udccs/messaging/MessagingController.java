@@ -7,21 +7,27 @@ import com.amazon.sqs.javamessaging.SQSSession;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
 import javax.jms.*;
 
+@Configuration
 public class MessagingController {
+
+    @Value("${aws.region}")
+    private String awsRegionName;
 
     private SQSConnection createConnection() throws JMSException {
         // Create the connection factory using the environment variable credential provider.
         // This assumes that the AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY)
         // environment variables are set.
         //
-        // These connections can talk to queues in the us-east-2 region.
+        // These connections can talk to queues in the configured region.
         SQSConnectionFactory connectionFactory = new SQSConnectionFactory(new ProviderConfiguration(),
-                                                                          AmazonSQSClientBuilder.standard().withRegion(
-                                                                                  Regions.US_EAST_2).withCredentials(
-                                                                                  new EnvironmentVariableCredentialsProvider()));
+                AmazonSQSClientBuilder.standard().withRegion(
+                        Regions.fromName(awsRegionName)).withCredentials(
+                        new EnvironmentVariableCredentialsProvider()));
 
         // Create the connection
         return (connectionFactory.createConnection());

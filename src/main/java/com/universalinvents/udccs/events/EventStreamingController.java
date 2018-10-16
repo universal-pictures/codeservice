@@ -17,6 +17,9 @@ public class EventStreamingController {
     @Value("${kinesis.delivery-stream}")
     private String streamName;
 
+    @Value("${aws.region}")
+    private String awsRegionName;
+
     public void putRecord(String data) {
         PutRecordRequest putRecordRequest = new PutRecordRequest();
         putRecordRequest.setStreamName(this.streamName);
@@ -31,7 +34,7 @@ public class EventStreamingController {
     private AmazonKinesis getKinesisClient() {
         AmazonKinesisClientBuilder clientBuilder = AmazonKinesisClientBuilder.standard()
                 .withCredentials(new EnvironmentVariableCredentialsProvider())
-                .withRegion(Regions.US_EAST_2);
+                .withRegion(Regions.fromName(awsRegionName));
 
         return clientBuilder.build();
     }
