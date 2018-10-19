@@ -27,6 +27,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -71,6 +72,9 @@ public class RetailerCodeController {
 
     @Autowired
     private EventConfig eventConfig;
+
+    @Autowired
+    private RetryTemplate retryTemplate;
 
     private final Logger log = LoggerFactory.getLogger(RetailerCodeController.class);
 
@@ -227,8 +231,8 @@ public class RetailerCodeController {
 
             ExternalRetailerCodeStatusResponse status;
             try {
-                status = restTemplate.exchange(url, HttpMethod.GET, entity, ExternalRetailerCodeStatusResponse.class, vars)
-                        .getBody();
+                status = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.GET, entity,
+                        ExternalRetailerCodeStatusResponse.class, vars).getBody()));
             } catch (HttpClientErrorException e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
             } catch (HttpServerErrorException e) {

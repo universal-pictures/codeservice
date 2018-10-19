@@ -35,6 +35,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -82,6 +83,9 @@ public class MasterCodeController {
 
     @Autowired
     private EventConfig eventConfig;
+
+    @Autowired
+    private RetryTemplate retryTemplate;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Master Code",
@@ -643,13 +647,9 @@ public class MasterCodeController {
         HttpEntity entity = new HttpEntity(headers);
 
         ExternalRetailerCodeStatusResponse status = null;
-        try {
-            status = restTemplate.exchange(url, HttpMethod.GET, entity,
-                    ExternalRetailerCodeStatusResponse.class, vars).getBody();
+        status = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.GET, entity,
+                ExternalRetailerCodeStatusResponse.class, vars).getBody()));
 
-        } catch (HttpStatusCodeException e) {
-            handleHttpStatusCodeException(e);
-        }
         return status.getStatus().equals("EXPIRED");
     }
 
@@ -666,15 +666,13 @@ public class MasterCodeController {
 
         ExternalRetailerCodeResponse externalRc;
         RetailerCode retailerCode = null;
-        try {
-            externalRc = restTemplate.exchange(url, HttpMethod.POST, entity,
-                    ExternalRetailerCodeResponse.class).getBody();
-            retailerCode = new RetailerCode(
-                    externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer,
-                    Date.from(externalRc.getExpiresOn().atZone(ZoneId.systemDefault()).toInstant()));
-        } catch (HttpStatusCodeException e) {
-            handleHttpStatusCodeException(e);
-        }
+
+        externalRc = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.POST, entity,
+                ExternalRetailerCodeResponse.class).getBody()));
+        retailerCode = new RetailerCode(
+                externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer,
+                Date.from(externalRc.getExpiresOn().atZone(ZoneId.systemDefault()).toInstant()));
+
         return retailerCodeRepository.save(retailerCode);
     }
 
@@ -687,14 +685,8 @@ public class MasterCodeController {
         headers.set("Request-Context", requestContext);
         HttpEntity entity = new HttpEntity(headers);
 
-        ExternalRetailerCodeResponse externalRc;
-        try {
-            externalRc = restTemplate.exchange(url, HttpMethod.PUT, entity,
-                    ExternalRetailerCodeResponse.class).getBody();
-        } catch (HttpStatusCodeException e) {
-            e.printStackTrace();
-            handleHttpStatusCodeException(e);
-        }
+        retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
+                ExternalRetailerCodeResponse.class).getBody()));
     }
 
     private void handleHttpStatusCodeException(HttpStatusCodeException e)
