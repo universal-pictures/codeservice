@@ -16,10 +16,10 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class UdccsPocApplication {
 
-	@Value("${resttemplateutil.max_retries}")
+	@Value("${resttemplateutil.max-retries}")
 	private int maxAttempts;
 
-	@Value("${resttemplateutil.retry_delay}")
+	@Value("${resttemplateutil.retry-delay}")
 	private int retryDelay;
 
 	public static void main(String[] args)
