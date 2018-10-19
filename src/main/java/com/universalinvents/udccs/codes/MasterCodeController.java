@@ -1,6 +1,5 @@
 package com.universalinvents.udccs.codes;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.universalinvents.udccs.apps.App;
 import com.universalinvents.udccs.apps.AppRepository;
 import com.universalinvents.udccs.contents.Content;
@@ -38,11 +37,9 @@ import org.springframework.http.*;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.io.IOException;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -689,15 +686,4 @@ public class MasterCodeController {
                 ExternalRetailerCodeResponse.class).getBody()));
     }
 
-    private void handleHttpStatusCodeException(HttpStatusCodeException e)
-            throws HttpException {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            ApiError error = mapper.readValue(e.getResponseBodyAsByteArray(), ApiError.class);
-            throw new HttpException(error.getMessage());
-        } catch (IOException e1) {
-            e1.printStackTrace();
-            throw new HttpException(e.getResponseBodyAsString());
-        }
-    }
 }
