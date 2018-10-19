@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -42,6 +43,9 @@ public class RetailerController {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private RetryTemplate retryTemplate;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Retailer Entry",
@@ -322,8 +326,9 @@ public class RetailerController {
                     HttpEntity entity = new HttpEntity(null, headers);
 
                     try {
-                        ExternalEidrMappingsResponse externalEm = restTemplate.exchange(url, HttpMethod.GET, entity,
-                                ExternalEidrMappingsResponse.class).getBody();
+                        ExternalEidrMappingsResponse externalEm = retryTemplate.execute(context ->
+                                (restTemplate.exchange(url, HttpMethod.GET, entity,
+                                        ExternalEidrMappingsResponse.class).getBody()));
 
                         // If we only want results with content in stock, remove those without enough inventory
                         if (hasInventory) {
@@ -335,7 +340,7 @@ public class RetailerController {
                         }
                     } catch (HttpClientErrorException e) {
                         // If it's a 404, ignore since that just means the retailer doesn't know about the eidr at all
-                        if (! e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                        if (!e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                             return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
                         }
                     } catch (HttpServerErrorException e) {
