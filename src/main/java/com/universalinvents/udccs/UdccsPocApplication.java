@@ -16,35 +16,35 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class UdccsPocApplication {
 
-	@Value("${resttemplateutil.max-retries}")
-	private int maxAttempts;
+    @Value("${resttemplateutil.max-retries}")
+    private int maxAttempts;
 
-	@Value("${resttemplateutil.retry-delay}")
-	private int retryDelay;
+    @Value("${resttemplateutil.retry-delay}")
+    private int retryDelay;
 
-	public static void main(String[] args)
-	{
-		SpringApplication.run(UdccsPocApplication.class, args);
-	}
+    public static void main(String[] args)
+    {
+        SpringApplication.run(UdccsPocApplication.class, args);
+    }
 
-	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.build();
-	}
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
+    }
 
-	@Bean
-	public RetryTemplate retryTemplate() {
-		SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-		retryPolicy.setMaxAttempts(maxAttempts);
+    @Bean
+    public RetryTemplate retryTemplate() {
+        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+        retryPolicy.setMaxAttempts(maxAttempts);
 
-		FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
-		backOffPolicy.setBackOffPeriod(retryDelay);
+        FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+        backOffPolicy.setBackOffPeriod(retryDelay);
 
-		RetryTemplate template = new RetryTemplate();
-		template.setRetryPolicy(retryPolicy);
-		template.setBackOffPolicy(backOffPolicy);
-		template.registerListener(new UdccsRetryListener());
+        RetryTemplate template = new RetryTemplate();
+        template.setRetryPolicy(retryPolicy);
+        template.setBackOffPolicy(backOffPolicy);
+        template.registerListener(new UdccsRetryListener());
 
-		return template;
-	}
+        return template;
+    }
 }
