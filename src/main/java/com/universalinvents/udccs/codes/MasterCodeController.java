@@ -683,7 +683,7 @@ public class MasterCodeController {
         HttpEntity entity = new HttpEntity(headers);
 
         retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
-                ExternalRetailerCodeResponse.class).getBody()));
+                ExternalRetailerCodeResponse.class)));
     }
 
 }
