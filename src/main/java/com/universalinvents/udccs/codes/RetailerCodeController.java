@@ -7,7 +7,7 @@ import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.events.EventWrapper;
 import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
-import com.universalinvents.udccs.external.ExternalAWSCredentialsRequest;
+import com.universalinvents.udccs.external.ExternalAWSCredentialsResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairingRepository;
@@ -32,6 +32,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -192,25 +194,37 @@ public class RetailerCodeController {
         // Update EST Inventory Retailer Code status to REDEEMED
         String retailerBaseUrl = retailerCode.getRetailer().getBaseUrl();
         if (retailerBaseUrl != null) {
-            String url = retailerBaseUrl + "/retailerCodes/{code}/redeem";
-            Map<String, String> pathParams = new HashMap<>();
-            pathParams.put("code", retailerCode.getCode());
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-            headers.set("Request-Context", requestContext);
-            HttpEntity entity = new HttpEntity(headers);
-
-            try {
-                retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
-                        ExternalRetailerCodeResponse.class, pathParams)));
-            } catch (Exception e) {
-                // If anything goes wrong here, simply ignore it and allow
+            // Get an AWS authorization token first
+            String authToken = getAWSCredentials();
+            if (authToken == null) {
+                // If we weren't able to get an auth token, simply ignore it and allow
                 // the EST Inventory service status to get out of sync.  There will
                 // be a separate scheduler that runs periodically to fix these sync issues
                 // if any are found.
+            } else {
+                String url = retailerBaseUrl + "/retailerCodes/{code}/redeem";
+                Map<String, String> pathParams = new HashMap<>();
+                pathParams.put("code", retailerCode.getCode());
+                HttpHeaders headers = new HttpHeaders();
+                headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+                headers.add(HttpHeaders.AUTHORIZATION, authToken);
+                headers.set("Request-Context", requestContext);
+                HttpEntity entity = new HttpEntity(headers);
 
-                // NOOP
+                try {
+                    retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
+                            ExternalRetailerCodeResponse.class, pathParams)));
+                } catch (Exception e) {
+                    // If anything goes wrong here, simply ignore it and allow
+                    // the EST Inventory service status to get out of sync.  There will
+                    // be a separate scheduler that runs periodically to fix these sync issues
+                    // if any are found.
+
+                    // NOOP
+                    log.warn("Unable to redeem retailer code " + retailerCode.getCode() + " using " + url +
+                            " : " + e.getMessage());
+                }
             }
         }
 
@@ -220,7 +234,7 @@ public class RetailerCodeController {
                 "master-code", "masterCodeRedeemed", event, requestContext, eventConfig.getSchemaVersion());
         eventStreamingController.putRecord(eventWrapper.toString());
 
-        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+        return new ResponseEntity<>(retailerCode, HttpStatus.OK);
     }
 
     @CrossOrigin
@@ -474,31 +488,30 @@ public class RetailerCodeController {
         return new ResponseEntity<Page<RetailerCode>>(retailerCodes, HttpStatus.OK);
     }
 
+
     private String getAWSCredentials() {
-
-//        AWSSecurityTokenService stsClient = AWSSecurityTokenServiceClientBuilder.defaultClient();
-//        stsClient.setEndpoint();
-
         String auth = "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
         String url = tokenBaseUrl + "/oauth2/token";
-        ExternalAWSCredentialsRequest request = new ExternalAWSCredentialsRequest();
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("grant_type", "client_credentials");
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         headers.add(HttpHeaders.AUTHORIZATION, auth);
-        HttpEntity<ExternalAWSCredentialsRequest> entity = new HttpEntity<>(request, headers);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
 
+        String retAccessToken = null;
         try {
-            retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.POST, entity,
-                    ExternalRetailerCodeResponse.class)));
-        } catch (Exception e) {
-            // If anything goes wrong here, simply ignore it and allow
-            // the EST Inventory service status to get out of sync.  There will
-            // be a separate scheduler that runs periodically to fix these sync issues
-            // if any are found.
+            log.debug("Calling " + url);
+            ResponseEntity<ExternalAWSCredentialsResponse> resp = retryTemplate.execute(context -> (
+                    restTemplate.exchange(url, HttpMethod.POST, entity, ExternalAWSCredentialsResponse.class)));
+            retAccessToken = resp.getBody().getAccess_token();
+            log.debug("Received access token " + retAccessToken);
 
+        } catch (Exception e) {
             // NOOP
+            log.warn("Unable to get AWS credentials: " + e.getMessage(), e);
         }
-        return null;
+        return retAccessToken;
     }
 
 }
