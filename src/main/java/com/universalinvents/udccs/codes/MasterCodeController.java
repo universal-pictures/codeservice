@@ -11,7 +11,7 @@ import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.exception.HttpException;
 import com.universalinvents.udccs.exception.RecordNotFoundException;
-import com.universalinvents.udccs.external.ExternalRetailerCodeRequest;
+import com.universalinvents.udccs.external.ExternalEstRetailerController;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
 import com.universalinvents.udccs.pairings.PairMasterCodeRequest;
@@ -33,15 +33,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.*;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @Api(tags = {"Master Code Controller"},
         description = "Operations pertaining to master codes")
@@ -64,6 +66,9 @@ public class MasterCodeController {
     private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
+    private ExternalEstRetailerController externalEstRetailerController;
+
+    @Autowired
     private PairingRepository pairingRepository;
 
     @Autowired
@@ -73,16 +78,10 @@ public class MasterCodeController {
     private StudioRepository studioRepository;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
     private EventStreamingController eventStreamingController;
 
     @Autowired
     private EventConfig eventConfig;
-
-    @Autowired
-    private RetryTemplate retryTemplate;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Master Code",
@@ -511,7 +510,9 @@ public class MasterCodeController {
 
             boolean isExpiredRetailerCode;
             try {
-                isExpiredRetailerCode = isRetailerCodeExpired(rc.getCode(), retailer.getBaseUrl(), requestContext);
+                ExternalRetailerCodeStatusResponse status = externalEstRetailerController.status(rc, requestContext,
+                        ExternalRetailerCodeStatusResponse.class);
+                isExpiredRetailerCode = (status.getStatus().equals(RetailerCode.Status.EXPIRED.toString()));
             } catch (Exception e) {
                 return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
             }
@@ -608,7 +609,7 @@ public class MasterCodeController {
 
         // Kill the code with the Retailer
         try {
-            killRetailerCode(retailerCode, requestContext);
+            externalEstRetailerController.killRetailerCode(retailerCode, requestContext);
         } catch (Exception e) {
             return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
         }
@@ -630,60 +631,20 @@ public class MasterCodeController {
         eventStreamingController.putRecord(eventWrapper.toString());
 
         // Success
-        return new ResponseEntity<MasterCode>(masterCode, HttpStatus.OK);
-    }
-
-    private boolean isRetailerCodeExpired(String code, String baseUrl, String requestContext)
-            throws RecordNotFoundException, HttpException {
-        String url = baseUrl + "/retailerCodes/{code}/status/refresh";
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("code", code);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("Request-Context", requestContext);
-        HttpEntity entity = new HttpEntity(headers);
-
-        ExternalRetailerCodeStatusResponse status = null;
-        status = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.GET, entity,
-                ExternalRetailerCodeStatusResponse.class, vars).getBody()));
-
-        return status.getStatus().equals("EXPIRED");
+        return new ResponseEntity<>(masterCode, HttpStatus.OK);
     }
 
     private RetailerCode fetchAndSaveRetailerCode(Content content, String format,
                                                   Retailer retailer, String requestContext)
             throws RecordNotFoundException, HttpException {
-        String url = retailer.getBaseUrl() + "/retailerCodes";
-        ExternalRetailerCodeRequest request = new ExternalRetailerCodeRequest(content.getEidr(), null);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("Request-Context", requestContext);
-        HttpEntity<ExternalRetailerCodeRequest> entity = new HttpEntity<ExternalRetailerCodeRequest>(request, headers);
+        ExternalRetailerCodeResponse externalRc = externalEstRetailerController.fetchRetailerCode(
+                content, retailer, requestContext);
 
-        ExternalRetailerCodeResponse externalRc;
-        RetailerCode retailerCode = null;
-
-        externalRc = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.POST, entity,
-                ExternalRetailerCodeResponse.class).getBody()));
-        retailerCode = new RetailerCode(
+        RetailerCode retailerCode = new RetailerCode(
                 externalRc.getCode(), content, format, RetailerCode.Status.PAIRED, retailer,
                 Date.from(externalRc.getExpiresOn().atZone(ZoneId.systemDefault()).toInstant()));
 
         return retailerCodeRepository.save(retailerCode);
-    }
-
-    private void killRetailerCode(RetailerCode code, String requestContext)
-            throws HttpException {
-        String url = code.getRetailer().getBaseUrl() + "/retailerCodes/" + code.getCode() + "/kill";
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("Request-Context", requestContext);
-        HttpEntity entity = new HttpEntity(headers);
-
-        retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
-                ExternalRetailerCodeResponse.class)));
     }
 
 }

@@ -7,10 +7,10 @@ import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.events.EventWrapper;
 import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
-import com.universalinvents.udccs.external.ExternalAWSCredentialsResponse;
+import com.universalinvents.udccs.exception.HttpException;
+import com.universalinvents.udccs.external.ExternalEstRetailerController;
 import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
-import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.Retailer;
@@ -23,25 +23,24 @@ import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.*;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @Api(tags = {"Retailer Code Controller"},
         description = "Operations pertaining to retailer codes")
@@ -67,28 +66,13 @@ public class RetailerCodeController {
     private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
-    private PairingRepository pairingRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
+    private ExternalEstRetailerController externalEstRetailerController;
 
     @Autowired
     private EventStreamingController eventStreamingController;
 
     @Autowired
     private EventConfig eventConfig;
-
-    @Autowired
-    private RetryTemplate retryTemplate;
-
-    @Value("${aws.security.client_id}")
-    private String clientId;
-
-    @Value("${aws.security.client_secret}")
-    private String clientSecret;
-
-    @Value("${aws.security.token_base_url}")
-    private String tokenBaseUrl;
 
     private final Logger log = LoggerFactory.getLogger(RetailerCodeController.class);
 
@@ -192,41 +176,7 @@ public class RetailerCodeController {
         masterCodeRepository.saveAndFlush(masterCode);
 
         // Update EST Inventory Retailer Code status to REDEEMED
-        String retailerBaseUrl = retailerCode.getRetailer().getBaseUrl();
-        if (retailerBaseUrl != null) {
-            // Get an AWS authorization token first
-            String authToken = getAWSCredentials();
-            if (authToken == null) {
-                // If we weren't able to get an auth token, simply ignore it and allow
-                // the EST Inventory service status to get out of sync.  There will
-                // be a separate scheduler that runs periodically to fix these sync issues
-                // if any are found.
-            } else {
-                String url = retailerBaseUrl + "/retailerCodes/{code}/redeem";
-                Map<String, String> pathParams = new HashMap<>();
-                pathParams.put("code", retailerCode.getCode());
-                HttpHeaders headers = new HttpHeaders();
-                headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-                headers.add(HttpHeaders.AUTHORIZATION, authToken);
-                headers.set("Request-Context", requestContext);
-                HttpEntity entity = new HttpEntity(headers);
-
-                try {
-                    retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
-                            ExternalRetailerCodeResponse.class, pathParams)));
-                } catch (Exception e) {
-                    // If anything goes wrong here, simply ignore it and allow
-                    // the EST Inventory service status to get out of sync.  There will
-                    // be a separate scheduler that runs periodically to fix these sync issues
-                    // if any are found.
-
-                    // NOOP
-                    log.warn("Unable to redeem retailer code " + retailerCode.getCode() + " using " + url +
-                            " : " + e.getMessage());
-                }
-            }
-        }
+        externalEstRetailerController.redeem(retailerCode, requestContext, ExternalRetailerCodeResponse.class);
 
         // Send a 'masterCodeRedeemed' event
         MasterCodeEvent event = new MasterCodeEvent(masterCode);
@@ -270,27 +220,9 @@ public class RetailerCodeController {
 
         // Get the latest status of this retailer code from the Retailer Code Service
         // If the returned status is EXPIRED, then update the status of the Retailer Code
-        Retailer retailer = retailerCode.getRetailer();
-        if (retailer.getBaseUrl() != null) {
-            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/status/refresh";
-            Map<String, String> vars = new HashMap<String, String>();
-            vars.put("code", code);
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-            headers.set("Request-Context", requestContext);
-            HttpEntity entity = new HttpEntity(headers);
-
-            ExternalRetailerCodeStatusResponse status;
-            try {
-                status = retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.GET, entity,
-                        ExternalRetailerCodeStatusResponse.class, vars).getBody()));
-            } catch (HttpClientErrorException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
-            } catch (HttpServerErrorException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-            } catch (RestClientException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+        try {
+            ExternalRetailerCodeStatusResponse status = externalEstRetailerController.status(retailerCode, requestContext,
+                    ExternalRetailerCodeStatusResponse.class);
 
             if (status.getStatus().equals("EXPIRED")) {
                 // Update RetailerCode status to EXPIRED
@@ -299,11 +231,19 @@ public class RetailerCodeController {
                 retailerCode.setModifiedOn(modifiedDate);
                 retailerCodeRepository.saveAndFlush(retailerCode);
 
-                return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+                return new ResponseEntity<>(retailerCode, HttpStatus.OK);
             }
+        } catch (HttpException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+        } catch (HttpClientErrorException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
+        } catch (HttpServerErrorException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (RestClientException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.NOT_MODIFIED);
+        return new ResponseEntity<>(retailerCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
@@ -486,32 +426,6 @@ public class RetailerCodeController {
         }
 
         return new ResponseEntity<Page<RetailerCode>>(retailerCodes, HttpStatus.OK);
-    }
-
-
-    private String getAWSCredentials() {
-        String auth = "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
-        String url = tokenBaseUrl + "/oauth2/token";
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add("grant_type", "client_credentials");
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
-        headers.add(HttpHeaders.AUTHORIZATION, auth);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(map, headers);
-
-        String retAccessToken = null;
-        try {
-            log.debug("Calling " + url);
-            ResponseEntity<ExternalAWSCredentialsResponse> resp = retryTemplate.execute(context -> (
-                    restTemplate.exchange(url, HttpMethod.POST, entity, ExternalAWSCredentialsResponse.class)));
-            retAccessToken = resp.getBody().getAccess_token();
-            log.debug("Received access token " + retAccessToken);
-
-        } catch (Exception e) {
-            // NOOP
-            log.warn("Unable to get AWS credentials: " + e.getMessage(), e);
-        }
-        return retAccessToken;
     }
 
 }
