@@ -241,20 +241,6 @@ public class MasterCodeIntegrationTests {
         );
         this.masterCodeRepository.save(masterCode1);
 
-        masterCode1 = new MasterCode(
-                "AZFEF",
-                "HD",
-                "swong",
-                null,
-                null,
-                partner1,
-                app1,
-                content1,
-                MasterCode.Status.ISSUED,
-                "master-code-1-external-id"
-        );
-        this.masterCodeRepository.save(masterCode1);
-
         masterCode2 = new MasterCode(
                 "ASDFEF",
                 "HD",

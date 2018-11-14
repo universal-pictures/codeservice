@@ -182,6 +182,8 @@ public class ExternalEstRetailerController {
 
             retryTemplate.execute(context -> (restTemplate.exchange(url, HttpMethod.PUT, entity,
                     ExternalRetailerCodeResponse.class, pathParams)));
+
+            return;
         }
 
         throw new HttpException(retailerCode.getRetailer().getName() + " does not have a base URL set.  Unable to " +
