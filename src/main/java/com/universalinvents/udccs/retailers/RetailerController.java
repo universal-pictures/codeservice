@@ -3,6 +3,7 @@ package com.universalinvents.udccs.retailers;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import com.universalinvents.udccs.exception.ApiError;
 import com.universalinvents.udccs.external.ExternalEidrMappingsResponse;
+import com.universalinvents.udccs.external.ExternalEstRetailerController;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.utilities.ApiDefinitions;
@@ -14,16 +15,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.*;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -42,10 +41,7 @@ public class RetailerController {
     private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private RetryTemplate retryTemplate;
+    private ExternalEstRetailerController externalEstRetailerController;
 
     @CrossOrigin
     @ApiOperation(value = "Create a Retailer Entry",
@@ -314,44 +310,34 @@ public class RetailerController {
 
             // Loop through found Retailers
             for (Retailer retailer : retailers) {
-                // Using the baseUrl property of this Retailer, call it's EST Inventory service
+
+                // Call the Retailer's EST Inventory service
                 // for inventory records related to the given eidr.
-                String baseUrl = retailer.getBaseUrl();
-                if (baseUrl != null) {
-                    URI url = URI.create(baseUrl + "/eidrMappings/" + encodedEidr + "/inventoryCount");
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                    headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-                    headers.set("Request-Context", requestContext);
-                    HttpEntity entity = new HttpEntity(null, headers);
+                try {
+                    ExternalEidrMappingsResponse externalEm = externalEstRetailerController.inventoryCount(
+                            retailer, encodedEidr, requestContext);
 
-                    try {
-                        ExternalEidrMappingsResponse externalEm = retryTemplate.execute(context ->
-                                (restTemplate.exchange(url, HttpMethod.GET, entity,
-                                        ExternalEidrMappingsResponse.class).getBody()));
-
-                        // If we only want results with content in stock, remove those without enough inventory
-                        if (hasInventory) {
-                            if (externalEm.getCount() >= externalEm.getMinInventoryCount()) {
-                                returnRetailers.add(retailer);
-                            }
-                        } else {
+                    // If we only want results with content in stock, remove those without enough inventory
+                    if (hasInventory && externalEm != null) {
+                        if (externalEm.getCount() >= externalEm.getMinInventoryCount()) {
                             returnRetailers.add(retailer);
                         }
-                    } catch (HttpClientErrorException e) {
-                        // If it's a 404, ignore since that just means the retailer doesn't know about the eidr at all
-                        if (!e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
-                        }
-                    } catch (HttpServerErrorException e) {
-                        return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
-                    } catch (RestClientException e) {
+                    } else if (externalEm != null) {
+                        returnRetailers.add(retailer);
+                    }
+                } catch (HttpClientErrorException e) {
+                    // If it's a 404, ignore since that just means the retailer doesn't know about the eidr at all
+                    if (!e.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
                         return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
                     }
+                } catch (HttpServerErrorException e) {
+                    return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+                } catch (RestClientException e) {
+                    return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
                 }
             }
         }
 
-        return new ResponseEntity<List<Retailer>>(returnRetailers, HttpStatus.OK);
+        return new ResponseEntity<>(returnRetailers, HttpStatus.OK);
     }
 }
