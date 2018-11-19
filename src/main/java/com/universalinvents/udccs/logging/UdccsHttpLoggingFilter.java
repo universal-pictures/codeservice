@@ -52,20 +52,24 @@ public class UdccsHttpLoggingFilter implements Filter {
         String content = new String(respWrapper.getContentAsByteArray());
         if (respWrapper.getStatusCode() >= 200 && respWrapper.getStatusCode() < 300) {
             // Log a success!
-            log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
-                    String.valueOf(respWrapper.getStatus()), content));
+            if (log.isDebugEnabled()) {
+                log.debug(buildResponseMessage("DEBUG", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                        String.valueOf(respWrapper.getStatus()), content));
+            }
         } else if (respWrapper.getStatusCode() >= 300 && respWrapper.getStatusCode() < 400) {
             // Log a warning
-            log.warn(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+            log.warn(buildResponseMessage("WARN", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
                     String.valueOf(respWrapper.getStatus()), content));
         } else if (respWrapper.getStatusCode() >= 400) {
             // Log an error
-            log.error(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+            log.error(buildResponseMessage("ERROR", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
                     String.valueOf(respWrapper.getStatus()), content));
         } else {
             // This shouldn't happen, but let's log it just in case we get here
-            log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
-                    String.valueOf(respWrapper.getStatus()), content));
+            if (log.isDebugEnabled()) {
+                log.debug(buildResponseMessage("DEBUG", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                        String.valueOf(respWrapper.getStatus()), content));
+            }
         }
 
         response.getWriter().write(content);
@@ -118,14 +122,14 @@ public class UdccsHttpLoggingFilter implements Filter {
         return sb.toString();
     }
 
-    private String buildResponseMessage(String method, String uri, String statusCode, String body) {
+    private String buildResponseMessage(String severity, String method, String uri, String statusCode, String body) {
 
         if (body.isEmpty()) {
             body = "\"\"";
         }
 
         StringBuffer sb = new StringBuffer();
-        sb.append("\"severity\":\"DEBUG\",");
+        sb.append("\"severity\":\"").append(severity).append("\",");
         sb.append("\"timestamp\":\"").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(new Date())).append("\",");
         sb.append("\"name\":\"").append(method).append(" ").append(uri).append("\",");
         sb.append("\"message\":{");
