@@ -40,7 +40,7 @@ public class SwaggerConfig {
                 .protocols(Collections.singleton(SWAGGER_UI_PROTOCOL))
                 .host(SWAGGER_UI_HOST)
                 .select()
-                .apis(RequestHandlerSelectors.any())
+                .apis(RequestHandlerSelectors.basePackage("com.universalinvents.udccs"))
                 .paths(PathSelectors.regex("/api.*"))
                 .build()
                 .useDefaultResponseMessages(false);

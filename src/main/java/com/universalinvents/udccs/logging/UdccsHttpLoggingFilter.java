@@ -24,7 +24,7 @@ public class UdccsHttpLoggingFilter implements Filter {
         // Don't run this filter on things unrelated to our api
         // (like Swagger UI)
         String includedUrl = "/api/";
-        if (! ((HttpServletRequest) request).getServletPath().startsWith(includedUrl)) {
+        if (!((HttpServletRequest) request).getServletPath().startsWith(includedUrl)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,10 +50,28 @@ public class UdccsHttpLoggingFilter implements Filter {
 
         // Log the response
         String content = new String(respWrapper.getContentAsByteArray());
-        if (log.isDebugEnabled()) {
-            log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+        if (respWrapper.getStatusCode() >= 200 && respWrapper.getStatusCode() < 300) {
+            // Log a success!
+            if (log.isDebugEnabled()) {
+                log.debug(buildResponseMessage("DEBUG", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                        String.valueOf(respWrapper.getStatus()), content));
+            }
+        } else if (respWrapper.getStatusCode() >= 300 && respWrapper.getStatusCode() < 400) {
+            // Log a warning
+            log.warn(buildResponseMessage("WARN", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
                     String.valueOf(respWrapper.getStatus()), content));
+        } else if (respWrapper.getStatusCode() >= 400) {
+            // Log an error
+            log.error(buildResponseMessage("ERROR", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                    String.valueOf(respWrapper.getStatus()), content));
+        } else {
+            // This shouldn't happen, but let's log it just in case we get here
+            if (log.isDebugEnabled()) {
+                log.debug(buildResponseMessage("DEBUG", requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                        String.valueOf(respWrapper.getStatus()), content));
+            }
         }
+
         response.getWriter().write(content);
 
     }
@@ -104,14 +122,14 @@ public class UdccsHttpLoggingFilter implements Filter {
         return sb.toString();
     }
 
-    private String buildResponseMessage(String method, String uri, String statusCode, String body) {
+    private String buildResponseMessage(String severity, String method, String uri, String statusCode, String body) {
 
         if (body.isEmpty()) {
             body = "\"\"";
         }
 
         StringBuffer sb = new StringBuffer();
-        sb.append("\"severity\":\"DEBUG\",");
+        sb.append("\"severity\":\"").append(severity).append("\",");
         sb.append("\"timestamp\":\"").append(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(new Date())).append("\",");
         sb.append("\"name\":\"").append(method).append(" ").append(uri).append("\",");
         sb.append("\"message\":{");

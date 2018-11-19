@@ -7,8 +7,10 @@ import com.universalinvents.udccs.events.EventStreamingController;
 import com.universalinvents.udccs.events.EventWrapper;
 import com.universalinvents.udccs.events.MasterCodeEvent;
 import com.universalinvents.udccs.exception.ApiError;
+import com.universalinvents.udccs.exception.HttpException;
+import com.universalinvents.udccs.external.ExternalEstRetailerController;
+import com.universalinvents.udccs.external.ExternalRetailerCodeResponse;
 import com.universalinvents.udccs.external.ExternalRetailerCodeStatusResponse;
-import com.universalinvents.udccs.pairings.PairingRepository;
 import com.universalinvents.udccs.partners.ReferralPartner;
 import com.universalinvents.udccs.partners.ReferralPartnerRepository;
 import com.universalinvents.udccs.retailers.Retailer;
@@ -26,16 +28,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 @Api(tags = {"Retailer Code Controller"},
         description = "Operations pertaining to retailer codes")
@@ -61,10 +66,7 @@ public class RetailerCodeController {
     private ReferralPartnerRepository referralPartnerRepository;
 
     @Autowired
-    private PairingRepository pairingRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
+    private ExternalEstRetailerController externalEstRetailerController;
 
     @Autowired
     private EventStreamingController eventStreamingController;
@@ -173,13 +175,16 @@ public class RetailerCodeController {
         masterCode.setModifiedOn(modifiedDate);
         masterCodeRepository.saveAndFlush(masterCode);
 
+        // Update EST Inventory Retailer Code status to REDEEMED
+        externalEstRetailerController.redeem(retailerCode, requestContext, ExternalRetailerCodeResponse.class);
+
         // Send a 'masterCodeRedeemed' event
         MasterCodeEvent event = new MasterCodeEvent(masterCode);
         EventWrapper eventWrapper = new EventWrapper(
                 "master-code", "masterCodeRedeemed", event, requestContext, eventConfig.getSchemaVersion());
         eventStreamingController.putRecord(eventWrapper.toString());
 
-        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+        return new ResponseEntity<>(retailerCode, HttpStatus.OK);
     }
 
     @CrossOrigin
@@ -215,27 +220,9 @@ public class RetailerCodeController {
 
         // Get the latest status of this retailer code from the Retailer Code Service
         // If the returned status is EXPIRED, then update the status of the Retailer Code
-        Retailer retailer = retailerCode.getRetailer();
-        if (retailer.getBaseUrl() != null) {
-            String url = retailer.getBaseUrl() + "/retailerCodes/{code}/status/refresh";
-            Map<String, String> vars = new HashMap<String, String>();
-            vars.put("code", code);
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-            headers.set("Request-Context", requestContext);
-            HttpEntity entity = new HttpEntity(headers);
-
-            ExternalRetailerCodeStatusResponse status;
-            try {
-                status = restTemplate.exchange(url, HttpMethod.GET, entity, ExternalRetailerCodeStatusResponse.class, vars)
-                        .getBody();
-            } catch (HttpClientErrorException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
-            } catch (HttpServerErrorException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-            } catch (RestClientException e) {
-                return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+        try {
+            ExternalRetailerCodeStatusResponse status = externalEstRetailerController.status(retailerCode, requestContext,
+                    ExternalRetailerCodeStatusResponse.class);
 
             if (status.getStatus().equals("EXPIRED")) {
                 // Update RetailerCode status to EXPIRED
@@ -244,11 +231,19 @@ public class RetailerCodeController {
                 retailerCode.setModifiedOn(modifiedDate);
                 retailerCodeRepository.saveAndFlush(retailerCode);
 
-                return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.OK);
+                return new ResponseEntity<>(retailerCode, HttpStatus.OK);
             }
+        } catch (HttpException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.CONFLICT);
+        } catch (HttpClientErrorException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.BAD_REQUEST);
+        } catch (HttpServerErrorException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (RestClientException e) {
+            return new ResponseEntity(new ApiError(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<RetailerCode>(retailerCode, HttpStatus.NOT_MODIFIED);
+        return new ResponseEntity<>(retailerCode, HttpStatus.NOT_MODIFIED);
     }
 
     @CrossOrigin
