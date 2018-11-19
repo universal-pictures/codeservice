@@ -24,7 +24,7 @@ public class UdccsHttpLoggingFilter implements Filter {
         // Don't run this filter on things unrelated to our api
         // (like Swagger UI)
         String includedUrl = "/api/";
-        if (! ((HttpServletRequest) request).getServletPath().startsWith(includedUrl)) {
+        if (!((HttpServletRequest) request).getServletPath().startsWith(includedUrl)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,10 +50,24 @@ public class UdccsHttpLoggingFilter implements Filter {
 
         // Log the response
         String content = new String(respWrapper.getContentAsByteArray());
-        if (log.isDebugEnabled()) {
+        if (respWrapper.getStatusCode() >= 200 && respWrapper.getStatusCode() < 300) {
+            // Log a success!
+            log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                    String.valueOf(respWrapper.getStatus()), content));
+        } else if (respWrapper.getStatusCode() >= 300 && respWrapper.getStatusCode() < 400) {
+            // Log a warning
+            log.warn(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                    String.valueOf(respWrapper.getStatus()), content));
+        } else if (respWrapper.getStatusCode() >= 400) {
+            // Log an error
+            log.error(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
+                    String.valueOf(respWrapper.getStatus()), content));
+        } else {
+            // This shouldn't happen, but let's log it just in case we get here
             log.debug(buildResponseMessage(requestWrapper.getMethod(), requestWrapper.getRequestURI(),
                     String.valueOf(respWrapper.getStatus()), content));
         }
+
         response.getWriter().write(content);
 
     }
