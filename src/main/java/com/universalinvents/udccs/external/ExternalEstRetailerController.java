@@ -119,7 +119,7 @@ public class ExternalEstRetailerController {
 
                 try {
                     return (returnClass.cast(retryTemplate.execute(context -> (restTemplate.exchange(url,
-                            HttpMethod.PUT, entity, returnClass, pathParams)))));
+                            HttpMethod.PUT, entity, returnClass, pathParams).getBody()))));
                 } catch (Exception e) {
                     // If anything goes wrong here, simply ignore it and allow
                     // the EST Inventory service status to get out of sync.  There will
