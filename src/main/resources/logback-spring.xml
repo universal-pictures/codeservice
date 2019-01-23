@@ -32,10 +32,10 @@
 
     <!-- Logging settings for dev & test environments -->
     <springProfile name="dev,test">
-        <logger name="com.universalinvents.udccs" additivity="false" level="DEBUG">
+        <logger name="com.universalinvents.codeservice" additivity="false" level="DEBUG">
             <appender-ref ref="jsonConsoleAppender"/>
         </logger>
-        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="DEBUG">
+        <logger name="com.universalinvents.codeservice.logging.CodeServiceHttpLoggingFilter" additivity="false" level="DEBUG">
             <appender-ref ref="httpConsoleAppender"/>
         </logger>
         <root level="INFO">
@@ -45,10 +45,10 @@
 
     <!-- Logging settings for prod environments -->
     <springProfile name="prod">
-        <logger name="com.universalinvents.udccs" additivity="false" level="INFO">
+        <logger name="com.universalinvents.codeservice" additivity="false" level="INFO">
             <appender-ref ref="jsonConsoleAppender"/>
         </logger>
-        <logger name="com.universalinvents.udccs.logging.UdccsHttpLoggingFilter" additivity="false" level="INFO">
+        <logger name="com.universalinvents.codeservice.logging.CodeServiceHttpLoggingFilter" additivity="false" level="INFO">
             <appender-ref ref="httpConsoleAppender"/>
         </logger>
         <root level="WARN">
