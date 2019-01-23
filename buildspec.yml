@@ -19,4 +19,4 @@ phases:
       - mvn package
 artifacts:
   files:
-    - target/udccs-poc-*.jar
+    - target/codeservice-*.jar

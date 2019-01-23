@@ -3,13 +3,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.universalinvents.udccs</groupId>
-    <artifactId>udccs-poc</artifactId>
+    <groupId>com.universalinvents.codeservice</groupId>
+    <artifactId>codeservice</artifactId>
     <version>0.1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>udccs-poc</name>
-    <description>Universal Digital Content Code Services POC</description>
+    <name>Code Service</name>
+    <description>Code Service</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
