@@ -81,7 +81,7 @@ public class SwaggerConfig {
         return new ApiInfoBuilder().title("Code API")
                 .description(getDescription())
                 .license("Apache License, Version 2.0")
-                .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0")
                 .version(BUILD_VERSION)
                 .build();
     }
