@@ -78,7 +78,7 @@ public class SwaggerConfig {
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder().title("Code API")
+        return new ApiInfoBuilder().title("Code Service")
                 .description(getDescription())
                 .license("Apache License, Version 2.0")
                 .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0")
@@ -110,5 +110,4 @@ public class SwaggerConfig {
                 .defaultModelRendering(ModelRendering.MODEL)
                 .build();
     }
-
 }
