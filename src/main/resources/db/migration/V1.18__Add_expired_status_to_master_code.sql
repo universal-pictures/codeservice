@@ -1,0 +1,1 @@
+ALTER TABLE udccs.master_code MODIFY COLUMN `status` enum('UNALLOCATED', 'ISSUED', 'PAIRED', 'REDEEMED', 'EXPIRED') NOT NULL;
